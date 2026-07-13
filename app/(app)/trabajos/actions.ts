@@ -11,6 +11,8 @@ import {
   marcarEtapa,
 } from '@/lib/trabajos/data'
 import type { EstadoEtapa, EstadoTrabajo } from '@/lib/trabajos/estado'
+import { abonoSchema } from '@/lib/abonos/schema'
+import { crearAbono, eliminarAbono } from '@/lib/abonos/data'
 
 export interface FormState {
   error: string
@@ -82,5 +84,31 @@ export async function marcarEtapaAction(formData: FormData): Promise<void> {
     return
   }
   await marcarEtapa(id, estado, motivo)
+  if (trabajoId) revalidatePath(`/trabajos/${trabajoId}`)
+}
+
+export async function crearAbonoAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const trabajoId = String(formData.get('trabajo_id') ?? '')
+  if (!trabajoId) return { error: 'Falta el trabajo' }
+  const parsed = abonoSchema.safeParse({
+    monto: String(formData.get('monto') ?? ''),
+    metodo: String(formData.get('metodo') ?? 'efectivo'),
+    fecha: String(formData.get('fecha') ?? ''),
+    nota: String(formData.get('nota') ?? ''),
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+  await crearAbono(trabajoId, parsed.data)
+  revalidatePath(`/trabajos/${trabajoId}`)
+  return { error: '' }
+}
+
+export async function eliminarAbonoAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '')
+  const trabajoId = String(formData.get('trabajo_id') ?? '')
+  if (!id) return
+  await eliminarAbono(id)
   if (trabajoId) revalidatePath(`/trabajos/${trabajoId}`)
 }

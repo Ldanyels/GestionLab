@@ -5,6 +5,7 @@ import { progresoTrabajo } from '@/lib/trabajos/estado'
 import { formatMoney } from '@/lib/format'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
 import { EtapaAcciones } from '@/components/trabajos/EtapaAcciones'
+import { PagosSection } from '@/components/trabajos/PagosSection'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   cambiarEstadoTrabajoAction,
@@ -118,6 +119,8 @@ export default async function TrabajoDetallePage({
           </ul>
         )}
       </div>
+
+      <PagosSection trabajoId={t.id} precio={t.precio_acordado} />
     </section>
   )
 }
