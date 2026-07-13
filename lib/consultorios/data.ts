@@ -1,5 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase/server'
-import { getSessionContext } from '@/lib/auth'
+import { laboratorioIdActual } from '@/lib/tenant'
 import type { Consultorio, ConsultorioConDoctores, Doctor } from './types'
 import type { ConsultorioInput, DoctorInput } from './schema'
 
@@ -30,17 +30,11 @@ export async function getConsultorio(
   return { ...row, doctores: row.doctores ?? [] }
 }
 
-async function laboratorioId(): Promise<string> {
-  const { perfil } = await getSessionContext()
-  if (!perfil) throw new Error('Sesión sin perfil')
-  return perfil.laboratorio_id
-}
-
 export async function crearConsultorio(input: ConsultorioInput): Promise<void> {
   const supabase = await createServerSupabase()
   const { error } = await supabase
     .from('consultorio')
-    .insert({ ...input, laboratorio_id: await laboratorioId() })
+    .insert({ ...input, laboratorio_id: await laboratorioIdActual() })
   if (error) throw new Error(error.message)
 }
 
@@ -67,7 +61,7 @@ export async function crearDoctor(
   const { error } = await supabase.from('doctor').insert({
     ...input,
     consultorio_id: consultorioId,
-    laboratorio_id: await laboratorioId(),
+    laboratorio_id: await laboratorioIdActual(),
   })
   if (error) throw new Error(error.message)
 }
