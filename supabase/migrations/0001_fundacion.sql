@@ -46,9 +46,13 @@ drop policy if exists laboratorio_propio on laboratorio;
 create policy laboratorio_propio on laboratorio
   for select using (id = laboratorio_actual());
 
+-- IMPORTANTE: la lectura del propio perfil se compara directamente con auth.uid().
+-- Usar laboratorio_actual() aquí provocaría recursión infinita de RLS (esa función
+-- lee perfil). Otras tablas sí pueden usar laboratorio_actual() sin recursión.
 drop policy if exists perfil_propio_lab on perfil;
-create policy perfil_propio_lab on perfil
-  for select using (laboratorio_id = laboratorio_actual());
+drop policy if exists perfil_self_select on perfil;
+create policy perfil_self_select on perfil
+  for select using (id = auth.uid());
 
 drop policy if exists perfil_self_insert on perfil;
 create policy perfil_self_insert on perfil
