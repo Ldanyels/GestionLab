@@ -7,27 +7,22 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { userId, perfil, error } = await getSessionContext()
+  const { userId, perfil } = await getSessionContext()
 
   // Sin sesión → al login.
   if (!userId) redirect('/login')
 
-  // Sesión válida pero sin perfil legible: mostramos diagnóstico (sin bucle).
+  // Sesión válida pero sin perfil vinculado a un laboratorio.
+  // No redirigimos (evita el bucle /hoy ↔ /login): mostramos un aviso claro.
   if (!perfil) {
     return (
       <main className="min-h-dvh flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-4 text-center">
+        <div className="w-full max-w-sm space-y-4 text-center">
           <h1 className="text-xl font-semibold">Cuenta sin laboratorio</h1>
           <p className="text-sm text-[var(--color-muted)]">
-            Tu usuario aún no está vinculado a un laboratorio o la base de datos
-            bloqueó la lectura.
+            Tu usuario aún no está vinculado a un laboratorio. Pide al
+            administrador que complete la configuración y vuelve a intentar.
           </p>
-          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3 text-left text-xs">
-            <p className="font-mono break-all">userId: {userId}</p>
-            <p className="font-mono break-all">
-              error: {error ?? '(ninguno — la consulta devolvió 0 filas)'}
-            </p>
-          </div>
           <a
             href="/login/logout"
             className="inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm"
