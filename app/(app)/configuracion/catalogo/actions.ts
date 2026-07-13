@@ -13,6 +13,12 @@ import {
   intercambiarOrdenEtapas,
 } from '@/lib/catalogo/data'
 import { requireAdmin } from '@/lib/auth'
+import {
+  recetaSchema,
+  agregarReceta,
+  editarReceta,
+  eliminarReceta,
+} from '@/lib/recetas/data'
 
 export interface FormState {
   error: string
@@ -113,5 +119,51 @@ export async function moverEtapaAction(formData: FormData): Promise<void> {
   const bOrden = Number(formData.get('b_orden'))
   if (!aId || !bId || Number.isNaN(aOrden) || Number.isNaN(bOrden)) return
   await intercambiarOrdenEtapas({ id: aId, orden: aOrden }, { id: bId, orden: bOrden })
+  if (catalogoId) revalidatePath(`/configuracion/catalogo/${catalogoId}`)
+}
+
+// ── Recetas (insumos por tipo de trabajo) ───────────────────
+
+export async function agregarRecetaAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin()
+  const catalogoId = String(formData.get('catalogo_trabajo_id') ?? '')
+  if (!catalogoId) return { error: 'Falta el trabajo' }
+  const parsed = recetaSchema.safeParse({
+    producto_id: String(formData.get('producto_id') ?? ''),
+    cantidad: String(formData.get('cantidad') ?? ''),
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+  try {
+    await agregarReceta(catalogoId, parsed.data)
+  } catch {
+    return { error: 'Ese insumo ya está en la receta' }
+  }
+  revalidatePath(`/configuracion/catalogo/${catalogoId}`)
+  return { error: '' }
+}
+
+export async function editarRecetaAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const catalogoId = String(formData.get('catalogo_trabajo_id') ?? '')
+  const cantidad = Number(formData.get('cantidad'))
+  if (!id || Number.isNaN(cantidad) || cantidad <= 0) return { error: 'Cantidad inválida' }
+  await editarReceta(id, cantidad)
+  if (catalogoId) revalidatePath(`/configuracion/catalogo/${catalogoId}`)
+  return { error: '' }
+}
+
+export async function eliminarRecetaAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const catalogoId = String(formData.get('catalogo_trabajo_id') ?? '')
+  if (!id) return
+  await eliminarReceta(id)
   if (catalogoId) revalidatePath(`/configuracion/catalogo/${catalogoId}`)
 }

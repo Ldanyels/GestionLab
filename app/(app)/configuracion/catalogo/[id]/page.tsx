@@ -5,6 +5,9 @@ import { getCatalogoItem } from '@/lib/catalogo/data'
 import { formatMoney } from '@/lib/format'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EtapasEditor } from '@/components/catalogo/EtapasEditor'
+import { RecetaEditor } from '@/components/catalogo/RecetaEditor'
+import { listReceta } from '@/lib/recetas/data'
+import { listProductos } from '@/lib/inventario/data'
 import { eliminarCatalogoAction } from '../actions'
 
 export default async function CatalogoDetallePage({
@@ -16,6 +19,7 @@ export default async function CatalogoDetallePage({
   const { id } = await params
   const item = await getCatalogoItem(id)
   if (!item) notFound()
+  const [receta, productos] = await Promise.all([listReceta(id), listProductos()])
 
   return (
     <section className="space-y-6">
@@ -61,6 +65,12 @@ export default async function CatalogoDetallePage({
       </div>
 
       <EtapasEditor catalogoId={item.id} etapas={item.etapas} />
+
+      <RecetaEditor
+        catalogoId={item.id}
+        receta={receta}
+        productos={productos.map((p) => ({ id: p.id, nombre: p.nombre, unidad: p.unidad }))}
+      />
     </section>
   )
 }

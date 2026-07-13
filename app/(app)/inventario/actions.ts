@@ -10,6 +10,7 @@ import {
   eliminarProducto,
   registrarMovimiento,
   eliminarMovimiento,
+  liquidarProducto,
 } from '@/lib/inventario/data'
 
 export interface FormState {
@@ -93,4 +94,14 @@ export async function eliminarMovimientoAction(formData: FormData): Promise<void
     revalidatePath(`/inventario/${productoId}`)
     revalidatePath('/inventario')
   }
+}
+
+export async function liquidarProductoAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const productoId = String(formData.get('producto_id') ?? '')
+  const conteo = Number(formData.get('conteo_real'))
+  if (!productoId || Number.isNaN(conteo) || conteo < 0) return
+  await liquidarProducto(productoId, conteo)
+  revalidatePath('/inventario/liquidacion')
+  revalidatePath('/inventario')
 }

@@ -19,12 +19,20 @@ export default async function InventarioPage() {
             </p>
           ) : null}
         </div>
-        <Link
-          href="/inventario/nuevo"
-          className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-contrast)]"
-        >
-          + Nuevo
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/inventario/liquidacion"
+            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+          >
+            Liquidar
+          </Link>
+          <Link
+            href="/inventario/nuevo"
+            className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-contrast)]"
+          >
+            + Nuevo
+          </Link>
+        </div>
       </div>
 
       {productos.length === 0 ? (

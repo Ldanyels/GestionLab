@@ -1,5 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { laboratorioIdActual } from '@/lib/tenant'
+import { filasConsumoPorReceta } from '@/lib/recetas/data'
 import type { Movimiento, Producto, ProductoConMovimientos } from './types'
 import { deltaMovimiento, type MovimientoInput, type ProductoInput } from './schema'
 
@@ -103,5 +104,68 @@ export async function registrarMovimiento(
 export async function eliminarMovimiento(id: string): Promise<void> {
   const supabase = await createServerSupabase()
   const { error } = await supabase.from('movimiento_inventario').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Liquidación: ajusta el stock de un producto a su conteo físico real.
+ * La diferencia (real − teórico) se registra como 'merma' (si falta) o 'ajuste' (si sobra).
+ */
+export async function liquidarProducto(
+  productoId: string,
+  conteoReal: number,
+): Promise<void> {
+  const supabase = await createServerSupabase()
+  const { data: p } = await supabase
+    .from('producto')
+    .select('stock_actual')
+    .eq('id', productoId)
+    .maybeSingle()
+  if (!p) return
+  const teorico = (p as { stock_actual: number }).stock_actual
+  const delta = Math.round((conteoReal - teorico) * 1000) / 1000
+  if (delta === 0) return
+  const { error } = await supabase.from('movimiento_inventario').insert({
+    laboratorio_id: await laboratorioIdActual(),
+    producto_id: productoId,
+    tipo: delta < 0 ? 'merma' : 'ajuste',
+    cantidad: delta,
+    motivo: 'Liquidación',
+  })
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Descuenta del stock los insumos de la receta del trabajo (una sola vez).
+ * Idempotente: si ya existen salidas ligadas a este trabajo, no hace nada.
+ */
+export async function descontarInsumosPorTrabajo(trabajoId: string): Promise<void> {
+  const supabase = await createServerSupabase()
+
+  const { count } = await supabase
+    .from('movimiento_inventario')
+    .select('id', { count: 'exact', head: true })
+    .eq('trabajo_id', trabajoId)
+    .eq('tipo', 'salida')
+  if ((count ?? 0) > 0) return // ya se descontó
+
+  const { data: trabajo } = await supabase
+    .from('trabajo')
+    .select('catalogo_trabajo_id')
+    .eq('id', trabajoId)
+    .maybeSingle()
+  if (!trabajo) return
+
+  const { data: recetas } = await supabase
+    .from('receta')
+    .select('producto_id, cantidad')
+    .eq('catalogo_trabajo_id', (trabajo as { catalogo_trabajo_id: string }).catalogo_trabajo_id)
+  if (!recetas || recetas.length === 0) return
+
+  const filas = filasConsumoPorReceta(recetas as { producto_id: string; cantidad: number }[], {
+    laboratorioId: await laboratorioIdActual(),
+    trabajoId,
+  })
+  const { error } = await supabase.from('movimiento_inventario').insert(filas)
   if (error) throw new Error(error.message)
 }

@@ -13,6 +13,7 @@ import {
 import type { EstadoEtapa, EstadoTrabajo } from '@/lib/trabajos/estado'
 import { abonoSchema } from '@/lib/abonos/schema'
 import { crearAbono, eliminarAbono } from '@/lib/abonos/data'
+import { descontarInsumosPorTrabajo } from '@/lib/inventario/data'
 
 export interface FormState {
   error: string
@@ -70,6 +71,11 @@ export async function cambiarEstadoTrabajoAction(formData: FormData): Promise<vo
   const estado = String(formData.get('estado') ?? '') as EstadoTrabajo
   if (!id || !['en_curso', 'cerrado', 'entregado'].includes(estado)) return
   await cambiarEstadoTrabajo(id, estado)
+  // Al cerrar (o entregar), descontar insumos según receta (una sola vez).
+  if (estado === 'cerrado' || estado === 'entregado') {
+    await descontarInsumosPorTrabajo(id)
+    revalidatePath('/inventario')
+  }
   revalidatePath(`/trabajos/${id}`)
   revalidatePath('/trabajos')
   revalidatePath('/hoy')
