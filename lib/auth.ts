@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import type { Perfil, Rol } from '@/lib/supabase/types'
 
@@ -34,5 +35,13 @@ export async function getSessionContext(): Promise<SessionContext> {
 
 export async function getSessionPerfil(): Promise<Perfil | null> {
   const { perfil } = await getSessionContext()
+  return perfil
+}
+
+/** Exige rol admin: redirige si no hay sesión o el rol no es admin. */
+export async function requireAdmin(): Promise<Perfil> {
+  const { perfil } = await getSessionContext()
+  if (!perfil) redirect('/login')
+  if (perfil.rol !== 'admin') redirect('/hoy')
   return perfil
 }

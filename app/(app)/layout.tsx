@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSessionContext } from '@/lib/auth'
 import { BottomNav } from '@/components/nav/BottomNav'
@@ -38,12 +39,19 @@ export default async function AppLayout({
     <div className="min-h-dvh pb-16">
       <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 backdrop-blur">
         <span className="font-semibold tracking-tight">GestionLab</span>
-        <a
-          href="/login/logout"
-          className="text-sm text-[var(--color-muted)] transition-colors active:text-[var(--color-danger)]"
-        >
-          Salir
-        </a>
+        <nav className="flex items-center gap-4 text-sm">
+          {perfil.rol === 'admin' ? (
+            <Link href="/configuracion" className="text-[var(--color-muted)]">
+              Configuración
+            </Link>
+          ) : null}
+          <a
+            href="/login/logout"
+            className="text-[var(--color-muted)] transition-colors active:text-[var(--color-danger)]"
+          >
+            Salir
+          </a>
+        </nav>
       </header>
       <main className="mx-auto max-w-2xl p-4">{children}</main>
       <BottomNav rol={perfil.rol} />
