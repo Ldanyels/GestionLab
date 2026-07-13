@@ -30,6 +30,28 @@ export async function getConsultorio(
   return { ...row, doctores: row.doctores ?? [] }
 }
 
+export interface DoctorOpcion {
+  id: string
+  nombre: string
+  consultorio_nombre: string
+}
+
+/** Doctores del laboratorio con el nombre de su consultorio, para selectores. */
+export async function listDoctoresConConsultorio(): Promise<DoctorOpcion[]> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase
+    .from('doctor')
+    .select('id, nombre, consultorio:consultorio_id(nombre)')
+    .order('nombre', { ascending: true })
+  if (error) throw new Error(error.message)
+  type Row = { id: string; nombre: string; consultorio: { nombre: string } | null }
+  return (data as unknown as Row[]).map((d) => ({
+    id: d.id,
+    nombre: d.nombre,
+    consultorio_nombre: d.consultorio?.nombre ?? '—',
+  }))
+}
+
 export async function crearConsultorio(input: ConsultorioInput): Promise<void> {
   const supabase = await createServerSupabase()
   const { error } = await supabase
