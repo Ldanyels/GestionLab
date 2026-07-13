@@ -2,11 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { consultorioSchema } from '@/lib/consultorios/schema'
+import { consultorioSchema, doctorSchema } from '@/lib/consultorios/schema'
 import {
   crearConsultorio,
   editarConsultorio,
   eliminarConsultorio,
+  crearDoctor,
+  eliminarDoctor,
 } from '@/lib/consultorios/data'
 
 export interface FormState {
@@ -56,4 +58,30 @@ export async function eliminarConsultorioAction(formData: FormData): Promise<voi
   await eliminarConsultorio(id)
   revalidatePath('/consultorios')
   redirect('/consultorios')
+}
+
+export async function crearDoctorAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const consultorioId = String(formData.get('consultorio_id') ?? '')
+  if (!consultorioId) return { error: 'Falta el consultorio' }
+  const parsed = doctorSchema.safeParse({
+    nombre: String(formData.get('nombre') ?? ''),
+    contacto: String(formData.get('contacto') ?? ''),
+  })
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+  }
+  await crearDoctor(consultorioId, parsed.data)
+  revalidatePath(`/consultorios/${consultorioId}`)
+  return { error: '' }
+}
+
+export async function eliminarDoctorAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '')
+  const consultorioId = String(formData.get('consultorio_id') ?? '')
+  if (!id) return
+  await eliminarDoctor(id)
+  if (consultorioId) revalidatePath(`/consultorios/${consultorioId}`)
 }

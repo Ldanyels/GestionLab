@@ -10,7 +10,8 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     url: BASE_URL,
-    reuseExistingServer: false,
+    // Reutiliza el servidor de GestionLab si ya corre en 3100 (puerto dedicado).
+    reuseExistingServer: true,
     timeout: 120_000,
   },
 })
