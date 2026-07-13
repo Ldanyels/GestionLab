@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { crearAbonoAction, type FormState } from '@/app/(app)/trabajos/actions'
 import { METODOS_PAGO } from '@/lib/abonos/types'
@@ -9,12 +9,28 @@ const initial: FormState = { error: '' }
 const inputClass =
   'h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
+/** Fecha de hoy en formato YYYY-MM-DD según la zona horaria local (evita el corrimiento por UTC). */
+function hoyLocal(): string {
+  const d = new Date()
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10)
+}
+
 export function AbonoForm({ trabajoId }: { trabajoId: string }) {
   const [state, formAction, pending] = useActionState(crearAbonoAction, initial)
   const formRef = useRef<HTMLFormElement>(null)
   const prev = useRef(state)
+  // Fecha controlada, inicializada tras el montaje (evita desajuste de hidratación).
+  const [fecha, setFecha] = useState('')
   useEffect(() => {
-    if (state !== prev.current && !state.error) formRef.current?.reset()
+    if (!fecha) setFecha(hoyLocal())
+  }, [fecha])
+  useEffect(() => {
+    if (state !== prev.current && !state.error) {
+      formRef.current?.reset()
+      setFecha(hoyLocal())
+    }
     prev.current = state
   }, [state])
 
@@ -38,7 +54,13 @@ export function AbonoForm({ trabajoId }: { trabajoId: string }) {
             </option>
           ))}
         </select>
-        <input name="fecha" type="date" className={inputClass} />
+        <input
+          name="fecha"
+          type="date"
+          value={fecha}
+          onChange={(e) => setFecha(e.target.value)}
+          className={inputClass}
+        />
         <input name="nota" placeholder="Nota (opcional)" className={inputClass} />
       </div>
       {state.error ? (
