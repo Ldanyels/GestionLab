@@ -21,11 +21,15 @@ export async function proxy(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = req.nextUrl.pathname.startsWith('/login')
+  const { pathname } = req.nextUrl
+  const isAuthRoute = pathname.startsWith('/login') // login y logout
+  const isLoginPage = pathname === '/login'
+
   if (!user && !isAuthRoute) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
-  if (user && isAuthRoute) {
+  // Solo la página de login (no /login/logout) reenvía a los ya autenticados.
+  if (user && isLoginPage) {
     return NextResponse.redirect(new URL('/hoy', req.url))
   }
   return res
