@@ -9,6 +9,7 @@ export interface NavItem {
 
 const ALL_ITEMS: NavItem[] = [
   { label: 'Hoy', href: '/hoy', roles: ['admin', 'tecnico'] },
+  { label: 'Consultorios', href: '/consultorios', roles: ['admin', 'tecnico'] },
   { label: 'Trabajos', href: '/trabajos', roles: ['admin', 'tecnico'] },
   { label: 'Inventario', href: '/inventario', roles: ['admin'] },
   { label: 'Finanzas', href: '/finanzas', roles: ['admin'] },
@@ -28,9 +29,9 @@ export function BottomNav({ rol }: { rol: Rol }) {
         <Link
           key={item.href}
           href={item.href}
-          className="flex h-16 flex-1 items-center justify-center text-sm font-medium text-[var(--color-muted)] transition-colors active:text-[var(--color-accent)]"
+          className="flex h-16 min-w-0 flex-1 items-center justify-center px-1 text-center text-xs font-medium text-[var(--color-muted)] transition-colors active:text-[var(--color-accent)]"
         >
-          {item.label}
+          <span className="truncate">{item.label}</span>
         </Link>
       ))}
     </nav>
