@@ -8,6 +8,7 @@ import {
   editarConsultorio,
   eliminarConsultorio,
   crearDoctor,
+  editarDoctor,
   eliminarDoctor,
 } from '@/lib/consultorios/data'
 
@@ -75,6 +76,25 @@ export async function crearDoctorAction(
   }
   await crearDoctor(consultorioId, parsed.data)
   revalidatePath(`/consultorios/${consultorioId}`)
+  return { error: '' }
+}
+
+export async function editarDoctorAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = String(formData.get('id') ?? '')
+  const consultorioId = String(formData.get('consultorio_id') ?? '')
+  if (!id) return { error: 'Falta el identificador' }
+  const parsed = doctorSchema.safeParse({
+    nombre: String(formData.get('nombre') ?? ''),
+    contacto: String(formData.get('contacto') ?? ''),
+  })
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+  }
+  await editarDoctor(id, parsed.data)
+  if (consultorioId) revalidatePath(`/consultorios/${consultorioId}`)
   return { error: '' }
 }
 

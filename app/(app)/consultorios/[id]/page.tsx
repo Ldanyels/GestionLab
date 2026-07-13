@@ -2,10 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getConsultorio } from '@/lib/consultorios/data'
 import { DoctorForm } from '@/components/consultorios/DoctorForm'
-import {
-  eliminarConsultorioAction,
-  eliminarDoctorAction,
-} from '../actions'
+import { DoctorRow } from '@/components/consultorios/DoctorRow'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { eliminarConsultorioAction } from '../actions'
 
 export default async function ConsultorioDetallePage({
   params,
@@ -37,15 +36,14 @@ export default async function ConsultorioDetallePage({
           >
             Editar
           </Link>
-          <form action={eliminarConsultorioAction}>
-            <input type="hidden" name="id" value={consultorio.id} />
-            <button
-              type="submit"
-              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
-            >
-              Eliminar
-            </button>
-          </form>
+          <ConfirmDialog
+            action={eliminarConsultorioAction}
+            fields={{ id: consultorio.id }}
+            triggerLabel="Eliminar"
+            triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
+            title="Eliminar consultorio"
+            message={`¿Eliminar "${consultorio.nombre}" y todos sus doctores? Esta acción no se puede deshacer.`}
+          />
         </div>
       </div>
 
@@ -64,30 +62,7 @@ export default async function ConsultorioDetallePage({
         ) : (
           <ul className="space-y-2">
             {consultorio.doctores.map((d) => (
-              <li
-                key={d.id}
-                className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{d.nombre}</span>
-                  {d.contacto ? (
-                    <span className="block truncate text-sm text-[var(--color-muted)]">
-                      {d.contacto}
-                    </span>
-                  ) : null}
-                </span>
-                <form action={eliminarDoctorAction}>
-                  <input type="hidden" name="id" value={d.id} />
-                  <input type="hidden" name="consultorio_id" value={consultorio.id} />
-                  <button
-                    type="submit"
-                    aria-label={`Eliminar ${d.nombre}`}
-                    className="px-2 text-sm text-[var(--color-danger)]"
-                  >
-                    Eliminar
-                  </button>
-                </form>
-              </li>
+              <DoctorRow key={d.id} doctor={d} />
             ))}
           </ul>
         )}

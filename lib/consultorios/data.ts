@@ -72,6 +72,15 @@ export async function crearDoctor(
   if (error) throw new Error(error.message)
 }
 
+export async function editarDoctor(
+  id: string,
+  input: DoctorInput,
+): Promise<void> {
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.from('doctor').update(input).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 export async function eliminarDoctor(id: string): Promise<void> {
   const supabase = await createServerSupabase()
   const { error } = await supabase.from('doctor').delete().eq('id', id)
