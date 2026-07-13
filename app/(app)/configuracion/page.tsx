@@ -8,7 +8,12 @@ export default async function ConfiguracionPage() {
     {
       href: '/configuracion/catalogo',
       titulo: 'Catálogo de trabajos',
-      descripcion: 'Tipos de trabajo, precios y etapas.',
+      descripcion: 'Tipos de trabajo, precios, etapas y recetas.',
+    },
+    {
+      href: '/configuracion/trabajadores',
+      titulo: 'Trabajadores',
+      descripcion: 'Personal, montos estándar y pagos.',
     },
   ]
 
