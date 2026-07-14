@@ -3,20 +3,24 @@ import {
   resumen,
   porMes,
   rankingConsultorios,
+  consumoPorProducto,
   rangoMesActual,
 } from '@/lib/finanzas/data'
 import { margenPct } from '@/lib/finanzas/calculo'
 import { formatMoney } from '@/lib/format'
 import { BarrasMensuales } from '@/components/finanzas/BarrasMensuales'
 import { RankingConsultorios } from '@/components/finanzas/RankingConsultorios'
+import { UtilidadMensual } from '@/components/finanzas/UtilidadMensual'
+import { ConsumoInsumos } from '@/components/finanzas/ConsumoInsumos'
 
 export default async function FinanzasPage() {
   await requireAdmin()
   const { desde, hasta } = rangoMesActual()
-  const [res, meses, ranking] = await Promise.all([
+  const [res, meses, ranking, consumo] = await Promise.all([
     resumen(desde, hasta),
     porMes(6),
     rankingConsultorios(desde, hasta),
+    consumoPorProducto(desde, hasta),
   ])
   const margen = margenPct(res)
   const utilidadColor =
@@ -55,8 +59,18 @@ export default async function FinanzasPage() {
       </div>
 
       <div className="space-y-2">
+        <h2 className="text-lg font-medium">Utilidad por mes (últimos 6 meses)</h2>
+        <UtilidadMensual datos={meses} />
+      </div>
+
+      <div className="space-y-2">
         <h2 className="text-lg font-medium">Top consultorios (mes actual)</h2>
         <RankingConsultorios datos={ranking} />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-lg font-medium">Insumos más costosos (mes actual)</h2>
+        <ConsumoInsumos datos={consumo} />
       </div>
     </section>
   )

@@ -12,6 +12,12 @@ export interface RankingItem {
   ingreso: number
 }
 
+export interface ConsumoItem {
+  producto: string
+  cantidad: number
+  costo: number
+}
+
 function fmtFecha(d: Date): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 }
@@ -70,4 +76,23 @@ export async function rankingConsultorios(
     consultorio: r.consultorio,
     ingreso: Number(r.ingreso),
   }))
+}
+
+export async function consumoPorProducto(
+  desde: string,
+  hasta: string,
+): Promise<ConsumoItem[]> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('consumo_por_producto', {
+    p_desde: desde,
+    p_hasta: hasta,
+  })
+  if (error) throw new Error(error.message)
+  return (data ?? []).map(
+    (r: { producto: string; cantidad: number; costo: number }) => ({
+      producto: r.producto,
+      cantidad: Number(r.cantidad),
+      costo: Number(r.costo),
+    }),
+  )
 }

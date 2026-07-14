@@ -9,11 +9,19 @@ export const productoSchema = z.object({
   stock_inicial: z.coerce.number().min(0).default(0),
 })
 
+const costoOpcional = z.preprocess(
+  (v) => (v === '' || v === undefined || v === null ? null : Number(v)),
+  z.number().min(0, 'El costo no puede ser negativo').nullable(),
+)
+
 export const movimientoSchema = z.object({
   tipo: z.enum(['ingreso', 'salida', 'ajuste', 'merma']),
   cantidad: z.coerce.number().positive('La cantidad debe ser mayor a 0'),
   // Para 'ajuste' el usuario elige si suma o resta.
   ajuste_resta: z.coerce.boolean().default(false),
+  // Solo para ingresos: origen (compra/ajuste/otro) y costo unitario de la compra.
+  origen: z.enum(['compra', 'ajuste', 'otro']).optional(),
+  costo_unitario: costoOpcional,
   motivo: z
     .string()
     .trim()

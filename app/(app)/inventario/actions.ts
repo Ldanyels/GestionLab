@@ -74,6 +74,8 @@ export async function registrarMovimientoAction(
     tipo: String(formData.get('tipo') ?? ''),
     cantidad: String(formData.get('cantidad') ?? ''),
     ajuste_resta: formData.get('ajuste_resta') === 'on',
+    origen: String(formData.get('origen') ?? '') || undefined,
+    costo_unitario: String(formData.get('costo_unitario') ?? ''),
     motivo: String(formData.get('motivo') ?? ''),
     fecha: String(formData.get('fecha') ?? ''),
   })

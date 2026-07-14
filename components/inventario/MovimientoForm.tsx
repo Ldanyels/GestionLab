@@ -16,6 +16,7 @@ function hoyLocal(): string {
 export function MovimientoForm({ productoId }: { productoId: string }) {
   const [state, formAction, pending] = useActionState(registrarMovimientoAction, initial)
   const [tipo, setTipo] = useState('ingreso')
+  const [origen, setOrigen] = useState('compra')
   const [fecha, setFecha] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
   const prev = useRef(state)
@@ -27,10 +28,13 @@ export function MovimientoForm({ productoId }: { productoId: string }) {
     if (state !== prev.current && !state.error) {
       formRef.current?.reset()
       setTipo('ingreso')
+      setOrigen('compra')
       setFecha(hoyLocal())
     }
     prev.current = state
   }, [state])
+
+  const mostrarCosto = tipo === 'ingreso' && (origen === 'compra' || origen === 'otro')
 
   return (
     <form ref={formRef} action={formAction} className="space-y-2">
@@ -65,6 +69,40 @@ export function MovimientoForm({ productoId }: { productoId: string }) {
         />
         <input name="motivo" placeholder="Motivo (opcional)" className={inputClass} />
       </div>
+
+      {tipo === 'ingreso' ? (
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            name="origen"
+            value={origen}
+            onChange={(e) => setOrigen(e.target.value)}
+            className={inputClass}
+          >
+            <option value="compra">Origen: Compra</option>
+            <option value="ajuste">Origen: Ajuste de stock</option>
+            <option value="otro">Origen: Otro</option>
+          </select>
+          {mostrarCosto ? (
+            <input
+              name="costo_unitario"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Costo unitario (S/)"
+              className={inputClass}
+            />
+          ) : (
+            <span />
+          )}
+        </div>
+      ) : null}
+      {mostrarCosto ? (
+        <p className="text-xs text-[var(--color-muted)]">
+          El costo unitario actualizará el precio del producto (útil si varía por
+          proveedor/marca).
+        </p>
+      ) : null}
+
       {tipo === 'ajuste' ? (
         <label className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
           <input type="checkbox" name="ajuste_resta" />

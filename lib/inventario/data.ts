@@ -85,20 +85,43 @@ export async function eliminarProducto(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+const ETIQUETA_ORIGEN: Record<string, string> = {
+  compra: 'Compra',
+  ajuste: 'Ajuste de stock',
+  otro: 'Otro',
+}
+
 export async function registrarMovimiento(
   productoId: string,
   input: MovimientoInput,
 ): Promise<void> {
   const supabase = await createServerSupabase()
+  const esIngreso = input.tipo === 'ingreso'
+  const costo = esIngreso ? input.costo_unitario : null
+  // Para ingresos, si no hay motivo escrito, usa el origen como motivo legible.
+  const motivo =
+    input.motivo ??
+    (esIngreso && input.origen ? ETIQUETA_ORIGEN[input.origen] : null)
+
   const { error } = await supabase.from('movimiento_inventario').insert({
     laboratorio_id: await laboratorioIdActual(),
     producto_id: productoId,
     tipo: input.tipo,
     cantidad: deltaMovimiento(input),
-    motivo: input.motivo,
+    costo_unitario: costo,
+    motivo,
     ...(input.fecha ? { fecha: input.fecha } : {}),
   })
   if (error) throw new Error(error.message)
+
+  // Si la compra trae costo, actualiza el costo unitario del producto (último precio).
+  if (esIngreso && costo !== null && costo > 0) {
+    const { error: upErr } = await supabase
+      .from('producto')
+      .update({ costo_unitario: costo })
+      .eq('id', productoId)
+    if (upErr) throw new Error(upErr.message)
+  }
 }
 
 export async function eliminarMovimiento(id: string): Promise<void> {

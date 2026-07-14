@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { listTrabajos } from '@/lib/trabajos/data'
 import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
+import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 
 const FILTROS: { label: string; estado?: EstadoTrabajo }[] = [
@@ -72,7 +73,12 @@ export default async function TrabajosPage({
                   <EstadoBadge estado={t.estado} />
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2 text-sm text-[var(--color-muted)]">
-                  <span className="min-w-0 truncate">
+                  <span className="flex min-w-0 items-center gap-1.5 truncate">
+                    <span
+                      aria-hidden
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: colorConsultorio(t.consultorio_nombre) }}
+                    />
                     {t.doctor_nombre} · {t.consultorio_nombre}
                     {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
                   </span>

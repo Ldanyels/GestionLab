@@ -96,6 +96,7 @@ export default async function ProductoDetallePage({
                   <span className="block text-xs text-[var(--color-muted)]">
                     {m.fecha}
                     {m.motivo ? ` · ${m.motivo}` : ''}
+                    {m.costo_unitario != null ? ` · ${formatMoney(m.costo_unitario)}/${p.unidad}` : ''}
                     {m.trabajo_id ? ' · por trabajo' : ''}
                   </span>
                 </span>
