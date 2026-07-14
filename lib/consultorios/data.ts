@@ -3,13 +3,12 @@ import { laboratorioIdActual } from '@/lib/tenant'
 import type { Consultorio, ConsultorioConDoctores, Doctor } from './types'
 import type { ConsultorioInput, DoctorInput } from './schema'
 
-/** Lista los consultorios del laboratorio actual (RLS los filtra). */
-export async function listConsultorios(): Promise<Consultorio[]> {
+/** Lista los consultorios del laboratorio actual (RLS los filtra), con búsqueda opcional. */
+export async function listConsultorios(q?: string): Promise<Consultorio[]> {
   const supabase = await createServerSupabase()
-  const { data, error } = await supabase
-    .from('consultorio')
-    .select('*')
-    .order('nombre', { ascending: true })
+  let query = supabase.from('consultorio').select('*')
+  if (q?.trim()) query = query.ilike('nombre', `%${q.trim()}%`)
+  const { data, error } = await query.order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as Consultorio[]
 }

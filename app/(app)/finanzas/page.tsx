@@ -28,9 +28,17 @@ export default async function FinanzasPage() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Finanzas</h1>
-        <p className="text-sm text-[var(--color-muted)]">Mes actual</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Finanzas</h1>
+          <p className="text-sm text-[var(--color-muted)]">Mes actual</p>
+        </div>
+        <a
+          href="/finanzas/export"
+          className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+        >
+          Exportar CSV
+        </a>
       </div>
 
       {/* KPIs (stat tiles) */}

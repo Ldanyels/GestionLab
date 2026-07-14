@@ -20,6 +20,11 @@ export default async function ConfiguracionPage() {
       titulo: 'Usuarios',
       descripcion: 'Accesos del equipo (admin / técnico).',
     },
+    {
+      href: '/configuracion/auditoria',
+      titulo: 'Historial de actividad',
+      descripcion: 'Quién creó, cambió o eliminó registros.',
+    },
   ]
 
   return (

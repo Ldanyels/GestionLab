@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { listTrabajos } from '@/lib/trabajos/data'
 import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
+import { PagoChip } from '@/components/trabajos/PagoChip'
+import { SearchBox } from '@/components/ui/SearchBox'
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 
@@ -15,13 +17,13 @@ const FILTROS: { label: string; estado?: EstadoTrabajo }[] = [
 export default async function TrabajosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string }>
+  searchParams: Promise<{ estado?: string; q?: string }>
 }) {
-  const { estado } = await searchParams
+  const { estado, q } = await searchParams
   const filtroEstado = (['en_curso', 'cerrado', 'entregado'] as const).find(
     (e) => e === estado,
   )
-  const trabajos = await listTrabajos(filtroEstado)
+  const trabajos = await listTrabajos({ estado: filtroEstado, q })
 
   return (
     <section className="space-y-4">
@@ -35,10 +37,20 @@ export default async function TrabajosPage({
         </Link>
       </div>
 
+      <SearchBox
+        placeholder="Buscar por paciente…"
+        defaultValue={q}
+        hidden={filtroEstado ? { estado: filtroEstado } : undefined}
+      />
+
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTROS.map((f) => {
           const activo = (f.estado ?? undefined) === filtroEstado
-          const href = f.estado ? `/trabajos?estado=${f.estado}` : '/trabajos'
+          const params = new URLSearchParams()
+          if (f.estado) params.set('estado', f.estado)
+          if (q) params.set('q', q)
+          const qs = params.toString()
+          const href = `/trabajos${qs ? `?${qs}` : ''}`
           return (
             <Link
               key={f.label}
@@ -82,8 +94,9 @@ export default async function TrabajosPage({
                     {t.doctor_nombre} · {t.consultorio_nombre}
                     {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
                   </span>
-                  <span className="shrink-0 tabular-nums">
-                    {formatMoney(t.precio_acordado)}
+                  <span className="flex shrink-0 items-center gap-2">
+                    <PagoChip saldo={t.saldo} />
+                    <span className="num">{formatMoney(t.precio_acordado)}</span>
                   </span>
                 </div>
               </Link>

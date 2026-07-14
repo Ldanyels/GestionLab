@@ -18,6 +18,13 @@ export interface ConsumoItem {
   costo: number
 }
 
+export interface CuentaConsultorio {
+  consultorio: string
+  facturado: number
+  pagado: number
+  saldo: number
+}
+
 function fmtFecha(d: Date): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 }
@@ -76,6 +83,20 @@ export async function rankingConsultorios(
     consultorio: r.consultorio,
     ingreso: Number(r.ingreso),
   }))
+}
+
+export async function estadoCuentaConsultorios(): Promise<CuentaConsultorio[]> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('estado_cuenta_consultorios')
+  if (error) return []
+  return (data ?? []).map(
+    (r: { consultorio: string; facturado: number; pagado: number; saldo: number }) => ({
+      consultorio: r.consultorio,
+      facturado: Number(r.facturado),
+      pagado: Number(r.pagado),
+      saldo: Number(r.saldo),
+    }),
+  )
 }
 
 export async function consumoPorProducto(

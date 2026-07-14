@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTrabajo } from '@/lib/trabajos/data'
+import { getSessionPerfil } from '@/lib/auth'
+import { costoInsumosPorTrabajo } from '@/lib/inventario/data'
 import { progresoTrabajo } from '@/lib/trabajos/estado'
 import { formatMoney } from '@/lib/format'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
@@ -18,10 +20,13 @@ export default async function TrabajoDetallePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const t = await getTrabajo(id)
+  const [t, perfil] = await Promise.all([getTrabajo(id), getSessionPerfil()])
   if (!t) notFound()
 
   const progreso = progresoTrabajo(t.etapas)
+  const esAdmin = perfil?.rol === 'admin'
+  const costoInsumos = esAdmin ? await costoInsumosPorTrabajo(t.id) : 0
+  const margen = Math.round((t.precio_acordado - costoInsumos) * 100) / 100
 
   return (
     <section className="space-y-6">
@@ -80,6 +85,35 @@ export default async function TrabajoDetallePage({
         <p className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">
           {t.notas}
         </p>
+      ) : null}
+
+      {esAdmin ? (
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3 text-sm">
+          <p className="font-medium">Costeo del trabajo</p>
+          <div className="mt-1 grid grid-cols-3 gap-2 text-center">
+            <span>
+              <span className="block text-xs text-[var(--color-muted)]">Precio</span>
+              <span className="num">{formatMoney(t.precio_acordado)}</span>
+            </span>
+            <span>
+              <span className="block text-xs text-[var(--color-muted)]">Insumos</span>
+              <span className="num">{formatMoney(costoInsumos)}</span>
+            </span>
+            <span>
+              <span className="block text-xs text-[var(--color-muted)]">Margen</span>
+              <span
+                className={`num ${margen >= 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}
+              >
+                {formatMoney(margen)}
+              </span>
+            </span>
+          </div>
+          {costoInsumos === 0 ? (
+            <p className="mt-1 text-xs text-[var(--color-muted)]">
+              El costo de insumos se calcula al cerrar el trabajo (según su receta).
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {/* Estado del trabajo */}

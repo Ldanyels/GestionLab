@@ -4,12 +4,11 @@ import { filasConsumoPorReceta } from '@/lib/recetas/data'
 import type { Movimiento, Producto, ProductoConMovimientos } from './types'
 import { deltaMovimiento, type MovimientoInput, type ProductoInput } from './schema'
 
-export async function listProductos(): Promise<Producto[]> {
+export async function listProductos(q?: string): Promise<Producto[]> {
   const supabase = await createServerSupabase()
-  const { data, error } = await supabase
-    .from('producto')
-    .select('*')
-    .order('nombre', { ascending: true })
+  let query = supabase.from('producto').select('*')
+  if (q?.trim()) query = query.ilike('nombre', `%${q.trim()}%`)
+  const { data, error } = await query.order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as Producto[]
 }
@@ -156,6 +155,22 @@ export async function liquidarProducto(
     motivo: 'Liquidación',
   })
   if (error) throw new Error(error.message)
+}
+
+/** Costo de insumos consumidos por un trabajo (salidas valorizadas a costo del producto). */
+export async function costoInsumosPorTrabajo(trabajoId: string): Promise<number> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase
+    .from('movimiento_inventario')
+    .select('cantidad, producto:producto_id(costo_unitario)')
+    .eq('trabajo_id', trabajoId)
+    .eq('tipo', 'salida')
+  if (error) return 0
+  type Row = { cantidad: number; producto: { costo_unitario: number } | null }
+  return (data as unknown as Row[]).reduce(
+    (s, m) => s + Math.abs(m.cantidad) * (m.producto?.costo_unitario ?? 0),
+    0,
+  )
 }
 
 /**

@@ -2,10 +2,16 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { listProductos } from '@/lib/inventario/data'
 import { formatMoney } from '@/lib/format'
+import { SearchBox } from '@/components/ui/SearchBox'
 
-export default async function InventarioPage() {
+export default async function InventarioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
   await requireAdmin()
-  const productos = await listProductos()
+  const { q } = await searchParams
+  const productos = await listProductos(q)
   const bajos = productos.filter((p) => p.stock_actual <= p.stock_minimo).length
 
   return (
@@ -34,6 +40,8 @@ export default async function InventarioPage() {
           </Link>
         </div>
       </div>
+
+      <SearchBox placeholder="Buscar insumo…" defaultValue={q} />
 
       {productos.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">

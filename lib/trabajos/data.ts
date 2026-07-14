@@ -11,28 +11,34 @@ import type {
 import type { TrabajoInput } from './schema'
 
 const SELECT_LIST =
-  '*, doctor:doctor_id(nombre, consultorio:consultorio_id(nombre)), catalogo:catalogo_trabajo_id(nombre, categoria, variable_etiqueta)'
+  '*, doctor:doctor_id(nombre, consultorio:consultorio_id(nombre)), catalogo:catalogo_trabajo_id(nombre, categoria, variable_etiqueta), abonos:abono(monto)'
 
 type Joined = Trabajo & {
   doctor: { nombre: string; consultorio: { nombre: string } | null } | null
   catalogo: { nombre: string; categoria: string; variable_etiqueta: string | null } | null
+  abonos: { monto: number }[] | null
 }
 
 function aListItem(row: Joined): TrabajoListItem {
+  const total_pagado = (row.abonos ?? []).reduce((s, a) => s + a.monto, 0)
   return {
     ...row,
     doctor_nombre: row.doctor?.nombre ?? '—',
     consultorio_nombre: row.doctor?.consultorio?.nombre ?? '—',
     tipo_nombre: row.catalogo?.nombre ?? '—',
+    total_pagado,
+    saldo: Math.round((row.precio_acordado - total_pagado) * 100) / 100,
   }
 }
 
-export async function listTrabajos(
-  estado?: EstadoTrabajo,
-): Promise<TrabajoListItem[]> {
+export async function listTrabajos(opts?: {
+  estado?: EstadoTrabajo
+  q?: string
+}): Promise<TrabajoListItem[]> {
   const supabase = await createServerSupabase()
   let query = supabase.from('trabajo').select(SELECT_LIST)
-  if (estado) query = query.eq('estado', estado)
+  if (opts?.estado) query = query.eq('estado', opts.estado)
+  if (opts?.q?.trim()) query = query.ilike('paciente_nombre', `%${opts.q.trim()}%`)
   const { data, error } = await query
     .order('fecha_ingreso', { ascending: false })
     .order('creado_en', { ascending: false })
