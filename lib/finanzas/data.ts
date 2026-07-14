@@ -87,7 +87,8 @@ export async function consumoPorProducto(
     p_desde: desde,
     p_hasta: hasta,
   })
-  if (error) throw new Error(error.message)
+  // Si la función aún no existe (migración 0009 pendiente), no rompas Finanzas.
+  if (error) return []
   return (data ?? []).map(
     (r: { producto: string; cantidad: number; costo: number }) => ({
       producto: r.producto,
