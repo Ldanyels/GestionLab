@@ -15,6 +15,11 @@ export default async function ConfiguracionPage() {
       titulo: 'Trabajadores',
       descripcion: 'Personal, montos estándar y pagos.',
     },
+    {
+      href: '/configuracion/usuarios',
+      titulo: 'Usuarios',
+      descripcion: 'Accesos del equipo (admin / técnico).',
+    },
   ]
 
   return (

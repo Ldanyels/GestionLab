@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { login, type LoginState } from './actions'
 import { Button } from '@/components/ui/Button'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 import { LogoDiente } from '@/components/nav/icons'
 
 const initial: LoginState = { error: '' }
@@ -35,14 +36,7 @@ export default function LoginPage() {
             required
             className="w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]"
           />
-          <input
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Contraseña"
-            required
-            className="w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]"
-          />
+          <PasswordInput required placeholder="Contraseña" />
         </div>
 
         {state.error ? (

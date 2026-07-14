@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getSessionContext } from '@/lib/auth'
 import { BottomNav } from '@/components/nav/BottomNav'
 import { LogoDiente } from '@/components/nav/icons'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default async function AppLayout({
   children,
@@ -43,7 +44,8 @@ export default async function AppLayout({
           <LogoDiente className="text-[var(--color-accent)]" width={20} height={20} />
           GestionLab
         </span>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex items-center gap-3 text-sm">
+          <ThemeToggle />
           {perfil.rol === 'admin' ? (
             <Link href="/configuracion" className="text-[var(--color-muted)]">
               Configuración

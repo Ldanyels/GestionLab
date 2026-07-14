@@ -23,8 +23,9 @@
   --shadow-pop: 0 8px 30px oklch(22% 0.02 255 / 0.12);
 }
 
+/* Paleta oscura: valores reutilizados por "sistema en oscuro" y por override manual. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --color-bg: oklch(17% 0.012 260);
     --color-surface: oklch(22% 0.014 260);
     --color-text: oklch(96% 0.005 260);
@@ -35,6 +36,18 @@
     --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3);
     --shadow-pop: 0 8px 30px oklch(0% 0 0 / 0.45);
   }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: oklch(17% 0.012 260);
+  --color-surface: oklch(22% 0.014 260);
+  --color-text: oklch(96% 0.005 260);
+  --color-muted: oklch(68% 0.015 260);
+  --color-border: oklch(30% 0.014 260);
+  --color-accent: oklch(70% 0.15 255);
+  --color-accent-soft: oklch(28% 0.05 255);
+  --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3);
+  --shadow-pop: 0 8px 30px oklch(0% 0 0 / 0.45);
 }
 
 /* Exponer tokens como colores utilitarios de Tailwind */
