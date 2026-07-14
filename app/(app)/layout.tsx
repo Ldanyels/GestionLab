@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSessionContext } from '@/lib/auth'
 import { BottomNav } from '@/components/nav/BottomNav'
+import { LogoDiente } from '@/components/nav/icons'
 
 export default async function AppLayout({
   children,
@@ -38,7 +39,10 @@ export default async function AppLayout({
   return (
     <div className="min-h-dvh pb-16">
       <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 backdrop-blur">
-        <span className="font-semibold tracking-tight">GestionLab</span>
+        <span className="flex items-center gap-2 font-semibold tracking-tight">
+          <LogoDiente className="text-[var(--color-accent)]" width={20} height={20} />
+          GestionLab
+        </span>
         <nav className="flex items-center gap-4 text-sm">
           {perfil.rol === 'admin' ? (
             <Link href="/configuracion" className="text-[var(--color-muted)]">

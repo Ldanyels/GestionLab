@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Oculta el indicador flotante de desarrollo (tapaba la barra de navegación).
+  devIndicators: false,
 };
 
 export default nextConfig;

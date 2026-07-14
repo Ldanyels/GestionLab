@@ -63,7 +63,7 @@ export default async function TrabajoDetallePage({
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
           <p className="text-[var(--color-muted)]">Precio acordado</p>
-          <p className="text-lg font-semibold tabular-nums">
+          <p className="num text-lg font-semibold">
             {formatMoney(t.precio_acordado)}
           </p>
         </div>

@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { login, type LoginState } from './actions'
 import { Button } from '@/components/ui/Button'
+import { LogoDiente } from '@/components/nav/icons'
 
 const initial: LoginState = { error: '' }
 
@@ -12,8 +13,13 @@ export default function LoginPage() {
   return (
     <main className="min-h-dvh flex items-center justify-center p-6">
       <form action={action} className="w-full max-w-sm space-y-5">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">GestionLab</h1>
+        <div className="space-y-2">
+          <LogoDiente
+            className="text-[var(--color-accent)]"
+            width={40}
+            height={40}
+          />
+          <h1 className="text-3xl font-semibold tracking-tight">GestionLab</h1>
           <p className="text-sm text-[var(--color-muted)]">
             Gestión para laboratorios dentales
           </p>

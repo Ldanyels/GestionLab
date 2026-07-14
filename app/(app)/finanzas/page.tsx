@@ -41,11 +41,11 @@ export default async function FinanzasPage() {
         <p className="font-medium">Desglose de gastos</p>
         <div className="mt-1 flex justify-between text-[var(--color-muted)]">
           <span>Materiales + merma</span>
-          <span className="tabular-nums">{formatMoney(res.materiales)}</span>
+          <span className="num">{formatMoney(res.materiales)}</span>
         </div>
         <div className="flex justify-between text-[var(--color-muted)]">
           <span>Pagos a trabajadores</span>
-          <span className="tabular-nums">{formatMoney(res.pagos)}</span>
+          <span className="num">{formatMoney(res.pagos)}</span>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ function Tile({
   return (
     <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
       <p className="text-sm text-[var(--color-muted)]">{label}</p>
-      <p className={`text-2xl font-semibold tabular-nums ${className}`}>{valor}</p>
+      <p className={`num text-2xl font-semibold ${className}`}>{valor}</p>
     </div>
   )
 }

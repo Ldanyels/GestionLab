@@ -34,15 +34,15 @@ export async function PagosSection({
       <div className="grid grid-cols-3 gap-2 text-center text-sm">
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-2">
           <p className="text-[var(--color-muted)]">Precio</p>
-          <p className="font-semibold tabular-nums">{formatMoney(precio)}</p>
+          <p className="num font-semibold">{formatMoney(precio)}</p>
         </div>
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-2">
           <p className="text-[var(--color-muted)]">Pagado</p>
-          <p className="font-semibold tabular-nums">{formatMoney(pagado)}</p>
+          <p className="num font-semibold">{formatMoney(pagado)}</p>
         </div>
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-2">
           <p className="text-[var(--color-muted)]">Saldo</p>
-          <p className={`font-semibold tabular-nums ${saldoColor}`}>
+          <p className={`num font-semibold ${saldoColor}`}>
             {formatMoney(saldo)}
           </p>
         </div>
