@@ -8,7 +8,7 @@ import { EtapasEditor } from '@/components/catalogo/EtapasEditor'
 import { RecetaEditor } from '@/components/catalogo/RecetaEditor'
 import { listReceta } from '@/lib/recetas/data'
 import { listProductos } from '@/lib/inventario/data'
-import { eliminarCatalogoAction } from '../actions'
+import { eliminarCatalogoAction, archivarCatalogoAction } from '../actions'
 
 export default async function CatalogoDetallePage({
   params,
@@ -45,21 +45,37 @@ export default async function CatalogoDetallePage({
               </span>
             ) : null}
           </p>
+          {!item.activo ? (
+            <span className="mt-1 inline-block rounded-full bg-[var(--color-muted)]/15 px-2 py-0.5 text-xs text-[var(--color-muted)]">
+              Archivado
+            </span>
+          ) : null}
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap justify-end gap-2">
           <Link
             href={`/configuracion/catalogo/${item.id}/editar`}
             className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
           >
             Editar
           </Link>
+          <form action={archivarCatalogoAction}>
+            <input type="hidden" name="id" value={item.id} />
+            <input type="hidden" name="activo" value={item.activo ? 'false' : 'true'} />
+            <button
+              type="submit"
+              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+            >
+              {item.activo ? 'Archivar' : 'Reactivar'}
+            </button>
+          </form>
           <ConfirmDialog
             action={eliminarCatalogoAction}
             fields={{ id: item.id }}
-            triggerLabel="Eliminar"
+            triggerLabel="Eliminar definitivo"
             triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
-            title="Eliminar trabajo"
-            message={`¿Eliminar "${item.nombre}" y sus etapas? Esta acción no se puede deshacer.`}
+            title="Eliminar definitivo"
+            message={`Esto borra "${item.nombre}", sus etapas, receta y TODOS los trabajos de este tipo. No se puede deshacer. ¿Prefieres archivar? Si estás seguro, confirma.`}
+            confirmLabel="Sí, eliminar todo"
           />
         </div>
       </div>

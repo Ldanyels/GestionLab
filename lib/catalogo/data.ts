@@ -3,15 +3,23 @@ import { laboratorioIdActual } from '@/lib/tenant'
 import type { CatalogoTrabajo, CatalogoConEtapas, PlantillaEtapa } from './types'
 import type { CatalogoInput, EtapaInput } from './schema'
 
-export async function listCatalogo(): Promise<CatalogoTrabajo[]> {
+export async function listCatalogo(
+  incluirArchivados = false,
+): Promise<CatalogoTrabajo[]> {
   const supabase = await createServerSupabase()
-  const { data, error } = await supabase
-    .from('catalogo_trabajo')
-    .select('*')
+  let query = supabase.from('catalogo_trabajo').select('*')
+  query = incluirArchivados ? query.eq('activo', false) : query.eq('activo', true)
+  const { data, error } = await query
     .order('categoria', { ascending: true })
     .order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as CatalogoTrabajo[]
+}
+
+export async function archivarCatalogo(id: string, activo: boolean): Promise<void> {
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.from('catalogo_trabajo').update({ activo }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function getCatalogoItem(

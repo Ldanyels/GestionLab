@@ -7,6 +7,7 @@ import {
   crearCatalogo,
   editarCatalogo,
   eliminarCatalogo,
+  archivarCatalogo,
   crearEtapa,
   editarEtapa,
   eliminarEtapa,
@@ -68,6 +69,17 @@ export async function eliminarCatalogoAction(formData: FormData): Promise<void> 
   await eliminarCatalogo(id)
   revalidatePath('/configuracion/catalogo')
   redirect('/configuracion/catalogo')
+}
+
+export async function archivarCatalogoAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const activo = String(formData.get('activo') ?? '') === 'true'
+  if (!id) return
+  await archivarCatalogo(id, activo)
+  revalidatePath('/configuracion/catalogo')
+  revalidatePath(`/configuracion/catalogo/${id}`)
+  redirect(activo ? `/configuracion/catalogo/${id}` : '/configuracion/catalogo')
 }
 
 // ── Etapas ──────────────────────────────────────────────────

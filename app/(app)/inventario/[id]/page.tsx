@@ -6,7 +6,11 @@ import { ETIQUETA_MOV } from '@/lib/inventario/types'
 import { formatMoney } from '@/lib/format'
 import { MovimientoForm } from '@/components/inventario/MovimientoForm'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { eliminarProductoAction, eliminarMovimientoAction } from '../actions'
+import {
+  eliminarProductoAction,
+  eliminarMovimientoAction,
+  archivarProductoAction,
+} from '../actions'
 
 export default async function ProductoDetallePage({
   params,
@@ -30,21 +34,37 @@ export default async function ProductoDetallePage({
           <p className="text-sm text-[var(--color-muted)]">
             {formatMoney(p.costo_unitario)} / {p.unidad} · mínimo {p.stock_minimo}
           </p>
+          {!p.activo ? (
+            <span className="mt-1 inline-block rounded-full bg-[var(--color-muted)]/15 px-2 py-0.5 text-xs text-[var(--color-muted)]">
+              Archivado
+            </span>
+          ) : null}
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap justify-end gap-2">
           <Link
             href={`/inventario/${p.id}/editar`}
             className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
           >
             Editar
           </Link>
+          <form action={archivarProductoAction}>
+            <input type="hidden" name="id" value={p.id} />
+            <input type="hidden" name="activo" value={p.activo ? 'false' : 'true'} />
+            <button
+              type="submit"
+              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+            >
+              {p.activo ? 'Archivar' : 'Reactivar'}
+            </button>
+          </form>
           <ConfirmDialog
             action={eliminarProductoAction}
             fields={{ id: p.id }}
-            triggerLabel="Eliminar"
+            triggerLabel="Eliminar definitivo"
             triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
-            title="Eliminar insumo"
-            message={`¿Eliminar "${p.nombre}" y su historial de movimientos?`}
+            title="Eliminar definitivo"
+            message={`Esto borra "${p.nombre}" y todo su historial de movimientos. No se puede deshacer. ¿Prefieres archivar? Si estás seguro, confirma.`}
+            confirmLabel="Sí, eliminar"
           />
         </div>
       </div>

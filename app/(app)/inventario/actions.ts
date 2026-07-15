@@ -11,6 +11,7 @@ import {
   registrarMovimiento,
   eliminarMovimiento,
   liquidarProducto,
+  archivarProducto,
 } from '@/lib/inventario/data'
 
 export interface FormState {
@@ -96,6 +97,17 @@ export async function eliminarMovimientoAction(formData: FormData): Promise<void
     revalidatePath(`/inventario/${productoId}`)
     revalidatePath('/inventario')
   }
+}
+
+export async function archivarProductoAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const activo = String(formData.get('activo') ?? '') === 'true'
+  if (!id) return
+  await archivarProducto(id, activo)
+  revalidatePath('/inventario')
+  revalidatePath(`/inventario/${id}`)
+  redirect(activo ? `/inventario/${id}` : '/inventario')
 }
 
 export async function liquidarProductoAction(formData: FormData): Promise<void> {

@@ -3,9 +3,14 @@ import { requireAdmin } from '@/lib/auth'
 import { listCatalogo } from '@/lib/catalogo/data'
 import { formatMoney } from '@/lib/format'
 
-export default async function CatalogoPage() {
+export default async function CatalogoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ archivados?: string }>
+}) {
   await requireAdmin()
-  const items = await listCatalogo()
+  const verArchivados = (await searchParams).archivados === '1'
+  const items = await listCatalogo(verArchivados)
 
   const categorias = [...new Set(items.map((i) => i.categoria))]
 
@@ -26,9 +31,18 @@ export default async function CatalogoPage() {
         </Link>
       </div>
 
+      <Link
+        href={verArchivados ? '/configuracion/catalogo' : '/configuracion/catalogo?archivados=1'}
+        className="inline-block text-sm text-[var(--color-muted)] underline"
+      >
+        {verArchivados ? '← Ver activos' : 'Ver archivados'}
+      </Link>
+
       {items.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          Aún no hay trabajos. Toca “+ Nuevo” o carga la semilla de MasterLab.
+          {verArchivados
+            ? 'No hay trabajos archivados.'
+            : 'Aún no hay trabajos. Toca “+ Nuevo” o carga la semilla de MasterLab.'}
         </p>
       ) : (
         <div className="space-y-6">

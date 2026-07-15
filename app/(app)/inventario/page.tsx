@@ -7,11 +7,12 @@ import { SearchBox } from '@/components/ui/SearchBox'
 export default async function InventarioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; archivados?: string }>
 }) {
   await requireAdmin()
-  const { q } = await searchParams
-  const productos = await listProductos(q)
+  const { q, archivados } = await searchParams
+  const verArchivados = archivados === '1'
+  const productos = await listProductos(q, verArchivados)
   const bajos = productos.filter((p) => p.stock_actual <= p.stock_minimo).length
 
   return (
@@ -42,6 +43,13 @@ export default async function InventarioPage({
       </div>
 
       <SearchBox placeholder="Buscar insumo…" defaultValue={q} />
+
+      <Link
+        href={verArchivados ? '/inventario' : '/inventario?archivados=1'}
+        className="inline-block text-sm text-[var(--color-muted)] underline"
+      >
+        {verArchivados ? '← Ver activos' : 'Ver archivados'}
+      </Link>
 
       {productos.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">

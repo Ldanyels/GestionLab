@@ -4,13 +4,23 @@ import { filasConsumoPorReceta } from '@/lib/recetas/data'
 import type { Movimiento, Producto, ProductoConMovimientos } from './types'
 import { deltaMovimiento, type MovimientoInput, type ProductoInput } from './schema'
 
-export async function listProductos(q?: string): Promise<Producto[]> {
+export async function listProductos(
+  q?: string,
+  incluirArchivados = false,
+): Promise<Producto[]> {
   const supabase = await createServerSupabase()
   let query = supabase.from('producto').select('*')
+  query = incluirArchivados ? query.eq('activo', false) : query.eq('activo', true)
   if (q?.trim()) query = query.ilike('nombre', `%${q.trim()}%`)
   const { data, error } = await query.order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as Producto[]
+}
+
+export async function archivarProducto(id: string, activo: boolean): Promise<void> {
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.from('producto').update({ activo }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function getProducto(
