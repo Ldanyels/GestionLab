@@ -7,11 +7,12 @@ import { getSessionPerfil } from '@/lib/auth'
 export default async function ConsultoriosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; archivados?: string }>
 }) {
-  const { q } = await searchParams
+  const { q, archivados } = await searchParams
+  const verArchivados = archivados === '1'
   const [consultorios, perfil] = await Promise.all([
-    listConsultorios(q),
+    listConsultorios(q, verArchivados),
     getSessionPerfil(),
   ])
 
@@ -39,9 +40,20 @@ export default async function ConsultoriosPage({
 
       <SearchBox placeholder="Buscar consultorio…" defaultValue={q} />
 
+      <Link
+        href={verArchivados ? '/consultorios' : '/consultorios?archivados=1'}
+        className="inline-block text-sm text-[var(--color-muted)] underline"
+      >
+        {verArchivados ? '← Ver activos' : 'Ver archivados'}
+      </Link>
+
       {consultorios.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          Aún no hay consultorios. Toca “+ Nuevo” para agregar el primero.
+          {verArchivados
+            ? 'No hay consultorios archivados.'
+            : q
+              ? 'Sin resultados para tu búsqueda.'
+              : 'Aún no hay consultorios. Toca “+ Nuevo” para agregar el primero.'}
         </p>
       ) : (
         <ul className="space-y-2">

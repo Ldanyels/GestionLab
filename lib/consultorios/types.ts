@@ -4,6 +4,7 @@ export interface Consultorio {
   nombre: string
   contacto: string | null
   notas: string | null
+  activo: boolean
   creado_en: string
 }
 
@@ -13,6 +14,7 @@ export interface Doctor {
   consultorio_id: string
   nombre: string
   contacto: string | null
+  activo: boolean
   creado_en: string
 }
 

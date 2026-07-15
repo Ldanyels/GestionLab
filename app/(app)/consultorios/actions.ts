@@ -10,6 +10,8 @@ import {
   crearDoctor,
   editarDoctor,
   eliminarDoctor,
+  archivarConsultorio,
+  archivarDoctor,
 } from '@/lib/consultorios/data'
 
 export interface FormState {
@@ -59,6 +61,25 @@ export async function eliminarConsultorioAction(formData: FormData): Promise<voi
   await eliminarConsultorio(id)
   revalidatePath('/consultorios')
   redirect('/consultorios')
+}
+
+export async function archivarConsultorioAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '')
+  const activo = String(formData.get('activo') ?? '') === 'true'
+  if (!id) return
+  await archivarConsultorio(id, activo)
+  revalidatePath('/consultorios')
+  revalidatePath(`/consultorios/${id}`)
+  redirect(activo ? `/consultorios/${id}` : '/consultorios')
+}
+
+export async function archivarDoctorAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '')
+  const consultorioId = String(formData.get('consultorio_id') ?? '')
+  const activo = String(formData.get('activo') ?? '') === 'true'
+  if (!id) return
+  await archivarDoctor(id, activo)
+  if (consultorioId) revalidatePath(`/consultorios/${consultorioId}`)
 }
 
 export async function crearDoctorAction(
