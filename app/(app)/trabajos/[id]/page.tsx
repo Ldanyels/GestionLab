@@ -44,6 +44,7 @@ export default async function TrabajoDetallePage({
           <p className="text-sm text-[var(--color-muted)]">
             {t.doctor_nombre} · {t.consultorio_nombre}
             {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
+            {t.pieza ? ` · pza ${t.pieza}` : ''}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">

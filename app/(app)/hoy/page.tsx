@@ -87,6 +87,7 @@ export default async function HoyPage() {
                   <p className="mt-1 truncate text-sm text-[var(--color-muted)]">
                     {t.doctor_nombre} · {t.consultorio_nombre}
                     {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
+                    {t.pieza ? ` · pza ${t.pieza}` : ''}
                     {t.fecha_entrega ? ` · entrega ${t.fecha_entrega}` : ''}
                   </p>
                 </Link>

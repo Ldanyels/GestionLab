@@ -94,6 +94,7 @@ export async function crearTrabajo(input: TrabajoInput): Promise<string> {
       doctor_id: input.doctor_id,
       catalogo_trabajo_id: input.catalogo_trabajo_id,
       paciente_nombre: input.paciente_nombre,
+      pieza: input.pieza,
       fecha_entrega: input.fecha_entrega,
       variable_cantidad: input.variable_cantidad,
       precio_acordado: precio,
@@ -150,6 +151,7 @@ export async function editarTrabajo(
     .update({
       doctor_id: input.doctor_id,
       paciente_nombre: input.paciente_nombre,
+      pieza: input.pieza,
       fecha_entrega: input.fecha_entrega,
       variable_cantidad: input.variable_cantidad,
       precio_acordado: precio,

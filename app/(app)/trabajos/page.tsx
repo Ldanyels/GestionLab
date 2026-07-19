@@ -93,6 +93,7 @@ export default async function TrabajosPage({
                     />
                     {t.doctor_nombre} · {t.consultorio_nombre}
                     {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
+                    {t.pieza ? ` · pza ${t.pieza}` : ''}
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
                     <PagoChip saldo={t.saldo} />

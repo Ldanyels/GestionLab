@@ -22,6 +22,7 @@ export const trabajoSchema = z.object({
   doctor_id: z.string().uuid('Selecciona un doctor'),
   catalogo_trabajo_id: z.string().uuid('Selecciona un tipo de trabajo'),
   paciente_nombre: opcionalTexto,
+  pieza: opcionalTexto,
   variable_cantidad: z.coerce.number().int().min(0).default(0),
   precio_manual: precioManualOpcional,
   fecha_entrega: fechaOpcional,

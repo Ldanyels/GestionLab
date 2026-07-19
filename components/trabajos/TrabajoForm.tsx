@@ -104,15 +104,26 @@ export function TrabajoForm({ action, doctores, tipos, trabajo, submitLabel }: P
         <input type="hidden" name="variable_cantidad" value={0} />
       )}
 
-      <label className="block space-y-1">
-        <span className={labelText}>Paciente (opcional)</span>
-        <input
-          name="paciente_nombre"
-          defaultValue={trabajo?.paciente_nombre ?? ''}
-          placeholder="Nombre del paciente"
-          className={inputClass}
-        />
-      </label>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block space-y-1">
+          <span className={labelText}>Paciente (opcional)</span>
+          <input
+            name="paciente_nombre"
+            defaultValue={trabajo?.paciente_nombre ?? ''}
+            placeholder="Nombre del paciente"
+            className={inputClass}
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className={labelText}>Pieza / diente (opcional)</span>
+          <input
+            name="pieza"
+            defaultValue={trabajo?.pieza ?? ''}
+            placeholder="Ej. 11, 21"
+            className={inputClass}
+          />
+        </label>
+      </div>
 
       <label className="block space-y-1">
         <span className={labelText}>Fecha de entrega (opcional)</span>

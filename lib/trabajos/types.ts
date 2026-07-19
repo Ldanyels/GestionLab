@@ -6,6 +6,7 @@ export interface Trabajo {
   doctor_id: string
   catalogo_trabajo_id: string
   paciente_nombre: string | null
+  pieza: string | null
   fecha_ingreso: string
   fecha_entrega: string | null
   estado: EstadoTrabajo
