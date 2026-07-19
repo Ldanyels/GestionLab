@@ -70,7 +70,12 @@ export function DoctorRow({ doctor }: { doctor: Doctor }) {
     <li className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
       <span className="min-w-0">
         <span className="block truncate font-medium">
-          {doctor.nombre}
+          <Link
+            href={`/doctores/${doctor.id}`}
+            className="underline decoration-transparent underline-offset-2 hover:decoration-[var(--color-muted)]"
+          >
+            {doctor.nombre}
+          </Link>
           {!doctor.activo ? (
             <span className="ml-2 rounded-full bg-[var(--color-muted)]/15 px-2 py-0.5 text-xs font-normal text-[var(--color-muted)]">
               Archivado

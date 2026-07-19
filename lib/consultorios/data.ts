@@ -55,6 +55,40 @@ export interface DoctorOpcion {
   consultorio_nombre: string
 }
 
+export interface DoctorDetalle {
+  id: string
+  nombre: string
+  activo: boolean
+  consultorio_id: string
+  consultorio_nombre: string
+}
+
+/** Un doctor con el nombre de su consultorio (para su página de trabajos). */
+export async function getDoctor(id: string): Promise<DoctorDetalle | null> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase
+    .from('doctor')
+    .select('id, nombre, activo, consultorio_id, consultorio:consultorio_id(nombre)')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) return null
+  const row = data as unknown as {
+    id: string
+    nombre: string
+    activo: boolean
+    consultorio_id: string
+    consultorio: { nombre: string } | null
+  }
+  return {
+    id: row.id,
+    nombre: row.nombre,
+    activo: row.activo,
+    consultorio_id: row.consultorio_id,
+    consultorio_nombre: row.consultorio?.nombre ?? '—',
+  }
+}
+
 /** Doctores del laboratorio con el nombre de su consultorio, para selectores. */
 export async function listDoctoresConConsultorio(): Promise<DoctorOpcion[]> {
   const supabase = await createServerSupabase()

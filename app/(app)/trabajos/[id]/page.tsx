@@ -42,10 +42,22 @@ export default async function TrabajoDetallePage({
             <EstadoBadge estado={t.estado} />
           </div>
           <p className="text-sm text-[var(--color-muted)]">
-            {t.doctor_nombre} · {t.consultorio_nombre}
+            <Link
+              href={`/doctores/${t.doctor_id}`}
+              className="text-[var(--color-accent)]"
+            >
+              {t.doctor_nombre}
+            </Link>{' '}
+            · {t.consultorio_nombre}
             {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
             {t.pieza ? ` · pza ${t.pieza}` : ''}
           </p>
+          <Link
+            href={`/trabajos/nuevo?doctor=${t.doctor_id}`}
+            className="text-sm font-medium text-[var(--color-accent)]"
+          >
+            + Otro trabajo para {t.doctor_nombre}
+          </Link>
         </div>
         <div className="flex shrink-0 gap-2">
           <Link
