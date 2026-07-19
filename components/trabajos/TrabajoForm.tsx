@@ -19,10 +19,18 @@ interface Props {
   doctores: DoctorOpcion[]
   tipos: CatalogoTrabajo[]
   trabajo?: Trabajo
+  doctorInicial?: string
   submitLabel: string
 }
 
-export function TrabajoForm({ action, doctores, tipos, trabajo, submitLabel }: Props) {
+export function TrabajoForm({
+  action,
+  doctores,
+  tipos,
+  trabajo,
+  doctorInicial,
+  submitLabel,
+}: Props) {
   const [state, formAction, pending] = useActionState(action, initial)
   const [tipoId, setTipoId] = useState(trabajo?.catalogo_trabajo_id ?? '')
   const [cantidad, setCantidad] = useState(trabajo?.variable_cantidad ?? 1)
@@ -41,7 +49,7 @@ export function TrabajoForm({ action, doctores, tipos, trabajo, submitLabel }: P
         <select
           name="doctor_id"
           required
-          defaultValue={trabajo?.doctor_id ?? ''}
+          defaultValue={trabajo?.doctor_id ?? doctorInicial ?? ''}
           className={inputClass}
         >
           <option value="" disabled>

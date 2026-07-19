@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -84,13 +85,21 @@ export function DoctorRow({ doctor }: { doctor: Doctor }) {
       </span>
       <span className="flex shrink-0 items-center gap-3 pl-2 text-sm">
         {doctor.activo ? (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="text-[var(--color-accent)]"
-          >
-            Editar
-          </button>
+          <>
+            <Link
+              href={`/trabajos/nuevo?doctor=${doctor.id}`}
+              className="font-medium text-[var(--color-accent)]"
+            >
+              + Trabajo
+            </Link>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-[var(--color-accent)]"
+            >
+              Editar
+            </button>
+          </>
         ) : null}
         <form action={archivarDoctorAction}>
           <input type="hidden" name="id" value={doctor.id} />

@@ -4,7 +4,12 @@ import { listCatalogo } from '@/lib/catalogo/data'
 import { TrabajoForm } from '@/components/trabajos/TrabajoForm'
 import { crearTrabajoAction } from '../actions'
 
-export default async function NuevoTrabajoPage() {
+export default async function NuevoTrabajoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ doctor?: string }>
+}) {
+  const { doctor } = await searchParams
   const [doctores, tipos] = await Promise.all([
     listDoctoresConConsultorio(),
     listCatalogo(),
@@ -48,6 +53,7 @@ export default async function NuevoTrabajoPage() {
           action={crearTrabajoAction}
           doctores={doctores}
           tipos={tipos}
+          doctorInicial={doctor}
           submitLabel="Crear trabajo"
         />
       )}
