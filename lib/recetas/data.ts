@@ -16,10 +16,13 @@ export interface RecetaItem {
   unidad: string
 }
 
-/** Salida (delta con signo) que genera cada insumo de una receta. Puro y testeable. */
+/**
+ * Salida (delta con signo) que genera cada insumo de una receta. Puro y testeable.
+ * `multiplicador` = cantidad de piezas del trabajo (1 por defecto).
+ */
 export function filasConsumoPorReceta(
   recetas: ReadonlyArray<{ producto_id: string; cantidad: number }>,
-  ctx: { laboratorioId: string; trabajoId: string },
+  ctx: { laboratorioId: string; trabajoId: string; multiplicador?: number },
 ): Array<{
   laboratorio_id: string
   producto_id: string
@@ -28,13 +31,17 @@ export function filasConsumoPorReceta(
   cantidad: number
   motivo: string
 }> {
+  const mult =
+    ctx.multiplicador && Number.isFinite(ctx.multiplicador) && ctx.multiplicador >= 1
+      ? Math.trunc(ctx.multiplicador)
+      : 1
   return recetas.map((r) => ({
     laboratorio_id: ctx.laboratorioId,
     producto_id: r.producto_id,
     trabajo_id: ctx.trabajoId,
     tipo: 'salida',
-    cantidad: -Math.abs(r.cantidad),
-    motivo: 'Consumo por trabajo',
+    cantidad: -Math.abs(r.cantidad) * mult,
+    motivo: mult > 1 ? `Consumo por trabajo (×${mult})` : 'Consumo por trabajo',
   }))
 }
 

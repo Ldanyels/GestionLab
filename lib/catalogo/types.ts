@@ -6,6 +6,7 @@ export interface CatalogoTrabajo {
   precio_base: number
   variable_etiqueta: string | null
   variable_precio_unitario: number | null
+  orden: number
   activo: boolean
   creado_en: string
 }

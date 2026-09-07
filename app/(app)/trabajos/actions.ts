@@ -25,6 +25,7 @@ function leerTrabajo(formData: FormData) {
     catalogo_trabajo_id: String(formData.get('catalogo_trabajo_id') ?? ''),
     paciente_nombre: String(formData.get('paciente_nombre') ?? ''),
     pieza: String(formData.get('pieza') ?? ''),
+    cantidad: String(formData.get('cantidad') ?? '1'),
     variable_cantidad: String(formData.get('variable_cantidad') ?? '0'),
     precio_manual: String(formData.get('precio_manual') ?? ''),
     fecha_entrega: String(formData.get('fecha_entrega') ?? ''),

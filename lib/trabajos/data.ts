@@ -1,6 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { laboratorioIdActual } from '@/lib/tenant'
-import { precioEfectivo } from '@/lib/catalogo/precio'
+import { precioTotalTrabajo } from '@/lib/catalogo/precio'
 import type { EstadoEtapa, EstadoTrabajo } from './estado'
 import type {
   Trabajo,
@@ -81,11 +81,12 @@ export async function crearTrabajo(input: TrabajoInput): Promise<string> {
 
   const precio =
     input.precio_manual ??
-    precioEfectivo(
+    precioTotalTrabajo(
       {
         precio_base: cat.precio_base,
         variable_precio_unitario: cat.variable_precio_unitario,
       },
+      input.cantidad,
       input.variable_cantidad,
     )
 
@@ -98,6 +99,7 @@ export async function crearTrabajo(input: TrabajoInput): Promise<string> {
       paciente_nombre: input.paciente_nombre,
       pieza: input.pieza,
       fecha_entrega: input.fecha_entrega,
+      cantidad: input.cantidad,
       variable_cantidad: input.variable_cantidad,
       precio_acordado: precio,
       notas: input.notas,
@@ -141,11 +143,12 @@ export async function editarTrabajo(
     .maybeSingle()
   const precio =
     input.precio_manual ??
-    precioEfectivo(
+    precioTotalTrabajo(
       {
         precio_base: cat?.precio_base ?? 0,
         variable_precio_unitario: cat?.variable_precio_unitario ?? null,
       },
+      input.cantidad,
       input.variable_cantidad,
     )
   const { error } = await supabase
@@ -155,6 +158,7 @@ export async function editarTrabajo(
       paciente_nombre: input.paciente_nombre,
       pieza: input.pieza,
       fecha_entrega: input.fecha_entrega,
+      cantidad: input.cantidad,
       variable_cantidad: input.variable_cantidad,
       precio_acordado: precio,
       notas: input.notas,

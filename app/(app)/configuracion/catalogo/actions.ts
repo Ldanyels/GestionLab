@@ -12,6 +12,7 @@ import {
   editarEtapa,
   eliminarEtapa,
   intercambiarOrdenEtapas,
+  intercambiarOrdenCatalogo,
 } from '@/lib/catalogo/data'
 import { requireAdmin } from '@/lib/auth'
 import {
@@ -80,6 +81,17 @@ export async function archivarCatalogoAction(formData: FormData): Promise<void> 
   revalidatePath('/configuracion/catalogo')
   revalidatePath(`/configuracion/catalogo/${id}`)
   redirect(activo ? `/configuracion/catalogo/${id}` : '/configuracion/catalogo')
+}
+
+export async function moverCatalogoAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const aId = String(formData.get('a_id') ?? '')
+  const bId = String(formData.get('b_id') ?? '')
+  const aOrden = Number(formData.get('a_orden'))
+  const bOrden = Number(formData.get('b_orden'))
+  if (!aId || !bId || Number.isNaN(aOrden) || Number.isNaN(bOrden)) return
+  await intercambiarOrdenCatalogo({ id: aId, orden: aOrden }, { id: bId, orden: bOrden })
+  revalidatePath('/configuracion/catalogo')
 }
 
 // ── Etapas ──────────────────────────────────────────────────

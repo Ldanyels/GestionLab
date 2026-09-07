@@ -37,6 +37,7 @@ export default async function TrabajoDetallePage({
           </Link>
           <div className="flex items-center gap-2">
             <h1 className="truncate text-xl font-semibold tracking-tight">
+              {t.cantidad > 1 ? `${t.cantidad} × ` : ''}
               {t.tipo_nombre}
             </h1>
             <EstadoBadge estado={t.estado} />
@@ -61,6 +62,12 @@ export default async function TrabajoDetallePage({
         </div>
         <div className="flex shrink-0 gap-2">
           <Link
+            href={`/trabajos/${t.id}/recibo`}
+            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+          >
+            Recibo
+          </Link>
+          <Link
             href={`/trabajos/${t.id}/editar`}
             className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
           >
@@ -84,6 +91,11 @@ export default async function TrabajoDetallePage({
           <p className="num text-lg font-semibold">
             {formatMoney(t.precio_acordado)}
           </p>
+          {t.cantidad > 1 ? (
+            <p className="text-xs text-[var(--color-muted)]">
+              {t.cantidad} piezas
+            </p>
+          ) : null}
         </div>
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
           <p className="text-[var(--color-muted)]">Ingreso</p>

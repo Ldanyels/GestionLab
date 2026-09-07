@@ -11,6 +11,7 @@ export interface Trabajo {
   fecha_entrega: string | null
   estado: EstadoTrabajo
   precio_acordado: number
+  cantidad: number
   variable_cantidad: number
   notas: string | null
   creado_en: string

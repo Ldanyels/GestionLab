@@ -81,7 +81,10 @@ export default async function TrabajosPage({
                 className="block rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:border-[var(--color-accent)]"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate font-medium">{t.tipo_nombre}</span>
+                  <span className="min-w-0 truncate font-medium">
+                    {t.cantidad > 1 ? `${t.cantidad} × ` : ''}
+                    {t.tipo_nombre}
+                  </span>
                   <EstadoBadge estado={t.estado} />
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2 text-sm text-[var(--color-muted)]">

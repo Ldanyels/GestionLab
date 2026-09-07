@@ -3,7 +3,8 @@
 import { useActionState, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { formatMoney } from '@/lib/format'
-import { precioEfectivo } from '@/lib/catalogo/precio'
+import { precioEfectivo, precioTotalTrabajo } from '@/lib/catalogo/precio'
+import { TipoCombobox } from './TipoCombobox'
 import type { FormState } from '@/app/(app)/trabajos/actions'
 import type { DoctorOpcion } from '@/lib/consultorios/data'
 import type { CatalogoTrabajo } from '@/lib/catalogo/types'
@@ -13,6 +14,8 @@ const initial: FormState = { error: '' }
 const inputClass =
   'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 const labelText = 'text-sm text-[var(--color-muted)]'
+const stepperBtnClass =
+  'h-11 w-12 shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] text-xl leading-none active:border-[var(--color-accent)]'
 
 interface Props {
   action: (prev: FormState, formData: FormData) => Promise<FormState>
@@ -33,15 +36,27 @@ export function TrabajoForm({
 }: Props) {
   const [state, formAction, pending] = useActionState(action, initial)
   const [tipoId, setTipoId] = useState(trabajo?.catalogo_trabajo_id ?? '')
-  const [cantidad, setCantidad] = useState(trabajo?.variable_cantidad ?? 1)
+  const [tipoError, setTipoError] = useState('')
+  const [piezas, setPiezas] = useState(trabajo?.cantidad ?? 1)
+  const [varCantidad, setVarCantidad] = useState(trabajo?.variable_cantidad ?? 1)
   const [manual, setManual] = useState(false)
 
   const tipo = useMemo(() => tipos.find((t) => t.id === tipoId), [tipos, tipoId])
-  const categorias = useMemo(() => [...new Set(tipos.map((t) => t.categoria))], [tipos])
-  const precioCalculado = tipo ? precioEfectivo(tipo, tipo.variable_etiqueta ? cantidad : 0) : 0
+  const cantidadVariable = tipo?.variable_etiqueta ? varCantidad : 0
+  const precioUnitario = tipo ? precioEfectivo(tipo, cantidadVariable) : 0
+  const precioCalculado = tipo ? precioTotalTrabajo(tipo, piezas, cantidadVariable) : 0
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        if (!tipoId) {
+          e.preventDefault()
+          setTipoError('Selecciona un tipo de trabajo')
+        }
+      }}
+      className="space-y-4"
+    >
       {trabajo ? <input type="hidden" name="id" value={trabajo.id} /> : null}
 
       <label className="block space-y-1">
@@ -63,48 +78,74 @@ export function TrabajoForm({
         </select>
       </label>
 
-      <label className="block space-y-1">
-        <span className={labelText}>Tipo de trabajo</span>
-        <select
-          name="catalogo_trabajo_id"
-          required
+      <div className="space-y-1">
+        <span id="tipo-trabajo-label" className={labelText}>
+          Tipo de trabajo
+        </span>
+        <TipoCombobox
+          tipos={tipos}
           value={tipoId}
-          onChange={(e) => setTipoId(e.target.value)}
+          onChange={(id) => {
+            setTipoId(id)
+            setTipoError('')
+          }}
           disabled={!!trabajo}
-          className={inputClass}
-        >
-          <option value="" disabled>
-            Selecciona un tipo…
-          </option>
-          {categorias.map((cat) => (
-            <optgroup key={cat} label={cat}>
-              {tipos
-                .filter((t) => t.categoria === cat)
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.nombre} — {formatMoney(t.precio_base)}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </select>
-        {trabajo ? (
-          <input type="hidden" name="catalogo_trabajo_id" value={tipoId} />
+          labelId="tipo-trabajo-label"
+        />
+        <input type="hidden" name="catalogo_trabajo_id" value={tipoId} />
+        {tipoError ? (
+          <p role="alert" className="text-sm text-[var(--color-danger)]">
+            {tipoError}
+          </p>
         ) : null}
-      </label>
+      </div>
+
+      <div className="space-y-1">
+        <span className={labelText}>
+          Cantidad (mismo trabajo para varios dientes)
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Quitar una pieza"
+            onClick={() => setPiezas((p) => Math.max(1, p - 1))}
+            className={stepperBtnClass}
+          >
+            −
+          </button>
+          <input
+            name="cantidad"
+            type="number"
+            min="1"
+            step="1"
+            value={piezas}
+            onChange={(e) => setPiezas(Math.max(1, Number(e.target.value) || 1))}
+            className={`${inputClass} text-center`}
+          />
+          <button
+            type="button"
+            aria-label="Agregar una pieza"
+            onClick={() => setPiezas((p) => p + 1)}
+            className={stepperBtnClass}
+          >
+            +
+          </button>
+        </div>
+      </div>
 
       {tipo?.variable_etiqueta ? (
         <label className="block space-y-1">
           <span className={labelText}>
-            Cantidad de {tipo.variable_etiqueta} (× {formatMoney(tipo.variable_precio_unitario ?? 0)})
+            Cantidad de {tipo.variable_etiqueta} por pieza (×{' '}
+            {formatMoney(tipo.variable_precio_unitario ?? 0)})
           </span>
           <input
             name="variable_cantidad"
             type="number"
             min="0"
             step="1"
-            value={cantidad}
-            onChange={(e) => setCantidad(Number(e.target.value))}
+            value={varCantidad}
+            onChange={(e) => setVarCantidad(Number(e.target.value))}
             className={inputClass}
           />
         </label>
@@ -146,8 +187,15 @@ export function TrabajoForm({
       <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
         <div className="flex items-center justify-between">
           <span className={labelText}>Precio</span>
-          <span className="text-lg font-semibold tabular-nums">
-            {manual ? 'Manual' : formatMoney(precioCalculado)}
+          <span className="text-right">
+            {!manual && piezas > 1 ? (
+              <span className="block text-xs text-[var(--color-muted)]">
+                {piezas} × {formatMoney(precioUnitario)}
+              </span>
+            ) : null}
+            <span className="text-lg font-semibold tabular-nums">
+              {manual ? 'Manual' : formatMoney(precioCalculado)}
+            </span>
           </span>
         </div>
         <label className="mt-2 flex items-center gap-2 text-sm">

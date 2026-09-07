@@ -199,20 +199,22 @@ export async function descontarInsumosPorTrabajo(trabajoId: string): Promise<voi
 
   const { data: trabajo } = await supabase
     .from('trabajo')
-    .select('catalogo_trabajo_id')
+    .select('catalogo_trabajo_id, cantidad')
     .eq('id', trabajoId)
     .maybeSingle()
   if (!trabajo) return
+  const t = trabajo as { catalogo_trabajo_id: string; cantidad: number | null }
 
   const { data: recetas } = await supabase
     .from('receta')
     .select('producto_id, cantidad')
-    .eq('catalogo_trabajo_id', (trabajo as { catalogo_trabajo_id: string }).catalogo_trabajo_id)
+    .eq('catalogo_trabajo_id', t.catalogo_trabajo_id)
   if (!recetas || recetas.length === 0) return
 
   const filas = filasConsumoPorReceta(recetas as { producto_id: string; cantidad: number }[], {
     laboratorioId: await laboratorioIdActual(),
     trabajoId,
+    multiplicador: t.cantidad ?? 1,
   })
   const { error } = await supabase.from('movimiento_inventario').insert(filas)
   if (error) throw new Error(error.message)

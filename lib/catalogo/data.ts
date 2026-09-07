@@ -11,6 +11,7 @@ export async function listCatalogo(
   query = incluirArchivados ? query.eq('activo', false) : query.eq('activo', true)
   const { data, error } = await query
     .order('categoria', { ascending: true })
+    .order('orden', { ascending: true })
     .order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as CatalogoTrabajo[]
@@ -40,10 +41,30 @@ export async function getCatalogoItem(
 
 export async function crearCatalogo(input: CatalogoInput): Promise<void> {
   const supabase = await createServerSupabase()
+  const { data: maxRow } = await supabase
+    .from('catalogo_trabajo')
+    .select('orden')
+    .eq('categoria', input.categoria)
+    .order('orden', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const orden = ((maxRow as { orden: number } | null)?.orden ?? 0) + 1
   const { error } = await supabase
     .from('catalogo_trabajo')
-    .insert({ ...input, laboratorio_id: await laboratorioIdActual() })
+    .insert({ ...input, orden, laboratorio_id: await laboratorioIdActual() })
   if (error) throw new Error(error.message)
+}
+
+/** Intercambia el orden de dos tipos de trabajo (mover arriba/abajo en su categoría). */
+export async function intercambiarOrdenCatalogo(
+  a: { id: string; orden: number },
+  b: { id: string; orden: number },
+): Promise<void> {
+  const supabase = await createServerSupabase()
+  const e1 = await supabase.from('catalogo_trabajo').update({ orden: b.orden }).eq('id', a.id)
+  if (e1.error) throw new Error(e1.error.message)
+  const e2 = await supabase.from('catalogo_trabajo').update({ orden: a.orden }).eq('id', b.id)
+  if (e2.error) throw new Error(e2.error.message)
 }
 
 export async function editarCatalogo(
@@ -51,7 +72,24 @@ export async function editarCatalogo(
   input: CatalogoInput,
 ): Promise<void> {
   const supabase = await createServerSupabase()
-  const { error } = await supabase.from('catalogo_trabajo').update(input).eq('id', id)
+  // Si cambia de categoría, va al final de la nueva (evita chocar órdenes).
+  const { data: actual } = await supabase
+    .from('catalogo_trabajo')
+    .select('categoria')
+    .eq('id', id)
+    .maybeSingle()
+  let cambios: CatalogoInput & { orden?: number } = input
+  if (actual && (actual as { categoria: string }).categoria !== input.categoria) {
+    const { data: maxRow } = await supabase
+      .from('catalogo_trabajo')
+      .select('orden')
+      .eq('categoria', input.categoria)
+      .order('orden', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    cambios = { ...input, orden: ((maxRow as { orden: number } | null)?.orden ?? 0) + 1 }
+  }
+  const { error } = await supabase.from('catalogo_trabajo').update(cambios).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
