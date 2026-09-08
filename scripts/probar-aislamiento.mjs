@@ -422,6 +422,20 @@ async function limpiar(laboratorios, usuarios) {
       await admin.from('perfil').delete().eq('id', p.id)
     }
 
+    // `auditoria.laboratorio_id` es un uuid suelto, sin llave foránea, así que
+    // borrar el laboratorio NO arrastra sus registros de auditoría: los
+    // disparadores de la migración 0010 escriben una fila por cada inserción
+    // de la siembra y quedarían huérfanos para siempre.
+    const { error: errAuditoria, count } = await admin
+      .from('auditoria')
+      .delete({ count: 'exact' })
+      .eq('laboratorio_id', id)
+    if (errAuditoria && errAuditoria.code !== 'PGRST205') {
+      console.log(`  ✗ auditoría de ${id} — ${errAuditoria.message}`)
+    } else if (count) {
+      console.log(`  · auditoría de ${id}: ${count} registro(s)`)
+    }
+
     const { error } = await admin.from('laboratorio').delete().eq('id', id)
     console.log(`  ${error ? '✗' : '·'} laboratorio ${id}${error ? ` — ${error.message}` : ''}`)
   }
