@@ -14,11 +14,13 @@ interface Props {
   etiqueta: string
   valor: string
   tono?: Tono
+  /** Clases extra del contenedor, ej. `col-span-full` para importes largos. */
+  className?: string
 }
 
-export function KpiTile({ etiqueta, valor, tono = 'normal' }: Props) {
+export function KpiTile({ etiqueta, valor, tono = 'normal', className = '' }: Props) {
   return (
-    <Card className="px-4 py-3.5">
+    <Card className={`px-4 py-3.5 ${className}`}>
       <p className="text-[12.5px] font-semibold text-[var(--color-muted)]">{etiqueta}</p>
       <p className={`num mt-0.5 text-[26px] font-bold leading-tight ${COLOR[tono]}`}>
         {valor}

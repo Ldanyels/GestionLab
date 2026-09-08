@@ -35,6 +35,8 @@ export default async function HoyPage() {
             etiqueta="Por cobrar"
             valor={formatMoney(datos.resumen.porCobrar)}
             tono="peligro"
+            // En móvil ocupa la fila completa: un importe grande no cabe a media pantalla.
+            className="col-span-full sm:col-span-1"
           />
         ) : null}
       </div>

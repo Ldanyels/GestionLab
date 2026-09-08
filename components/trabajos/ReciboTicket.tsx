@@ -3,7 +3,7 @@
 import type { LineaRecibo } from '@/lib/recibos/lineas'
 
 const btnClass =
-  'inline-flex h-10 items-center rounded-[var(--radius-md)] px-4 text-sm font-medium'
+  'inline-flex h-11 items-center rounded-[var(--radius-md)] px-4 text-sm font-semibold'
 
 interface Props {
   lineas: LineaRecibo[]
@@ -15,13 +15,13 @@ interface Props {
 export function ReciboTicket({ lineas, pdfHref, pdfLabel = 'Exportar PDF' }: Props) {
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => window.print()}
           className={`${btnClass} bg-[var(--color-accent)] text-[var(--color-accent-contrast)]`}
         >
-          Imprimir
+          Imprimir 80 mm
         </button>
         <a
           href={pdfHref}
@@ -33,7 +33,7 @@ export function ReciboTicket({ lineas, pdfHref, pdfLabel = 'Exportar PDF' }: Pro
 
       <div
         id="recibo-print"
-        className="mx-auto w-[80mm] max-w-full border border-dashed border-[var(--color-border)] bg-white p-3 font-mono text-[12px] leading-5 text-black"
+        className="mx-auto w-[360px] max-w-full border border-dashed border-[var(--color-border)] bg-white p-4 font-mono text-[13px] leading-[1.7] text-black"
       >
         {lineas.map((l, i) =>
           l.separador ? (
