@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#F6F7F9;--surface:#FFFFFF;--surface2:#FBFCFD;--text:#14181F;--muted:#626B7A;--border:#E5E8EE;--accent:#2F6FED;--accentSoft:#EAF1FE;--accentInk:#1B4FBF;--danger:#DC2A2A;--dangerSoft:#FDECEC;--success:#12855F;--successSoft:#E7F6EF;--warn:#B45309;--warnSoft:#FEF3E2;--accentOn:#FFFFFF;--accentGlow:rgba(47,111,237,.28);--shadow:0 1px 2px rgba(20,24,31,.05),0 1px 3px rgba(20,24,31,.05);--pop:0 14px 40px rgba(20,24,31,.18)}
+:root[data-theme='dark']{--bg:#0F1216;--surface:#171B21;--surface2:#1D222A;--text:#F2F4F7;--muted:#9AA4B2;--border:#2A303A;--accent:#7EA6FF;--accentSoft:#1D2942;--accentInk:#BBD0FF;--danger:#FF7A7A;--dangerSoft:#3A2020;--success:#4ED8A5;--successSoft:#12301F;--warn:#F5B461;--warnSoft:#332413;--accentOn:#0E141C;--accentGlow:rgba(126,166,255,.22);--shadow:0 1px 2px rgba(0,0,0,.45);--pop:0 14px 40px rgba(0,0,0,.55)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-wrap:pretty}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accentInk)}
+input,select,textarea,button{font-family:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.85}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes sheetIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:var(--bg)">
+
+<sc-if value="{{ sLogin }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)">
+  <div style="width:100%;max-width:1000px;display:flex;gap:48px;align-items:center;justify-content:center;flex-wrap:wrap-reverse">
+    <div style="flex:1 1 320px;min-width:280px;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3C4.8 3 3.2 4.9 3.6 7.4c.2 1.7.9 3.2 1.4 5.6.4 1.9.5 6 1.9 6 1.2 0 1.1-3.4 2.1-4.7.4-.5 1.6-.5 2 0 1 1.3.9 4.7 2.1 4.7 1.4 0 1.5-4.1 1.9-6 .5-2.4 1.2-3.9 1.4-5.6C20.8 4.9 19.2 3 17 3c-1.9 0-2.8 1-5 1S8.9 3 7 3Z"></path></svg>
+        <span style="font-size:20px;font-weight:700;letter-spacing:-.02em">GestionLab</span>
+      </div>
+      <h1 style="margin:0 0 6px;font-size:26px;font-weight:700;letter-spacing:-.02em">Entrar al laboratorio</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:var(--muted)">Gestión de trabajos, cobranza e insumos.</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:var(--muted)">Correo
+          <input type="email" value="masterlab@gmail.com" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 14px;font-size:15px" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:var(--muted)">Contraseña
+          <span style="position:relative;display:block">
+            <input type="password" value="secreto123" style="width:100%;height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 46px 0 14px;font-size:15px" />
+            <button type="button" aria-label="Mostrar contraseña" style="position:absolute;right:6px;top:6px;height:36px;width:36px;display:grid;place-items:center;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:10px" style-hover="background:var(--accentSoft);color:var(--accent)">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </span>
+        </label>
+        <button type="button" onClick="{{ entrar }}" style="height:50px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;transition:transform .12s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.985)">Ingresar</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)">
+          <a href="#" style="font-weight:500">¿Olvidaste tu contraseña?</a>
+          <button type="button" onClick="{{ toggleTheme }}" style="border:1px solid var(--border);background:var(--surface);border-radius:999px;height:32px;padding:0 12px;font-size:12px;color:var(--muted);cursor:pointer">Modo claro / oscuro</button>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1 1 300px;min-width:260px;max-width:420px;padding:8px">
+      <p style="margin:0 0 18px;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Rediseño 2026</p>
+      <h2 style="margin:0 0 14px;font-size:34px;line-height:1.12;font-weight:700;letter-spacing:-.03em;text-wrap:balance">Todo el laboratorio en una pantalla, sin perder un solo dato.</h2>
+      <p style="margin:0;font-size:15px;line-height:1.55;color:var(--muted)">Misma funcionalidad que hoy — trabajos, etapas, abonos, inventario, recetas, reportes y permisos — con jerarquía clara, cero texto cortado y acciones al alcance del pulgar.</p>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ inApp }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;min-height:100vh;align-items:stretch">
+
+  <sc-if value="{{ wide }}">
+  <aside style="width:236px;flex:0 0 236px;border-right:1px solid var(--border);background:var(--surface);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 8px 18px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3C4.8 3 3.2 4.9 3.6 7.4c.2 1.7.9 3.2 1.4 5.6.4 1.9.5 6 1.9 6 1.2 0 1.1-3.4 2.1-4.7.4-.5 1.6-.5 2 0 1 1.3.9 4.7 2.1 4.7 1.4 0 1.5-4.1 1.9-6 .5-2.4 1.2-3.9 1.4-5.6C20.8 4.9 19.2 3 17 3c-1.9 0-2.8 1-5 1S8.9 3 7 3Z"></path></svg>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-.02em">GestionLab</span>
+    </div>
+    <sc-for list="{{ navItems }}" as="it" hint-placeholder-count="5">
+      <button type="button" onClick="{{ it.go }}" style="display:flex;align-items:center;gap:11px;height:44px;padding:0 12px;border:0;border-radius:12px;background:{{ it.bg }};color:{{ it.fg }};font-size:14.5px;font-weight:{{ it.weight }};cursor:pointer;text-align:left;width:100%" style-hover="background:var(--accentSoft)">
+        <span style="display:grid;place-items:center;width:22px;height:22px" dangerouslySetInnerHTML="{{ it.icon }}"></span>
+        {{ it.label }}
+      </button>
+    </sc-for>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--border)">
+      <button type="button" onClick="{{ goConfig }}" style="display:flex;align-items:center;gap:11px;height:42px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;text-align:left" style-hover="background:var(--accentSoft);color:var(--accent)">Configuración</button>
+      <button type="button" onClick="{{ toggleTheme }}" style="display:flex;align-items:center;gap:11px;height:42px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;text-align:left" style-hover="background:var(--accentSoft);color:var(--accent)">Tema claro / oscuro</button>
+      <button type="button" onClick="{{ salir }}" style="display:flex;align-items:center;gap:11px;height:42px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;text-align:left" style-hover="background:var(--dangerSoft);color:var(--danger)">Salir</button>
+    </div>
+  </aside>
+  </sc-if>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <sc-if value="{{ narrow }}">
+    <header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface)">
+      <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;letter-spacing:-.02em">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3C4.8 3 3.2 4.9 3.6 7.4c.2 1.7.9 3.2 1.4 5.6.4 1.9.5 6 1.9 6 1.2 0 1.1-3.4 2.1-4.7.4-.5 1.6-.5 2 0 1 1.3.9 4.7 2.1 4.7 1.4 0 1.5-4.1 1.9-6 .5-2.4 1.2-3.9 1.4-5.6C20.8 4.9 19.2 3 17 3c-1.9 0-2.8 1-5 1S8.9 3 7 3Z"></path></svg>
+        GestionLab
+      </span>
+      <span style="display:flex;align-items:center;gap:4px">
+        <button type="button" onClick="{{ toggleTheme }}" aria-label="Cambiar tema" style="width:40px;height:40px;display:grid;place-items:center;border:0;background:transparent;color:var(--muted);border-radius:12px;cursor:pointer" style-hover="background:var(--accentSoft);color:var(--accent)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"></path></svg>
+        </button>
+        <button type="button" onClick="{{ goConfig }}" aria-label="Configuración" style="width:40px;height:40px;display:grid;place-items:center;border:0;background:transparent;color:var(--muted);border-radius:12px;cursor:pointer" style-hover="background:var(--accentSoft);color:var(--accent)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"></path></svg>
+        </button>
+        <button type="button" onClick="{{ salir }}" aria-label="Salir" style="width:40px;height:40px;display:grid;place-items:center;border:0;background:transparent;color:var(--muted);border-radius:12px;cursor:pointer" style-hover="background:var(--dangerSoft);color:var(--danger)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h9"></path></svg>
+        </button>
+      </span>
+    </header>
+    </sc-if>
+
+    <main style="flex:1;width:100%;max-width:880px;margin:0 auto;padding:18px 16px 110px">
+<sc-if value="{{ sHoy }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>
+      <p style="margin:0 0 2px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Martes 8 de setiembre</p>
+      <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.03em">Hoy</h1>
+    </div>
+    <div style="display:flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--border);border-radius:999px">
+      <button type="button" onClick="{{ verA }}" style="height:32px;padding:0 14px;border:0;border-radius:999px;background:{{ bgA }};color:{{ fgA }};font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">Dirección A</button>
+      <button type="button" onClick="{{ verB }}" style="height:32px;padding:0 14px;border:0;border-radius:999px;background:{{ bgB }};color:{{ fgB }};font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">Dirección B</button>
+    </div>
+  </div>
+
+  <sc-if value="{{ hoyA }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)">
+        <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Entregas de hoy</p>
+        <p style="margin:0;font-size:26px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ hoyCount }}</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)">
+        <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">En curso</p>
+        <p style="margin:0;font-size:26px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ kpiEnCurso }}</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)">
+        <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Por cobrar</p>
+        <p style="margin:0;font-size:26px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em;color:var(--danger)">{{ kpiDeuda }}</p>
+      </div>
+    </div>
+
+    <button type="button" onClick="{{ nuevoTrabajo }}" style="display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border:0;border-radius:16px;background:var(--accent);color:var(--accentOn);font-size:16.5px;font-weight:600;cursor:pointer;box-shadow:0 6px 18px var(--accentGlow)" style-active="transform:scale(.99)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      Nuevo trabajo
+    </button>
+
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em">Agenda de entregas</h2>
+        <button type="button" onClick="{{ irTrabajos }}" style="border:0;background:transparent;color:var(--accent);font-size:13.5px;font-weight:600;cursor:pointer;padding:0">Ver todos →</button>
+      </div>
+      <sc-if value="{{ hoyHay }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ hoyEntregas }}" as="e" hint-placeholder-count="3">
+          <button type="button" onClick="{{ e.abrir }}" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ e.color }};border-radius:14px;padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s" style-hover="transform:translateY(-1px)">
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:15.5px;font-weight:600;line-height:1.25;text-wrap:balance">{{ e.titulo }}</span>
+              <span style="font-size:13px;color:var(--muted)">{{ e.cliente }}</span>
+            </span>
+            <span style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+              <span style="font-size:11.5px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:999px;background:{{ e.hoyBg }};color:{{ e.hoyFg }}">{{ e.hoy }}</span>
+              <span style="font-size:14px;font-weight:600;font-family:'Geist Mono',monospace">{{ e.precio }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      </sc-if>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em">A quién cobrar</h2>
+        <button type="button" onClick="{{ irCuentas }}" style="border:0;background:transparent;color:var(--accent);font-size:13.5px;font-weight:600;cursor:pointer;padding:0">Estado de cuenta →</button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden">
+        <sc-for list="{{ cuentasTop }}" as="c" hint-placeholder-count="4">
+          <button type="button" onClick="{{ c.abrir }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--border);padding:13px 15px;cursor:pointer" style-hover="background:var(--surface2)">
+            <span style="width:8px;height:8px;border-radius:999px;background:{{ c.color }};flex-shrink:0"></span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:15px;font-weight:600">{{ c.nombre }}</span>
+              <span style="font-size:12.5px;color:var(--muted)">{{ c.detalle }}</span>
+            </span>
+            <span style="font-size:15px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--danger)">{{ c.monto }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ hoyB }}">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div>
+          <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:var(--muted)">Por cobrar acumulado</p>
+          <p style="margin:0;font-size:38px;line-height:1;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.03em;color:var(--danger)">{{ kpiDeuda }}</p>
+          <p style="margin:8px 0 0;font-size:13px;color:var(--muted)">{{ kpiEnCurso }} trabajos en curso · {{ hoyCount }} entregas próximas</p>
+        </div>
+        <button type="button" onClick="{{ irCuentas }}" style="height:42px;padding:0 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14px;font-weight:600;cursor:pointer">Cobrar</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" onClick="{{ nuevoTrabajo }}" style="flex:1 1 160px;height:48px;border:0;border-radius:14px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">+ Nuevo trabajo</button>
+        <button type="button" onClick="{{ irReportes }}" style="flex:1 1 160px;height:48px;border:1px solid var(--border);border-radius:14px;background:var(--surface);font-size:15px;font-weight:600;cursor:pointer">Emitir reporte</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+        <p style="margin:0 0 10px;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn)">En curso</p>
+        <p style="margin:0 0 2px;font-size:30px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ kpiEnCurso }}</p>
+        <p style="margin:0;font-size:13px;color:var(--muted)">en producción</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+        <p style="margin:0 0 10px;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--success)">Entregados</p>
+        <p style="margin:0 0 2px;font-size:30px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ kpiEntregados }}</p>
+        <p style="margin:0;font-size:13px;color:var(--muted)">pendientes de cobro</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+        <p style="margin:0 0 10px;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent)">Facturado mes</p>
+        <p style="margin:0 0 2px;font-size:24px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ kpiMes }}</p>
+        <p style="margin:0;font-size:13px;color:var(--muted)">setiembre 2026</p>
+      </div>
+    </div>
+
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <h2 style="margin:0;font-size:17px;font-weight:700">Próximas entregas</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ hoyEntregas }}" as="e" hint-placeholder-count="3">
+          <button type="button" onClick="{{ e.abrir }}" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer" style-hover="background:var(--surface2)">
+            <span style="width:44px;height:44px;border-radius:12px;background:{{ e.hoyBg }};color:{{ e.hoyFg }};display:grid;place-items:center;font-size:11.5px;font-weight:700;white-space:nowrap;flex-shrink:0">{{ e.hoy }}</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:15px;font-weight:600;line-height:1.25">{{ e.titulo }}</span>
+              <span style="font-size:12.5px;color:var(--muted)">{{ e.cliente }}</span>
+            </span>
+            <span style="font-size:14px;font-weight:600;font-family:'Geist Mono',monospace;flex-shrink:0">{{ e.precio }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTrabajos }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em">Trabajos</h1>
+    <button type="button" onClick="{{ nuevoTrabajo }}" style="height:44px;padding:0 16px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer;flex-shrink:0">+ Nuevo</button>
+  </div>
+
+  <div style="position:relative">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:absolute;left:14px;top:15px;color:var(--muted)"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="Buscar por paciente, doctor o tipo…" style="width:100%;height:48px;border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:0 14px 0 42px;font-size:15px" />
+  </div>
+
+  <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+    <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="4">
+      <button type="button" onClick="{{ f.set }}" style="flex-shrink:0;height:36px;padding:0 14px;border:1px solid {{ f.bd }};border-radius:999px;background:{{ f.bg }};color:{{ f.fg }};font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">{{ f.label }} <span style="font-family:'Geist Mono',monospace;opacity:.75">{{ f.n }}</span></button>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:9px">
+    <sc-for list="{{ lista }}" as="t" hint-placeholder-count="6">
+      <button type="button" onClick="{{ t.abrir }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ t.color }};border-radius:14px;padding:14px;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:9px;transition:transform .12s" style-hover="transform:translateY(-1px)">
+        <span style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <span style="font-size:16px;font-weight:600;line-height:1.28;text-wrap:balance">{{ t.titulo }}</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;padding:4px 9px;border-radius:999px;background:{{ t.chipBg }};color:{{ t.chipFg }};font-size:11.5px;font-weight:700;white-space:nowrap">
+            <span style="width:6px;height:6px;border-radius:999px;background:{{ t.chipDot }}"></span>{{ t.chipT }}
+          </span>
+        </span>
+        <span style="font-size:13px;color:var(--muted);line-height:1.4">{{ t.cliente }}</span>
+        <span style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11.5px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:8px;background:{{ t.deudaBg }};color:{{ t.deudaFg }};font-family:'Geist Mono',monospace">{{ t.deuda }}</span>
+            <span style="font-size:12px;color:var(--muted)">Entrega {{ t.entrega }}</span>
+          </span>
+          <span style="font-size:16px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.01em">{{ t.precio }}</span>
+        </span>
+      </button>
+    </sc-for>
+    <sc-if value="{{ listaVacia }}">
+    <div style="padding:48px 20px;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:16px">
+      <p style="margin:0 0 4px;font-size:15px;font-weight:600">Sin resultados</p>
+      <p style="margin:0;font-size:13.5px;color:var(--muted)">Cambia el filtro o limpia la búsqueda.</p>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ sForm }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ formVolver }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0" style-hover="background:var(--surface2)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+    </button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">{{ formTitulo }}</h1>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Consultorio y doctor
+      <select value="{{ doctorSel }}" onChange="{{ setDoctor }}" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px">
+        <option value="">Selecciona un doctor…</option>
+        <sc-for list="{{ doctoresOpts }}" as="d" hint-placeholder-count="3"><option value="{{ d.v }}">{{ d.v }}</option></sc-for>
+      </select>
+    </label>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <h2 style="margin:0;font-size:16px;font-weight:700">Trabajos de la cuenta</h2>
+      <span style="font-size:12.5px;color:var(--muted)">{{ nLineas }} línea(s)</span>
+    </div>
+    <sc-for list="{{ lineasVals }}" as="l" hint-placeholder-count="1">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <button type="button" onClick="{{ l.abrirPicker }}" style="flex:1;min-width:0;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:8px 12px;cursor:pointer;font-size:15px" style-hover="border-color:var(--accent)">
+            <span style="min-width:0;font-weight:500;line-height:1.3">{{ l.nombre }}</span>
+            <span style="display:flex;align-items:center;gap:8px;flex-shrink:0;color:var(--muted)">
+              <span style="font-family:'Geist Mono',monospace;font-size:13.5px">{{ l.precio }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg>
+            </span>
+          </button>
+          <sc-if value="{{ l.puedeQuitar }}">
+          <button type="button" onClick="{{ l.quitar }}" aria-label="Quitar línea" style="width:48px;flex-shrink:0;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--danger);cursor:pointer;display:grid;place-items:center" style-hover="background:var(--dangerSoft)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+          </button>
+          </sc-if>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:600;color:var(--muted)">Cantidad</span>
+          <span style="display:flex;align-items:center;border:1px solid var(--border);border-radius:12px;overflow:hidden">
+            <button type="button" onClick="{{ l.menos }}" aria-label="Menos" style="width:46px;height:44px;border:0;background:var(--surface);color:var(--text);font-size:20px;cursor:pointer" style-hover="background:var(--surface2)">−</button>
+            <span style="width:52px;text-align:center;font-size:16px;font-weight:600;font-family:'Geist Mono',monospace">{{ l.cant }}</span>
+            <button type="button" onClick="{{ l.mas }}" aria-label="Más" style="width:46px;height:44px;border:0;background:var(--surface);color:var(--text);font-size:20px;cursor:pointer" style-hover="background:var(--surface2)">+</button>
+          </span>
+          <input value="{{ l.pieza }}" onInput="{{ l.setPieza }}" placeholder="Pieza / diente (11, 21)" style="flex:1 1 150px;min-width:0;height:44px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--muted)">Subtotal</span>
+          <span style="font-size:16px;font-weight:700;font-family:'Geist Mono',monospace">{{ l.sub }}</span>
+        </div>
+      </div>
+    </sc-for>
+    <button type="button" onClick="{{ agregarLinea }}" style="height:48px;border:1.5px dashed var(--border);border-radius:14px;background:transparent;color:var(--accent);font-size:14.5px;font-weight:600;cursor:pointer" style-hover="background:var(--accentSoft);border-color:var(--accent)">+ Agregar otro trabajo</button>
+    <sc-if value="{{ avisoEtapas }}">
+    <p style="margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)">Al cambiar las líneas, las etapas ya creadas no se recalculan.</p>
+    </sc-if>
+  </section>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Paciente <span style="font-weight:400">(opcional)</span>
+      <input value="{{ paciente }}" onInput="{{ setPaciente }}" placeholder="Nombre del paciente" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Fecha de entrega <span style="font-weight:400">(opcional)</span>
+      <input type="date" value="{{ entrega }}" onChange="{{ setEntrega }}" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Notas <span style="font-weight:400">(opcional)</span>
+      <textarea value="{{ notas }}" onInput="{{ setNotas }}" rows="3" placeholder="Indicaciones, color, observaciones…" style="border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:10px 12px;font-size:15px;resize:vertical"></textarea>
+    </label>
+  </div>
+
+  <div style="position:sticky;bottom:76px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:14px 16px;box-shadow:var(--pop);display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-size:14px;font-weight:600;color:var(--muted)">Total de la cuenta</span>
+      <span style="font-size:26px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ totalCuenta }}</span>
+    </div>
+    <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);cursor:pointer">
+      <input type="checkbox" checked="{{ manual }}" onChange="{{ toggleManual }}" style="width:20px;height:20px;margin:0;accent-color:#2F6FED;flex-shrink:0" />
+      <span style="line-height:1.4">Ingresar un monto manual (ej. cobrar solo hasta donde se hizo)</span>
+    </label>
+    <sc-if value="{{ manual }}">
+    <input placeholder="Monto final (S/)" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+    </sc-if>
+    <button type="button" onClick="{{ formAccion }}" style="height:52px;border:0;border-radius:14px;background:var(--accent);color:var(--accentOn);font-size:16px;font-weight:600;cursor:pointer" style-active="transform:scale(.99)">{{ formCta }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ pickerAbierto }}">
+<div style="position:fixed;inset:0;z-index:80;background:rgba(10,13,18,.5);display:flex;align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:560px;max-height:82vh;background:var(--surface);border-radius:22px 22px 0 0;display:flex;flex-direction:column;box-shadow:var(--pop);animation:sheetIn .22s ease-out">
+    <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 style="margin:0;font-size:17px;font-weight:700">Tipo de trabajo</h3>
+        <button type="button" onClick="{{ cerrarPicker }}" style="width:36px;height:36px;border:0;background:var(--surface2);border-radius:10px;cursor:pointer;color:var(--muted);display:grid;place-items:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+      <input value="{{ pickerQ }}" onInput="{{ setPickerQ }}" placeholder="Buscar tipo de trabajo…" autoFocus="{{ true }}" style="height:46px;border:1px solid var(--accent);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </div>
+    <div style="overflow-y:auto;padding:8px 8px 16px">
+      <sc-for list="{{ pickerGrupos }}" as="g" hint-placeholder-count="3">
+        <div style="padding:12px 8px 6px;font-size:11.5px;font-weight:700;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">{{ g.cat }}</div>
+        <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="4">
+          <button type="button" onClick="{{ i.elegir }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;border:0;background:transparent;border-radius:12px;padding:12px;cursor:pointer;font-size:15px" style-hover="background:var(--accentSoft)">
+            <span style="min-width:0;line-height:1.3">{{ i.n }}</span>
+            <span style="flex-shrink:0;font-family:'Geist Mono',monospace;font-size:13.5px;color:var(--muted);white-space:nowrap">{{ i.p }}</span>
+          </button>
+        </sc-for>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ sTrabajoDet }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverTrabajos }}" aria-label="Volver a trabajos" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0" style-hover="background:var(--surface2)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+    </button>
+    <span style="font-size:13.5px;color:var(--muted);font-weight:500">Trabajos</span>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ tColor }};border-radius:18px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+      <div style="min-width:0">
+        <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance">{{ tTitulo }}</h1>
+        <p style="margin:0;font-size:14px;color:var(--muted)">{{ tCliente }} · {{ tPaciente }} · {{ tPieza }}</p>
+      </div>
+      <span style="flex-shrink:0;padding:5px 11px;border-radius:999px;background:{{ tChipBg }};color:{{ tChipFg }};font-size:12px;font-weight:700">{{ tChip }}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+      <div style="background:var(--surface2);border-radius:12px;padding:11px 13px">
+        <p style="margin:0 0 3px;font-size:12px;color:var(--muted);font-weight:600">Precio acordado</p>
+        <p style="margin:0;font-size:18px;font-weight:700;font-family:'Geist Mono',monospace">{{ tPrecio }}</p>
+      </div>
+      <div style="background:var(--surface2);border-radius:12px;padding:11px 13px">
+        <p style="margin:0 0 3px;font-size:12px;color:var(--muted);font-weight:600">Saldo</p>
+        <p style="margin:0;font-size:18px;font-weight:700;font-family:'Geist Mono',monospace;color:{{ tSaldoFg }}">{{ tSaldo }}</p>
+      </div>
+      <div style="background:var(--surface2);border-radius:12px;padding:11px 13px">
+        <p style="margin:0 0 3px;font-size:12px;color:var(--muted);font-weight:600">Ingreso</p>
+        <p style="margin:0;font-size:15px;font-weight:600;font-family:'Geist Mono',monospace">{{ tIngreso }}</p>
+      </div>
+      <div style="background:var(--surface2);border-radius:12px;padding:11px 13px">
+        <p style="margin:0 0 3px;font-size:12px;color:var(--muted);font-weight:600">Entrega</p>
+        <p style="margin:0;font-size:15px;font-weight:600;font-family:'Geist Mono',monospace">{{ tEntrega }}</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" onClick="{{ cerrarTrabajo }}" style="flex:1 1 150px;height:46px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">Cerrar trabajo</button>
+      <button type="button" onClick="{{ marcarEntregado }}" style="flex:1 1 150px;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14.5px;font-weight:600;cursor:pointer" style-hover="background:var(--successSoft);border-color:var(--success);color:var(--success)">Marcar entregado</button>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-top:4px">
+      <button type="button" onClick="{{ irRecibo }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">Recibo</button>
+      <button type="button" onClick="{{ irEditar }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">Editar</button>
+      <button type="button" onClick="{{ nuevoTrabajo }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">+ Otro trabajo para este doctor</button>
+      <button type="button" onClick="{{ eliminarTrabajo }}" style="border:0;background:transparent;padding:0;color:var(--danger);font-size:14px;font-weight:600;cursor:pointer;margin-left:auto">Eliminar</button>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)">
+    <h2 style="margin:0 0 12px;font-size:16px;font-weight:700">Trabajos de la cuenta</h2>
+    <sc-for list="{{ tLineas }}" as="l" hint-placeholder-count="1">
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;font-size:14.5px">
+        <span style="color:var(--muted)">{{ l.n }}</span>
+        <span style="font-weight:600;font-family:'Geist Mono',monospace;flex-shrink:0">{{ l.p }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)">
+    <h2 style="margin:0 0 12px;font-size:16px;font-weight:700">Costeo del trabajo</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center">
+      <div><p style="margin:0 0 4px;font-size:12px;color:var(--muted);font-weight:600">Precio</p><p style="margin:0;font-size:16px;font-weight:700;font-family:'Geist Mono',monospace">{{ tPrecio }}</p></div>
+      <div><p style="margin:0 0 4px;font-size:12px;color:var(--muted);font-weight:600">Insumos</p><p style="margin:0;font-size:16px;font-weight:700;font-family:'Geist Mono',monospace">{{ tInsumos }}</p></div>
+      <div><p style="margin:0 0 4px;font-size:12px;color:var(--muted);font-weight:600">Margen</p><p style="margin:0;font-size:16px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--success)">{{ tMargen }}</p></div>
+    </div>
+    <p style="margin:12px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)">El costo de insumos se calcula al cerrar el trabajo, según su receta.</p>
+  </div>
+
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <h2 style="margin:0;font-size:16px;font-weight:700">Etapas</h2>
+      <span style="font-size:13px;font-weight:600;color:var(--muted);font-family:'Geist Mono',monospace">{{ progresoTxt }}</span>
+    </div>
+    <div style="height:8px;border-radius:999px;background:var(--surface2);overflow:hidden">
+      <div style="height:100%;width:{{ progreso }};background:var(--accent);border-radius:999px;transition:width .3s"></div>
+    </div>
+    <sc-for list="{{ etapas }}" as="e" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:12px">
+        <span style="flex:1;min-width:0;font-size:14.5px;font-weight:500">{{ e.n }}</span>
+        <span style="flex-shrink:0;padding:4px 9px;border-radius:999px;background:{{ e.bg }};color:{{ e.fg }};font-size:11.5px;font-weight:700;white-space:nowrap">{{ e.estado }}</span>
+        <button type="button" onClick="{{ e.avanzar }}" style="flex-shrink:0;height:34px;padding:0 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent)">Avanzar</button>
+        <button type="button" onClick="{{ e.excluir }}" style="flex-shrink:0;height:34px;padding:0 11px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:13px;cursor:pointer" style-hover="color:var(--danger)">Excluir</button>
+      </div>
+    </sc-for>
+  </section>
+
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Pagos</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:var(--surface2);border-radius:12px;padding:10px 12px"><p style="margin:0 0 3px;font-size:11.5px;color:var(--muted);font-weight:600">Precio</p><p style="margin:0;font-size:15px;font-weight:700;font-family:'Geist Mono',monospace">{{ tPrecio }}</p></div>
+      <div style="background:var(--surface2);border-radius:12px;padding:10px 12px"><p style="margin:0 0 3px;font-size:11.5px;color:var(--muted);font-weight:600">Pagado</p><p style="margin:0;font-size:15px;font-weight:700;font-family:'Geist Mono',monospace">{{ tPagado }}</p></div>
+      <div style="background:var(--surface2);border-radius:12px;padding:10px 12px"><p style="margin:0 0 3px;font-size:11.5px;color:var(--muted);font-weight:600">Saldo</p><p style="margin:0;font-size:15px;font-weight:700;font-family:'Geist Mono',monospace;color:{{ tSaldoFg }}">{{ tSaldo }}</p></div>
+    </div>
+    <sc-if value="{{ sinAbonos }}" hint-placeholder-val="{{ true }}">
+    <p style="margin:0;font-size:13.5px;color:var(--muted)">Sin abonos aún. El primero se registra como adelanto.</p>
+    </sc-if>
+    <sc-for list="{{ abonos }}" as="a" hint-placeholder-count="0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);border-radius:12px">
+        <span style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:15px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--success)">{{ a.monto }}</span>
+          <span style="font-size:12.5px;color:var(--muted)">{{ a.fecha }} · {{ a.metodo }} · {{ a.nota }}</span>
+        </span>
+      </div>
+    </sc-for>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px">
+      <input value="{{ abonoMonto }}" onInput="{{ setAbonoMonto }}" placeholder="Monto (S/)" style="flex:1 1 130px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      <select value="{{ abonoMetodo }}" onChange="{{ setAbonoMetodo }}" style="flex:1 1 130px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px">
+        <option value="efectivo">Efectivo</option>
+        <option value="yape">Yape / Plin</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+      <input value="{{ abonoNota }}" onInput="{{ setAbonoNota }}" placeholder="Nota (opcional)" style="flex:1 1 100%;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <button type="button" onClick="{{ registrarAbono }}" style="flex:1 1 100%;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Registrar abono</button>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sRecibo }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverDet }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Recibo de venta</h1>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button type="button" onClick="{{ imprimir }}" style="flex:1;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Imprimir 80 mm</button>
+    <button type="button" onClick="{{ exportarPdf }}" style="flex:1;height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:15px;font-weight:600;cursor:pointer">Exportar PDF</button>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);max-width:360px;margin:0 auto;width:100%;font-family:'Geist Mono',monospace;font-size:13px;line-height:1.7">
+    <p style="margin:0;text-align:center;font-size:15px;font-weight:600">MasterLab</p>
+    <p style="margin:0;text-align:center;color:var(--muted)">Recibo de venta</p>
+    <p style="margin:0 0 12px;text-align:center;color:var(--muted)">8/09/26, 9:47 a. m.</p>
+    <div style="border-top:1px dashed var(--border);padding-top:10px;display:flex;justify-content:space-between"><span style="color:var(--muted)">Doctor</span><span>{{ tCliente }}</span></div>
+    <div style="display:flex;justify-content:space-between;padding-bottom:10px"><span style="color:var(--muted)">Paciente</span><span>{{ tPaciente }}</span></div>
+    <sc-for list="{{ tLineas }}" as="l" hint-placeholder-count="1">
+      <div style="border-top:1px dashed var(--border);padding-top:10px;display:flex;justify-content:space-between;gap:10px"><span>{{ l.n }}</span><span>{{ l.p }}</span></div>
+    </sc-for>
+    <div style="border-top:1px dashed var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between"><span style="color:var(--muted)">Total</span><span>{{ tPrecio }}</span></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Pagado</span><span>{{ tPagado }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-weight:600"><span>Saldo</span><span>{{ tSaldo }}</span></div>
+    <p style="margin:12px 0 0;border-top:1px dashed var(--border);padding-top:10px;text-align:center;color:var(--muted)">¡Gracias por su preferencia!</p>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ sConsultorios }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em">Consultorios</h1>
+    <div style="display:flex;gap:8px">
+      <button type="button" onClick="{{ irCuentas }}" style="height:44px;padding:0 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14px;font-weight:600;cursor:pointer">Estado de cuenta</button>
+      <button type="button" onClick="{{ nuevoConsultorio }}" style="height:44px;padding:0 16px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">+ Nuevo</button>
+    </div>
+  </div>
+  <div style="position:relative">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:absolute;left:14px;top:15px;color:var(--muted)"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+    <input value="{{ consQ }}" onInput="{{ setConsQ }}" placeholder="Buscar consultorio o doctor…" style="width:100%;height:48px;border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:0 14px 0 42px;font-size:15px" />
+  </div>
+  <button type="button" onClick="{{ toggleArchivados }}" style="align-self:flex-start;border:0;background:transparent;padding:0;color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:underline">Ver archivados</button>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px">
+    <sc-for list="{{ consLista }}" as="c" hint-placeholder-count="6">
+      <button type="button" onClick="{{ c.abrir }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ c.color }};border-radius:14px;padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s" style-hover="transform:translateY(-1px)">
+        <span style="width:38px;height:38px;flex-shrink:0;border-radius:12px;display:grid;place-items:center;background:{{ c.color }}1f;color:{{ c.color }};font-size:16px;font-weight:700">{{ c.inicial }}</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:15.5px;font-weight:600;line-height:1.25">{{ c.nombre }}</span>
+          <span style="font-size:12.5px;color:var(--muted)">{{ c.doctores }} · {{ c.tel }}</span>
+        </span>
+        <span style="flex-shrink:0;font-size:14px;font-weight:700;font-family:'Geist Mono',monospace;color:{{ c.deudaFg }}">{{ c.deuda }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sConsForm }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:560px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ consFormVolver }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">{{ consFormTitulo }}</h1>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Nombre
+      <input value="{{ consFormNombre }}" placeholder="Ej. Clínica Dental Sonrisa" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Contacto <span style="font-weight:400">(opcional)</span>
+      <input value="{{ consFormTel }}" placeholder="Teléfono, correo…" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Notas <span style="font-weight:400">(opcional)</span>
+      <textarea value="{{ consFormNotas }}" rows="3" placeholder="Días de entrega, preferencias…" style="border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:10px 12px;font-size:15px;resize:vertical"></textarea>
+    </label>
+    <button type="button" onClick="{{ guardarConsultorio }}" style="height:50px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15.5px;font-weight:600;cursor:pointer">Guardar</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sConsDet }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConsultorios }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <span style="font-size:13.5px;color:var(--muted);font-weight:500">Consultorios</span>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ cColor }};border-radius:18px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:13px">
+      <span style="width:52px;height:52px;flex-shrink:0;border-radius:16px;display:grid;place-items:center;background:{{ cColor }}1f;color:{{ cColor }};font-size:22px;font-weight:700">{{ cInicial }}</span>
+      <div style="min-width:0">
+        <h1 style="margin:0 0 3px;font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance">{{ cNombre }}</h1>
+        <p style="margin:0;font-size:13.5px;color:var(--muted)">{{ cTel }} · {{ cTrab }} trabajos</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="flex:1 1 140px;background:var(--surface2);border-radius:12px;padding:11px 13px">
+        <p style="margin:0 0 3px;font-size:12px;color:var(--muted);font-weight:600">Deuda vigente</p>
+        <p style="margin:0;font-size:19px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--danger)">{{ cDeuda }}</p>
+      </div>
+      <div style="flex:2 1 200px;background:var(--surface2);border-radius:12px;padding:11px 13px">
+        <p style="margin:0 0 3px;font-size:12px;color:var(--muted);font-weight:600">Notas</p>
+        <p style="margin:0;font-size:14px;line-height:1.4">{{ cNotas }}</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <button type="button" onClick="{{ editarConsultorio }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">Editar</button>
+      <button type="button" onClick="{{ archivarConsultorio }}" style="border:0;background:transparent;padding:0;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer">Archivar</button>
+      <button type="button" onClick="{{ eliminarConsultorio }}" style="border:0;background:transparent;padding:0;color:var(--danger);font-size:14px;font-weight:600;cursor:pointer;margin-left:auto">Eliminar definitivo</button>
+    </div>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2 style="margin:0;font-size:17px;font-weight:700">Doctores</h2>
+    <sc-if value="{{ sinDoctores }}">
+    <p style="margin:0;padding:20px;text-align:center;font-size:13.5px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:14px">Este consultorio aún no tiene doctores.</p>
+    </sc-if>
+    <sc-for list="{{ consDoctores }}" as="d" hint-placeholder-count="1">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="width:36px;height:36px;flex-shrink:0;border-radius:11px;display:grid;place-items:center;background:{{ d.color }}1f;color:{{ d.color }};font-size:15px;font-weight:700">{{ d.inicial }}</span>
+        <span style="flex:1 1 120px;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:15.5px;font-weight:600">{{ d.nombre }}</span>
+          <span style="font-size:12.5px;color:var(--muted)">{{ d.tel }}</span>
+        </span>
+        <button type="button" onClick="{{ d.nuevoTrabajo }}" style="height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--accentSoft);color:var(--accent);font-size:13.5px;font-weight:600;cursor:pointer">+ Trabajo</button>
+        <button type="button" onClick="{{ d.abrir }}" style="height:38px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13.5px;font-weight:600;cursor:pointer">Ver</button>
+      </div>
+    </sc-for>
+    <div style="background:var(--surface);border:1px dashed var(--border);border-radius:14px;padding:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <input placeholder="Nombre del doctor" style="flex:1 1 160px;min-width:0;height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <input placeholder="Contacto (opcional)" style="flex:1 1 160px;min-width:0;height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <button type="button" onClick="{{ agregarDoctor }}" style="flex:1 1 100%;height:46px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Agregar doctor</button>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sDoctor }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverCons }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <span style="font-size:13.5px;color:var(--muted);font-weight:500">{{ cNombre }}</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="width:12px;height:12px;border-radius:999px;background:{{ cColor }}"></span>
+    <h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em">{{ dNombre }}</h1>
+  </div>
+  <p style="margin:0;font-size:14px;color:var(--muted)">{{ cTrab }} trabajos · {{ cDeuda }} por cobrar</p>
+  <button type="button" onClick="{{ nuevoTrabajo }}" style="height:52px;border:0;border-radius:14px;background:var(--accent);color:var(--accentOn);font-size:15.5px;font-weight:600;cursor:pointer">+ Nuevo trabajo para {{ dNombre }}</button>
+  <div style="display:flex;flex-direction:column;gap:9px">
+    <sc-for list="{{ lista }}" as="t" hint-placeholder-count="3">
+      <button type="button" onClick="{{ t.abrir }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:10px" style-hover="background:var(--surface2)">
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:15px;font-weight:600;line-height:1.25">{{ t.titulo }}</span>
+          <span style="font-size:12.5px;color:var(--muted)">{{ t.cliente }}</span>
+        </span>
+        <span style="flex-shrink:0;font-size:15px;font-weight:700;font-family:'Geist Mono',monospace">{{ t.precio }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCuentas }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConsultorios }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <div style="flex:1;min-width:0">
+      <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Estado de cuenta</h1>
+      <p style="margin:2px 0 0;font-size:13px;color:var(--muted)">Deuda por consultorio y doctor</p>
+    </div>
+    <button type="button" onClick="{{ exportarCsv }}" style="height:40px;padding:0 13px;border:1px solid var(--border);border-radius:11px;background:var(--surface);font-size:13.5px;font-weight:600;cursor:pointer;flex-shrink:0">CSV</button>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)">
+    <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:var(--muted)">Total por cobrar</p>
+    <p style="margin:0 0 4px;font-size:34px;line-height:1;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.03em;color:var(--danger)">{{ totalCobrar }}</p>
+    <p style="margin:0;font-size:13px;color:var(--muted)">{{ abonado }} cobrado de {{ montoFinal }} facturado</p>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConsultorios }}" style="border:0;background:transparent;padding:0;color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:underline">Ver todos los consultorios</button>
+    <button type="button" onClick="{{ irReportes }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:13.5px;font-weight:600;cursor:pointer">Reportes por fecha →</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:9px">
+    <sc-for list="{{ cuentas }}" as="c" hint-placeholder-count="6">
+      <button type="button" onClick="{{ c.abrir }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ c.color }};border-radius:14px;padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:12px" style-hover="background:var(--surface2)">
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:15.5px;font-weight:600">{{ c.nombre }}</span>
+          <span style="font-size:12.5px;color:var(--muted)">{{ c.detalle }}</span>
+        </span>
+        <span style="flex-shrink:0;font-size:16px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--danger)">{{ c.monto }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ sInv }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em">Inventario</h1>
+    <div style="display:flex;gap:8px">
+      <button type="button" onClick="{{ irLiquidacion }}" style="height:44px;padding:0 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14px;font-weight:600;cursor:pointer">Liquidar stock</button>
+      <button type="button" onClick="{{ nuevoInsumo }}" style="height:44px;padding:0 16px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">+ Nuevo</button>
+    </div>
+  </div>
+  <div style="position:relative">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:absolute;left:14px;top:15px;color:var(--muted)"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+    <input value="{{ invQ }}" onInput="{{ setInvQ }}" placeholder="Buscar insumo…" style="width:100%;height:48px;border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:0 14px 0 42px;font-size:15px" />
+  </div>
+  <button type="button" onClick="{{ toggleArchivados }}" style="align-self:flex-start;border:0;background:transparent;padding:0;color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:underline">Ver archivados</button>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px">
+    <sc-for list="{{ insumosLista }}" as="i" hint-placeholder-count="2">
+      <button type="button" onClick="{{ i.abrir }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px" style-hover="transform:translateY(-1px)">
+        <span style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <span style="font-size:15.5px;font-weight:600;line-height:1.25">{{ i.n }}</span>
+          <span style="flex-shrink:0;padding:4px 9px;border-radius:999px;background:{{ i.estadoBg }};color:{{ i.estadoFg }};font-size:11.5px;font-weight:700;white-space:nowrap">{{ i.estadoT }}</span>
+        </span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+          <span style="font-size:12.5px;color:var(--muted);font-family:'Geist Mono',monospace">{{ i.costo }}</span>
+          <span style="font-size:18px;font-weight:700;font-family:'Geist Mono',monospace">{{ i.stock }}</span>
+        </span>
+      </button>
+    </sc-for>
+    <sc-if value="{{ invVacio }}">
+    <div style="padding:44px 20px;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:16px">
+      <p style="margin:0 0 4px;font-size:15px;font-weight:600">Aún no hay insumos</p>
+      <p style="margin:0;font-size:13.5px;color:var(--muted)">Toca “+ Nuevo” para registrar el primero.</p>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sInvForm }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:560px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ invFormVolver }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">{{ invFormTitulo }}</h1>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Nombre del insumo
+      <input value="{{ invFormNombre }}" placeholder="Ej. Acrílico rosado" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Unidad
+        <select style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px">
+          <option>unidad</option><option>g</option><option>ml</option><option>caja</option>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Stock mínimo
+        <input value="{{ invFormMin }}" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Costo unitario (S/)
+        <input value="{{ invFormCosto }}" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      </label>
+      <sc-if value="{{ invFormNuevo }}">
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Stock inicial
+        <input value="0" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      </label>
+      </sc-if>
+    </div>
+    <button type="button" onClick="{{ guardarInsumo }}" style="height:50px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15.5px;font-weight:600;cursor:pointer">Guardar</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sInvDet }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverInv }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <span style="font-size:13.5px;color:var(--muted);font-weight:500">Inventario</span>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <div>
+      <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.02em;text-wrap:balance">{{ iN }}</h1>
+      <p style="margin:0;font-size:13.5px;color:var(--muted)">{{ iCosto }} · mínimo {{ iMin }}</p>
+    </div>
+    <div style="background:var(--surface2);border-radius:14px;padding:16px;text-align:center">
+      <p style="margin:0 0 4px;font-size:12.5px;font-weight:600;color:var(--muted)">Stock actual</p>
+      <p style="margin:0;font-size:34px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ iStock }}</p>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <button type="button" onClick="{{ editarInsumo }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">Editar</button>
+      <button type="button" onClick="{{ archivarInsumo }}" style="border:0;background:transparent;padding:0;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer">Archivar</button>
+      <button type="button" onClick="{{ eliminarInsumo }}" style="border:0;background:transparent;padding:0;color:var(--danger);font-size:14px;font-weight:600;cursor:pointer;margin-left:auto">Eliminar definitivo</button>
+    </div>
+  </div>
+
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Registrar movimiento</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+      <select value="{{ movTipo }}" onChange="{{ setMovTipo }}" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px">
+        <option value="ingreso">Ingreso (+)</option>
+        <option value="salida">Salida (−)</option>
+        <option value="merma">Merma (−)</option>
+      </select>
+      <input value="{{ movCant }}" onInput="{{ setMovCant }}" placeholder="Cantidad" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      <input type="date" value="2026-09-08" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <input placeholder="Motivo (opcional)" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <select style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px">
+        <option>Origen: Compra</option><option>Origen: Ajuste</option><option>Origen: Consumo de trabajo</option>
+      </select>
+      <input placeholder="Costo unitario (S/)" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+    </div>
+    <p style="margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)">El costo unitario actualiza el precio del producto (útil si varía por proveedor o marca).</p>
+    <button type="button" onClick="{{ registrarMov }}" style="height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Registrar movimiento</button>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:9px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Historial</h2>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:14.5px;font-weight:600">Ingreso <span style="color:var(--success);font-family:'Geist Mono',monospace">+2000 g</span></span>
+        <span style="font-size:12.5px;color:var(--muted)">2026-09-08 · Stock inicial</span>
+      </span>
+      <button type="button" onClick="{{ eliminarInsumo }}" style="border:0;background:transparent;color:var(--danger);font-size:13.5px;font-weight:600;cursor:pointer">Eliminar</button>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sLiq }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:620px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverInv }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Liquidación de stock</h1>
+  </div>
+  <p style="margin:0;font-size:14px;line-height:1.55;color:var(--muted)">Ingresa el conteo físico real de cada insumo. La diferencia con el teórico se registra como merma (si falta) o ajuste (si sobra).</p>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+      <span style="font-size:16px;font-weight:600">{{ iN }}</span>
+      <span style="font-size:13px;color:var(--muted);font-family:'Geist Mono',monospace">Teórico: {{ teorico }}</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input value="{{ conteo }}" onInput="{{ setConteo }}" style="flex:1 1 140px;min-width:0;height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:16px;font-family:'Geist Mono',monospace" />
+      <span style="font-size:14px;color:var(--muted)">g</span>
+      <button type="button" onClick="{{ registrarConteo }}" style="height:48px;padding:0 20px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Registrar</button>
+    </div>
+  </div>
+  <sc-if value="{{ invVacio }}">
+  <p style="margin:0;padding:40px;text-align:center;font-size:14px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:16px">No hay insumos para liquidar.</p>
+  </sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ sFin }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div>
+      <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em">Finanzas</h1>
+      <p style="margin:3px 0 0;font-size:13.5px;color:var(--muted)">Setiembre 2026 · mes actual</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button type="button" onClick="{{ irReportes }}" style="height:42px;padding:0 15px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14px;font-weight:600;cursor:pointer">Reportes</button>
+      <button type="button" onClick="{{ exportarCsv }}" style="height:42px;padding:0 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14px;font-weight:600;cursor:pointer">CSV</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Ingresos</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ finIngresos }}</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Gastos</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em">{{ finGastos }}</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Utilidad</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em;color:var(--success)">{{ finUtilidad }}</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Margen</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em;color:var(--success)">{{ finMargen }}</p>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)">
+    <h2 style="margin:0 0 12px;font-size:16px;font-weight:700">Desglose de gastos</h2>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px"><span style="color:var(--muted)">Materiales + merma</span><span style="font-weight:600;font-family:'Geist Mono',monospace">{{ finMateriales }}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px"><span style="color:var(--muted)">Pagos a trabajadores</span><span style="font-weight:600;font-family:'Geist Mono',monospace">{{ finPagos }}</span></div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+      <h2 style="margin:0;font-size:16px;font-weight:700">Ingresos vs gastos</h2>
+      <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:3px;background:#2F6FED"></span>Ingresos</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:3px;background:#d97706"></span>Gastos</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:10px;height:170px">
+      <sc-for list="{{ barras }}" as="b" hint-placeholder-count="6">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end">
+          <div style="display:flex;align-items:flex-end;gap:3px;width:100%;height:100%;justify-content:center">
+            <div style="width:38%;height:{{ b.hi }};background:#2F6FED;border-radius:6px 6px 0 0"></div>
+            <div style="width:38%;height:{{ b.hg }};background:#d97706;border-radius:6px 6px 0 0"></div>
+          </div>
+          <span style="font-size:11.5px;color:var(--muted);font-family:'Geist Mono',monospace">{{ b.m }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:11px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Top consultorios del mes</h2>
+    <sc-for list="{{ topConsultorios }}" as="c" hint-placeholder-count="5">
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;justify-content:space-between;font-size:13.5px">
+          <span style="font-weight:500">{{ c.nombre }}</span>
+          <span style="font-weight:700;font-family:'Geist Mono',monospace">{{ c.monto }}</span>
+        </div>
+        <div style="height:7px;border-radius:999px;background:var(--surface2);overflow:hidden">
+          <div style="height:100%;width:{{ c.w }};background:{{ c.color }};border-radius:999px"></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sRep }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverFin }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <div style="min-width:0">
+      <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Pendiente por cobrar</h1>
+      <p style="margin:2px 0 0;font-size:13px;color:var(--muted);font-family:'Geist Mono',monospace">{{ repDesde }} → {{ repHasta }}</p>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;gap:8px">
+      <button type="button" onClick="{{ setPorCobrar }}" style="flex:1;height:42px;border:1px solid var(--border);border-radius:11px;background:{{ bgPor }};color:{{ fgPor }};font-size:14px;font-weight:600;cursor:pointer">Solo por cobrar</button>
+      <button type="button" onClick="{{ setTodos }}" style="flex:1;height:42px;border:1px solid var(--border);border-radius:11px;background:{{ bgTod }};color:{{ fgTod }};font-size:14px;font-weight:600;cursor:pointer">Todos los trabajos</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)">Desde
+        <input type="date" value="{{ repDesde }}" onChange="{{ setDesde }}" style="height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 10px;font-size:14.5px" />
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)">Hasta
+        <input type="date" value="{{ repHasta }}" onChange="{{ setHasta }}" style="height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 10px;font-size:14.5px" />
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)">Consultorio
+        <select style="height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 8px;font-size:14.5px"><option>Todos los consultorios</option></select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)">Doctor
+        <select style="height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 8px;font-size:14.5px"><option>Todos los doctores</option></select>
+      </label>
+    </div>
+    <button type="button" onClick="{{ verReporte }}" style="height:46px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Ver reporte</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--muted)">Trabajos con deuda</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace">{{ nTrabajosDeuda }}</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--muted)">Monto final</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace">{{ montoFinal }}</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--muted)">Abonado</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace">{{ abonado }}</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow)">
+      <p style="margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--muted)">Por cobrar</p>
+      <p style="margin:0;font-size:22px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--danger)">{{ totalCobrar }}</p>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px">
+    <button type="button" onClick="{{ exportarPdf }}" style="flex:1;height:46px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">PDF A4</button>
+    <button type="button" onClick="{{ irTicket }}" style="flex:1;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14.5px;font-weight:600;cursor:pointer">Ticket 80 mm</button>
+    <button type="button" onClick="{{ exportarCsv }}" style="flex:0 0 90px;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:14.5px;font-weight:600;cursor:pointer">CSV</button>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:9px">
+    <sc-for list="{{ repGrupos }}" as="g" hint-placeholder-count="4">
+      <div style="background:var(--surface);border:1px solid var(--border);border-left:4px solid {{ g.color }};border-radius:14px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+          <span style="font-size:16px;font-weight:700">{{ g.nombre }}</span>
+          <span style="font-size:16px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--danger)">{{ g.monto }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)">
+          <span style="color:var(--accent);font-weight:600">{{ g.doctor }}</span>
+          <span style="font-family:'Geist Mono',monospace">{{ g.cobrado }}</span>
+        </div>
+        <sc-for list="{{ g.lineas }}" as="l" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0 6px 10px;border-left:2px solid var(--border);font-size:13px">
+            <span style="min-width:0;color:var(--muted)"><span style="font-family:'Geist Mono',monospace">{{ l.f }}</span> · {{ l.n }}</span>
+            <span style="flex-shrink:0;font-family:'Geist Mono',monospace;color:var(--danger)">{{ l.m }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sRepTicket }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverRep }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Cobranza en ticket</h1>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button type="button" onClick="{{ imprimir }}" style="flex:1;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Imprimir</button>
+    <button type="button" onClick="{{ exportarPdf }}" style="flex:1;height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:15px;font-weight:600;cursor:pointer">PDF A4</button>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);max-width:360px;width:100%;margin:0 auto;font-family:'Geist Mono',monospace;font-size:13px;line-height:1.7">
+    <p style="margin:0;text-align:center;font-size:15px;font-weight:600">MasterLab</p>
+    <p style="margin:0;text-align:center;color:var(--muted)">Pendiente por cobrar</p>
+    <p style="margin:0 0 12px;text-align:center;color:var(--muted)">{{ repDesde }} — {{ repHasta }}</p>
+    <sc-for list="{{ repGrupos }}" as="g" hint-placeholder-count="4">
+      <div style="border-top:1px dashed var(--border);padding-top:8px;display:flex;justify-content:space-between;font-weight:600"><span>{{ g.nombre }}</span><span>{{ g.monto }}</span></div>
+      <div style="display:flex;justify-content:space-between;color:var(--muted);padding-bottom:8px"><span>{{ g.doctor }}</span><span>{{ g.monto }}</span></div>
+    </sc-for>
+    <div style="border-top:1px dashed var(--border);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between"><span style="color:var(--muted)">Trabajos</span><span>{{ nTrabajosDeuda }}</span></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Monto final</span><span>{{ montoFinal }}</span></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Pagado</span><span>{{ abonado }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-weight:600"><span>Saldo por cobrar</span><span>{{ totalCobrar }}</span></div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ sConfig }}">
+<div style="display:flex;flex-direction:column;gap:14px;max-width:620px">
+  <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em">Configuración</h1>
+  <button type="button" onClick="{{ irCatalogo }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;gap:12px" style-hover="border-color:var(--accent)">
+    <span style="flex:1;min-width:0"><span style="display:block;font-size:16px;font-weight:600;margin-bottom:3px">Catálogo de trabajos</span><span style="display:block;font-size:13px;color:var(--muted)">Tipos de trabajo, precios, etapas y recetas.</span></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--muted);flex-shrink:0"><path d="m9 5 7 7-7 7"></path></svg>
+  </button>
+  <button type="button" onClick="{{ irTrabajadores }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;gap:12px" style-hover="border-color:var(--accent)">
+    <span style="flex:1;min-width:0"><span style="display:block;font-size:16px;font-weight:600;margin-bottom:3px">Trabajadores</span><span style="display:block;font-size:13px;color:var(--muted)">Personal, montos estándar y pagos.</span></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--muted);flex-shrink:0"><path d="m9 5 7 7-7 7"></path></svg>
+  </button>
+  <button type="button" onClick="{{ irUsuarios }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;gap:12px" style-hover="border-color:var(--accent)">
+    <span style="flex:1;min-width:0"><span style="display:block;font-size:16px;font-weight:600;margin-bottom:3px">Usuarios y permisos</span><span style="display:block;font-size:13px;color:var(--muted)">Accesos del equipo (admin / técnico).</span></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--muted);flex-shrink:0"><path d="m9 5 7 7-7 7"></path></svg>
+  </button>
+  <button type="button" onClick="{{ irAuditoria }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;gap:12px" style-hover="border-color:var(--accent)">
+    <span style="flex:1;min-width:0"><span style="display:block;font-size:16px;font-weight:600;margin-bottom:3px">Historial de actividad</span><span style="display:block;font-size:13px;color:var(--muted)">Quién creó, cambió o eliminó registros.</span></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--muted);flex-shrink:0"><path d="m9 5 7 7-7 7"></path></svg>
+  </button>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCat }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConfig }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;flex:1;min-width:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Catálogo de trabajos</h1>
+    <button type="button" onClick="{{ nuevoTipo }}" style="height:42px;padding:0 15px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0">+ Nuevo</button>
+  </div>
+  <div style="position:relative">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:absolute;left:14px;top:15px;color:var(--muted)"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+    <input value="{{ catQ }}" onInput="{{ setCatQ }}" placeholder="Buscar tipo de trabajo…" style="width:100%;height:48px;border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:0 14px 0 42px;font-size:15px" />
+  </div>
+  <sc-if value="{{ catFiltrado }}">
+  <p style="margin:0;font-size:12.5px;color:var(--muted)">Limpia la búsqueda para reordenar los trabajos.</p>
+  </sc-if>
+  <sc-for list="{{ catGrupos }}" as="g" hint-placeholder-count="3">
+    <section style="display:flex;flex-direction:column;gap:7px">
+      <h2 style="margin:8px 0 2px;font-size:11.5px;font-weight:700;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">{{ g.cat }}</h2>
+      <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="4">
+        <div style="display:flex;align-items:stretch;gap:6px">
+          <button type="button" onClick="{{ i.abrir }}" style="flex:1;min-width:0;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px" style-hover="border-color:var(--accent)">
+            <span style="min-width:0;font-size:14.5px;font-weight:500;line-height:1.3">{{ i.n }}</span>
+            <span style="flex-shrink:0;display:flex;align-items:center;gap:8px">
+              <span style="font-size:11.5px;color:var(--muted)">{{ i.extra }}</span>
+              <span style="font-size:14.5px;font-weight:700;font-family:'Geist Mono',monospace">{{ i.p }}</span>
+            </span>
+          </button>
+          <sc-if value="{{ i.ordenable }}" hint-placeholder-val="{{ true }}">
+          <span style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+            <button type="button" onClick="{{ i.subir }}" aria-label="Subir de posición" style="width:38px;height:24px;display:grid;place-items:center;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer;opacity:{{ i.subirOp }}" style-hover="border-color:var(--accent);color:var(--accent)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"></path></svg>
+            </button>
+            <button type="button" onClick="{{ i.bajar }}" aria-label="Bajar de posición" style="width:38px;height:24px;display:grid;place-items:center;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer;opacity:{{ i.bajarOp }}" style-hover="border-color:var(--accent);color:var(--accent)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+          </span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </section>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCatForm }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:560px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ catFormVolver }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:23px;font-weight:700;letter-spacing:-.02em">{{ catFormTitulo }}</h1>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Categoría
+      <input value="{{ catFormCat }}" placeholder="Ej. Prótesis fija" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Nombre del trabajo
+      <input value="{{ catFormN }}" placeholder="Ej. Corona porcelana sobre metal" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Precio base (S/)
+      <input value="{{ catFormP }}" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+    </label>
+    <fieldset style="border:1px solid var(--border);border-radius:14px;padding:14px;margin:0;display:flex;flex-direction:column;gap:10px">
+      <legend style="padding:0 6px;font-size:12.5px;font-weight:600;color:var(--muted)">Componente variable (opcional)</legend>
+      <p style="margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)">Para precios como “120 + 20 × cofia”. Deja ambos vacíos si no aplica.</p>
+      <input placeholder="Etiqueta (ej. cofia)" style="height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <input placeholder="Precio unitario (S/)" style="height:44px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+    </fieldset>
+    <button type="button" onClick="{{ guardarTipo }}" style="height:50px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15.5px;font-weight:600;cursor:pointer">Guardar</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCatDet }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:620px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverCat }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <span style="font-size:13.5px;color:var(--muted);font-weight:500">Catálogo</span>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <div>
+      <p style="margin:0 0 4px;font-size:11.5px;font-weight:700;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">{{ ktCat }}</p>
+      <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance">{{ ktN }}</h1>
+      <p style="margin:0;font-size:19px;font-weight:700;font-family:'Geist Mono',monospace">{{ ktP }}</p>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <button type="button" onClick="{{ editarTipo }}" style="border:0;background:transparent;padding:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">Editar</button>
+      <button type="button" onClick="{{ archivarInsumo }}" style="border:0;background:transparent;padding:0;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer">Archivar</button>
+      <button type="button" onClick="{{ eliminarInsumo }}" style="border:0;background:transparent;padding:0;color:var(--danger);font-size:14px;font-weight:600;cursor:pointer;margin-left:auto">Eliminar definitivo</button>
+    </div>
+  </div>
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Etapas estándar</h2>
+    <p style="margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)">Al crear un trabajo se copian y podrás ajustarlas o excluir las que haga un proveedor externo.</p>
+    <sc-for list="{{ etapas }}" as="e" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);border-radius:12px">
+        <span style="flex:1;min-width:0;font-size:14.5px;font-weight:500">{{ e.n }}</span>
+        <span style="flex-shrink:0;color:var(--muted);font-size:12.5px">arrastra para ordenar</span>
+      </div>
+    </sc-for>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input placeholder="Nueva etapa (ej. Encerado)" style="flex:1 1 180px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <button type="button" onClick="{{ agregarEtapa }}" style="height:46px;padding:0 18px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">Agregar</button>
+    </div>
+  </section>
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Receta (insumos)</h2>
+    <p style="margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)">Insumos y cantidades estándar que consume este trabajo. Se descuentan del stock al cerrarlo.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <select style="flex:1 1 180px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px"><option>Yeso piedra</option></select>
+      <input placeholder="Cantidad" style="flex:0 1 120px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      <button type="button" onClick="{{ agregarEtapa }}" style="height:46px;padding:0 18px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">Agregar</button>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTrabs }}">
+<div style="display:flex;flex-direction:column;gap:14px;max-width:620px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConfig }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;flex:1;font-size:24px;font-weight:700;letter-spacing:-.02em">Trabajadores</h1>
+    <button type="button" onClick="{{ nuevoTrabajador }}" style="height:42px;padding:0 15px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0">+ Nuevo</button>
+  </div>
+  <sc-for list="{{ trabajadores }}" as="t" hint-placeholder-count="1">
+    <button type="button" onClick="{{ abrirTrabajador }}" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px" style-hover="border-color:var(--accent)">
+      <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
+        <span style="font-size:15.5px;font-weight:600">{{ t.nombre }}</span>
+        <span style="font-size:12.5px;color:var(--muted)">{{ t.tipos }} montos estándar</span>
+      </span>
+      <span style="flex-shrink:0;font-size:14.5px;font-weight:700;font-family:'Geist Mono',monospace">{{ t.pagos }}</span>
+    </button>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTrabNuevo }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:520px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverTrabs }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Nuevo trabajador</h1>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Nombre del trabajador
+      <input placeholder="Ej. Luis Torres" style="height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    </label>
+    <button type="button" onClick="{{ guardarTrabajador }}" style="height:50px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15.5px;font-weight:600;cursor:pointer">Guardar</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTrabDet }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:620px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverTrabs }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <span style="font-size:13.5px;color:var(--muted);font-weight:500">Trabajadores</span>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)">
+    <h1 style="margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.02em">Daniel</h1>
+    <p style="margin:0;font-size:13.5px;color:var(--muted)">Total pagado: <span style="font-family:'Geist Mono',monospace;font-weight:600;color:var(--text)">S/ 0.00</span></p>
+  </div>
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Montos estándar</h2>
+    <p style="margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)">Monto que se le paga por tipo de trabajo. Podrás seleccionarlo al registrar un pago.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <select style="flex:1 1 180px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px"><option>Tipo de trabajo…</option></select>
+      <input placeholder="Monto (S/)" style="flex:0 1 130px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      <button type="button" onClick="{{ guardarTrabajador }}" style="height:46px;padding:0 18px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:14.5px;font-weight:600;cursor:pointer">Guardar</button>
+    </div>
+  </section>
+  <section style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Registrar pago</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input placeholder="Monto (S/)" style="flex:1 1 130px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px;font-family:'Geist Mono',monospace" />
+      <input type="date" value="2026-09-08" style="flex:1 1 150px;min-width:0;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <input placeholder="Nota (opcional)" style="flex:1 1 100%;height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+      <button type="button" onClick="{{ registrarPago }}" style="flex:1 1 100%;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Registrar pago</button>
+    </div>
+    <p style="margin:0;font-size:13.5px;color:var(--muted)">Sin pagos aún.</p>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sUsuarios }}">
+<div style="display:flex;flex-direction:column;gap:14px;max-width:640px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConfig }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Usuarios</h1>
+  </div>
+  <p style="margin:0;font-size:14px;line-height:1.55;color:var(--muted)">El técnico parte sin reportes ni inventario; abajo le habilitas lo que necesite. Los costos de insumos y el panel de Finanzas quedan siempre solo para administradores.</p>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="min-width:0">
+        <p style="margin:0 0 2px;font-size:16px;font-weight:700">Lab kevin</p>
+        <p style="margin:0;font-size:13px;color:var(--muted)">masterlab.ch@gmail.com</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <select style="height:40px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);padding:0 8px;font-size:14px"><option>Técnico</option><option>Admin</option></select>
+        <button type="button" onClick="{{ guardarPermisos }}" style="border:0;background:transparent;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer">Guardar</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:10px">
+      <p style="margin:0;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Permisos</p>
+      <sc-for list="{{ permisosList }}" as="p" hint-placeholder-count="4">
+        <button type="button" onClick="{{ p.toggle }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;border:1px solid {{ p.bd }};border-radius:12px;padding:12px;background:var(--surface);cursor:pointer;width:100%">
+          <span style="width:22px;height:22px;flex-shrink:0;border-radius:7px;border:1.5px solid {{ p.bd }};background:{{ p.bg }};display:grid;place-items:center;margin-top:1px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-10"></path></svg>
+          </span>
+          <span style="min-width:0">
+            <span style="display:block;font-size:14.5px;font-weight:600;margin-bottom:2px">{{ p.n }}</span>
+            <span style="display:block;font-size:12.5px;line-height:1.45;color:var(--muted)">{{ p.d }}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)">
+    <p style="margin:0 0 2px;font-size:16px;font-weight:700">Marlon Chávez (tú)</p>
+    <p style="margin:0 0 10px;font-size:13px;color:var(--muted)">prueba@gmail.com · Admin</p>
+    <p style="margin:0;font-size:13px;line-height:1.5;color:var(--muted);border-top:1px solid var(--border);padding-top:10px">Como administrador tiene acceso completo: finanzas, inventario, reportes y configuración.</p>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:16px;font-weight:700">Nuevo usuario</h2>
+    <input placeholder="Nombre del usuario" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    <input placeholder="correo@ejemplo.com" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    <input type="password" placeholder="Contraseña temporal (mínimo 6)" style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 12px;font-size:15px" />
+    <select style="height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);padding:0 10px;font-size:15px">
+      <option>Técnico (registra trabajos)</option><option>Admin (acceso completo)</option>
+    </select>
+    <button type="button" onClick="{{ crearUsuario }}" style="height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--accentOn);font-size:15px;font-weight:600;cursor:pointer">Crear usuario</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAuditoria }}">
+<div style="display:flex;flex-direction:column;gap:14px;max-width:620px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button type="button" onClick="{{ volverConfig }}" aria-label="Volver" style="width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface);border-radius:12px;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em">Historial de actividad</h1>
+  </div>
+  <p style="margin:0;font-size:13.5px;color:var(--muted)">Quién creó, actualizó o eliminó registros (últimos 150).</p>
+  <sc-for list="{{ auditoria }}" as="a" hint-placeholder-count="3">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
+        <span style="font-size:14.5px;font-weight:600">{{ a.q }} <span style="font-weight:400;color:var(--muted)">{{ a.a }}</span></span>
+        <span style="font-size:12.5px;color:var(--muted)">{{ a.o }}</span>
+      </span>
+      <span style="flex-shrink:0;font-size:12.5px;color:var(--muted);font-family:'Geist Mono',monospace">{{ a.f }}</span>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+<!--MORE-->
+    </main>
+
+    <sc-if value="{{ narrow }}">
+    <nav aria-label="Navegación principal" style="position:fixed;inset-inline:0;bottom:0;z-index:30;display:flex;border-top:1px solid var(--border);background:var(--surface);padding-bottom:env(safe-area-inset-bottom)">
+      <sc-for list="{{ navItems }}" as="it" hint-placeholder-count="5">
+        <button type="button" onClick="{{ it.go }}" style="flex:1;min-width:0;height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;background:transparent;color:{{ it.fg }};cursor:pointer">
+          <span style="display:grid;place-items:center;width:42px;height:26px;border-radius:999px;background:{{ it.bg }}" dangerouslySetInnerHTML="{{ it.icon }}"></span>
+          <span style="font-size:11px;font-weight:600;letter-spacing:-.01em">{{ it.label }}</span>
+        </button>
+      </sc-for>
+    </nav>
+    </sc-if>
+
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ toast }}">
+<div style="position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:60;background:var(--text);color:var(--bg);padding:12px 18px;border-radius:999px;font-size:14px;font-weight:500;box-shadow:var(--pop);animation:pop .2s ease-out">{{ toast }}</div>
+</sc-if>
+
+<sc-if value="{{ confirm }}">
+<div style="position:fixed;inset:0;z-index:70;background:rgba(10,13,18,.55);display:flex;align-items:flex-end;justify-content:center;padding:16px">
+  <div style="width:100%;max-width:420px;background:var(--surface);border-radius:20px;padding:22px;box-shadow:var(--pop);animation:sheetIn .22s ease-out;margin-bottom:8px">
+    <h3 style="margin:0 0 8px;font-size:19px;font-weight:700">{{ confirm.titulo }}</h3>
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:var(--muted)">{{ confirm.texto }}</p>
+    <div style="display:flex;gap:10px">
+      <button type="button" onClick="{{ cerrarConfirm }}" style="flex:1;height:46px;border:1px solid var(--border);background:var(--surface);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button type="button" onClick="{{ confirmarAccion }}" style="flex:1;height:46px;border:0;background:var(--danger);color:#fff;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">{{ confirm.cta }}</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:900},&quot;inicio&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;],&quot;default&quot;:&quot;A&quot;,&quot;tsType&quot;:&quot;'A'|'B'&quot;,&quot;section&quot;:&quot;Prototipo&quot;},&quot;escritorio&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;movil&quot;,&quot;escritorio&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototipo&quot;},&quot;mostrarImportes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Permisos&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'login', hoyVar: 'A', w: 1200, theme: 'light',
+    filtro: 'todos', q: '', consQ: '', invQ: '', catQ: '',
+    lineas: [{ tipoId: '', cant: 1, pieza: '' }],
+    manual: false, montoManual: '', paciente: '', entrega: '', notas: '', doctorSel: '',
+    pickerFor: null, pickerQ: '',
+    abonos: [], abonoMonto: '', abonoMetodo: 'efectivo', abonoNota: '',
+    etapas: [
+      { n: 'Encerado', e: 'completada' },
+      { n: 'Colado', e: 'en_progreso' },
+      { n: 'Acabado y pulido', e: 'pendiente' }
+    ],
+    trabajoId: 't1', consId: 'arte', docId: 'ivan', insumoId: 'i1', catId: 'k1', trabajadorId: 'w1',
+    confirm: null, toast: null, archivados: false,
+    repIncluir: 'porcobrar', repDesde: '2026-09-01', repHasta: '2026-09-30',
+    permisos: { reportes: true, importes: true, inv_ver: false, inv_mov: false },
+    stock: 2000, movTipo: 'ingreso', movCant: '', conteo: '2000'
+  };
+
+  ICON = {
+    hoy: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2.5v3M16 2.5v3"/><circle cx="12" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg>',
+    consultorios: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16"/><path d="M14 21V9h5a1 1 0 0 1 1 1v11"/><path d="M3 21h18M7.5 8h3M7.5 12h3M7.5 16h3"/></svg>',
+    trabajos: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 7.5l9 4.5 9-4.5L12 3Z"/><path d="M3 12.5 12 17l9-4.5M3 17 12 21.5 21 17"/></svg>',
+    inventario: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
+    finanzas: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M6 21v-6M12 21V7M18 21v-9"/></svg>'
+  };
+
+  consultorios = [
+    { id: 'arte', nombre: 'Arte oral', color: '#db2777', tel: '', notas: 'Entregas los martes', doctores: [{ id: 'ivan', nombre: 'Ivan', tel: '' }], deuda: 750, trab: 5 },
+    { id: 'celeste', nombre: 'Celeste (coa)', color: '#0891b2', tel: '962 358 329', notas: '', doctores: [{ id: 'celeste', nombre: 'Celeste', tel: '962 358 329' }], deuda: 80, trab: 1 },
+    { id: 'meza', nombre: 'Claudia Meza', color: '#2563eb', tel: '962 844 603', notas: '', doctores: [{ id: 'meza', nombre: 'Meza', tel: '' }], deuda: 540, trab: 2 },
+    { id: 'dentysalud', nombre: 'Dentysalud', color: '#7c3aed', tel: '', notas: '', doctores: [], deuda: 0, trab: 0 },
+    { id: 'gonzalez', nombre: 'González', color: '#db2777', tel: '946 524 252', notas: 'Atiende winni', doctores: [{ id: 'franz', nombre: 'Franz', tel: '' }], deuda: 0, trab: 0 },
+    { id: 'henry', nombre: 'Henry', color: '#2563eb', tel: '965 326 648', notas: '', doctores: [{ id: 'henry', nombre: 'Henry', tel: '' }], deuda: 0, trab: 0 },
+    { id: 'jean', nombre: 'Jean', color: '#2563eb', tel: '', notas: '', doctores: [{ id: 'jean', nombre: 'Jean', tel: '' }], deuda: 470, trab: 3 },
+    { id: 'odam', nombre: 'Odam', color: '#d97706', tel: '', notas: '', doctores: [{ id: 'odam', nombre: 'Odam', tel: '' }], deuda: 240, trab: 1 },
+    { id: 'pantoja', nombre: 'Pantoja', color: '#dc2626', tel: '', notas: '', doctores: [{ id: 'pantoja', nombre: 'Pantoja', tel: '' }], deuda: 260, trab: 1 },
+    { id: 'patty', nombre: 'Patty', color: '#2563eb', tel: '', notas: '', doctores: [{ id: 'patty', nombre: 'Patty', tel: '' }], deuda: 280, trab: 2 },
+    { id: 'vision', nombre: 'Visión dental', color: '#ca8a04', tel: '', notas: '', doctores: [{ id: 'vision', nombre: 'Visión', tel: '' }], deuda: 780, trab: 1 }
+  ];
+
+  trabajos = [
+    { id: 't1', titulo: 'Totales acrílico', cons: 'arte', doctor: 'Ivan', paciente: 'Gladys Chávez', estado: 'en_curso', precio: 120, pagado: 0, ingreso: '2026-09-08', entrega: '2026-09-11', cant: 1, pieza: '' },
+    { id: 't2', titulo: 'Corona porcelana sobre metal', cons: 'arte', doctor: 'Ivan', paciente: 'Noemí Ríos', estado: 'en_curso', precio: 180, pagado: 0, ingreso: '2026-09-08', entrega: '2026-09-09', cant: 2, pieza: '11, 21' },
+    { id: 't3', titulo: 'Corona porcelana sobre metal', cons: 'arte', doctor: 'Ivan', paciente: 'Jeremy Paz', estado: 'en_curso', precio: 90, pagado: 0, ingreso: '2026-09-08', entrega: '2026-09-08', cant: 1, pieza: '36' },
+    { id: 't4', titulo: 'Corona porcelana sobre metal', cons: 'arte', doctor: 'Ivan', paciente: 'Luis Ramos', estado: 'en_curso', precio: 90, pagado: 0, ingreso: '2026-09-08', entrega: '2026-09-08', cant: 1, pieza: '46' },
+    { id: 't5', titulo: 'Corona porcelana sobre metal', cons: 'arte', doctor: 'Ivan', paciente: 'Estela Cruz', estado: 'en_curso', precio: 270, pagado: 0, ingreso: '2026-09-08', entrega: '2026-09-12', cant: 3, pieza: '14, 15, 16' },
+    { id: 't6', titulo: 'Base metálica terminada', cons: 'patty', doctor: 'Patty', paciente: '', estado: 'en_curso', precio: 260, pagado: 0, ingreso: '2026-09-08', entrega: '2026-09-10', cant: 1, pieza: '' },
+    { id: 't7', titulo: 'Corona porcelana sobre metal', cons: 'meza', doctor: 'Meza', paciente: 'Claudia Meza', estado: 'en_curso', precio: 90, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-09', cant: 1, pieza: '25' },
+    { id: 't8', titulo: 'Corona porcelana sobre metal', cons: 'meza', doctor: 'Meza', paciente: 'Claudia Meza', estado: 'en_curso', precio: 450, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-14', cant: 5, pieza: '11-15' },
+    { id: 't9', titulo: 'Base metálica terminada', cons: 'pantoja', doctor: 'Pantoja', paciente: '', estado: 'en_curso', precio: 260, pagado: 0, ingreso: '2026-09-07', entrega: '', cant: 1, pieza: '' },
+    { id: 't10', titulo: 'Base metálica terminada', cons: 'vision', doctor: 'Visión', paciente: '', estado: 'en_curso', precio: 780, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-15', cant: 3, pieza: '' },
+    { id: 't11', titulo: 'Reparación', cons: 'jean', doctor: 'Jean', paciente: '', estado: 'entregado', precio: 30, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-08', cant: 1, pieza: '12' },
+    { id: 't12', titulo: 'Parcial acrílico wipla', cons: 'odam', doctor: 'Odam', paciente: '', estado: 'en_curso', precio: 240, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-10', cant: 2, pieza: '' },
+    { id: 't13', titulo: 'Corona porcelana sobre metal', cons: 'jean', doctor: 'Jean', paciente: '', estado: 'entregado', precio: 180, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-08', cant: 2, pieza: '15, 16' },
+    { id: 't14', titulo: 'Base metálica terminada', cons: 'jean', doctor: 'Jean', paciente: '', estado: 'cerrado', precio: 260, pagado: 100, ingreso: '2026-09-07', entrega: '', cant: 1, pieza: '' },
+    { id: 't15', titulo: 'Incrustación de resina', cons: 'celeste', doctor: 'Celeste', paciente: '', estado: 'entregado', precio: 80, pagado: 0, ingreso: '2026-09-07', entrega: '2026-09-08', cant: 1, pieza: '26' },
+    { id: 't16', titulo: 'Perno colado (directo o indirecto)', cons: 'patty', doctor: 'Patty', paciente: '', estado: 'cerrado', precio: 20, pagado: 0, ingreso: '2026-09-07', entrega: '', cant: 1, pieza: '21' }
+  ];
+
+  catalogo = [
+    { cat: 'Aparato ortodoncia – ortopedia', items: [
+      { id: 'k1', n: 'Placa de contención acetato rígido', p: 30 },
+      { id: 'k2', n: 'Placa de contención', p: 60 },
+      { id: 'k3', n: 'Hyrax', p: 140 },
+      { id: 'k4', n: 'Placa miorelajante acrílico', p: 60 },
+      { id: 'k5', n: 'ATP o ALP', p: 60 },
+      { id: 'k6', n: 'Placa con tornillo de expansión', p: 80 },
+      { id: 'k7', n: 'Placa miorelajante acetato', p: 30 }
+    ] },
+    { cat: 'Prótesis fija', items: [
+      { id: 'k8', n: 'Corona porcelana sobre metal', p: 90 },
+      { id: 'k9', n: 'Perno colado (directo o indirecto)', p: 20 },
+      { id: 'k10', n: 'Corona porcelana veneer', p: 80 },
+      { id: 'k11', n: 'Carilla disilicato de litio', p: 150 },
+      { id: 'k12', n: 'Incrustación disilicato de litio', p: 150 },
+      { id: 'k13', n: 'Incrustación de resina', p: 50 },
+      { id: 'k14', n: 'Corona disilicato de litio', p: 150 },
+      { id: 'k15', n: 'Corona porcelana libre de metal', p: 120 },
+      { id: 'k16', n: 'Carilla porcelana feldespática', p: 100 },
+      { id: 'k17', n: 'Incrustación porcelana', p: 100 },
+      { id: 'k18', n: 'Provisionales acrílico', p: 20 }
+    ] },
+    { cat: 'Prótesis parcial removible', items: [
+      { id: 'k19', n: 'Base metálica terminada', p: 260 },
+      { id: 'k20', n: 'Prótesis combinada flex', p: 350 },
+      { id: 'k21', n: 'Parcial acrílico wipla', p: 120 },
+      { id: 'k22', n: 'Prótesis flexibles', p: 200 },
+      { id: 'k23', n: 'Parcial acrílico + ganchos de alambre', p: 150 }
+    ] },
+    { cat: 'Prótesis total', items: [
+      { id: 'k24', n: 'Totales acrílico', p: 120 },
+      { id: 'k25', n: 'Totales acrílico con malla', p: 130 },
+      { id: 'k26', n: 'Provisional de totales', p: 50 },
+      { id: 'k27', n: 'Rebasados termocurado', p: 50 },
+      { id: 'k28', n: 'Prótesis telescópica', p: 120, extra: 'cofia', extraP: 20 }
+    ] },
+    { cat: 'Reparación', items: [{ id: 'k29', n: 'Reparación', p: 30 }] }
+  ];
+
+  insumos = [{ id: 'i1', n: 'Yeso piedra', unidad: 'g', costo: 0.05, min: 500, stock: 2000 }];
+
+  componentDidMount() {
+    const set = () => this.setState({ w: window.innerWidth });
+    set();
+    this._r = set;
+    window.addEventListener('resize', set);
+    try {
+      const t = localStorage.getItem('gl-theme');
+      if (t) { document.documentElement.dataset.theme = t; this.setState({ theme: t }); }
+      const s = localStorage.getItem('gl-screen');
+      if (s) this.setState({ screen: s });
+    } catch (e) {}
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); }
+
+  money(n) {
+    if ((this.props.mostrarImportes ?? true) === false) return 'S/ ···';
+    return 'S/ ' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  cons(id) { return this.consultorios.find(c => c.id === id) || this.consultorios[0]; }
+  tipo(id) { for (const g of this.catalogo) { const f = g.items.find(i => i.id === id); if (f) return f; } return null; }
+  go(s) {
+    this.setState({ screen: s, toast: null });
+    try { localStorage.setItem('gl-screen', s); } catch (e) {}
+    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+  }
+  flash(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2200); }
+  askConfirm(titulo, texto, cta, after) { this.setState({ confirm: { titulo, texto, cta }, _after: after }); }
+
+  totalLineas() {
+    return this.state.lineas.reduce((s, l) => { const t = this.tipo(l.tipoId); return s + (t ? t.p * (l.cant || 1) : 0); }, 0);
+  }
+  deudaTotal() { return this.trabajos.reduce((s, t) => s + (t.precio - t.pagado), 0); }
+
+  estadoChip(e) {
+    if (e === 'en_curso') return { t: 'En curso', bg: 'var(--warnSoft)', fg: 'var(--warn)', dot: '#d97706' };
+    if (e === 'cerrado') return { t: 'Cerrado', bg: 'var(--accentSoft)', fg: 'var(--accent)', dot: '#2F6FED' };
+    return { t: 'Entregado', bg: 'var(--successSoft)', fg: 'var(--success)', dot: '#12855F' };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const modo = this.props.escritorio ?? 'auto';
+    const wide = modo === 'movil' ? false : (modo === 'escritorio' ? true : s.w >= 980);
+    if (this.props.inicio && this.props.inicio !== s.hoyVar && !this._varSet) { this._varSet = true; setTimeout(() => this.setState({ hoyVar: this.props.inicio }), 0); }
+    const scr = s.screen;
+    const top = scr === 'hoy' ? 'hoy' : (['consultorios', 'consNuevo', 'consDet', 'consEdit', 'cuentas', 'doctor'].includes(scr) ? 'consultorios' : (['trabajos', 'trabajoNuevo', 'trabajoDet', 'trabajoEdit', 'recibo'].includes(scr) ? 'trabajos' : (['inventario', 'invNuevo', 'invDet', 'invEdit', 'liquidacion'].includes(scr) ? 'inventario' : (['finanzas', 'reportes', 'repTicket'].includes(scr) ? 'finanzas' : ''))));
+    const navDef = [
+      { k: 'hoy', label: 'Hoy', to: 'hoy' },
+      { k: 'consultorios', label: 'Consultorios', to: 'consultorios' },
+      { k: 'trabajos', label: 'Trabajos', to: 'trabajos' },
+      { k: 'inventario', label: 'Inventario', to: 'inventario' },
+      { k: 'finanzas', label: 'Finanzas', to: 'finanzas' }
+    ];
+    const navItems = navDef.map(n => {
+      const activo = top === n.k;
+      return {
+        label: n.label, icon: { __html: this.ICON[n.k] },
+        bg: activo ? 'var(--accentSoft)' : 'transparent',
+        fg: activo ? 'var(--accent)' : 'var(--muted)',
+        weight: activo ? '600' : '500',
+        go: () => this.go(n.to)
+      };
+    });
+
+    const q = s.q.trim().toLowerCase();
+    const lista = this.trabajos
+      .filter(t => s.filtro === 'todos' || t.estado === s.filtro)
+      .filter(t => !q || (t.titulo + ' ' + t.paciente + ' ' + t.doctor + ' ' + this.cons(t.cons).nombre).toLowerCase().includes(q))
+      .map(t => {
+        const c = this.cons(t.cons); const ch = this.estadoChip(t.estado); const deuda = t.precio - t.pagado;
+        return {
+          id: t.id,
+          titulo: (t.cant > 1 ? t.cant + ' × ' : '') + t.titulo,
+          cliente: c.nombre + ' · ' + t.doctor + (t.paciente ? ' · ' + t.paciente : ''),
+          pieza: t.pieza ? 'Pza ' + t.pieza : '',
+          color: c.color, chipBg: ch.bg, chipFg: ch.fg, chipT: ch.t, chipDot: ch.dot,
+          precio: this.money(t.precio),
+          deuda: deuda > 0 ? 'Debe ' + this.money(deuda) : 'Pagado',
+          deudaBg: deuda > 0 ? 'var(--dangerSoft)' : 'var(--successSoft)',
+          deudaFg: deuda > 0 ? 'var(--danger)' : 'var(--success)',
+          entrega: t.entrega ? t.entrega.slice(5).replace('-', '/') : 'sin fecha',
+          abrir: () => { this.setState({ trabajoId: t.id }); this.go('trabajoDet'); }
+        };
+      });
+
+    const cuentas = this.consultorios.filter(c => c.deuda > 0).sort((a, b) => b.deuda - a.deuda).map(c => ({
+      nombre: c.nombre, color: c.color, monto: this.money(c.deuda),
+      detalle: c.doctores.map(d => d.nombre).join(', ') + ' · ' + c.trab + (c.trab === 1 ? ' trabajo' : ' trabajos'),
+      abrir: () => { this.setState({ consId: c.id }); this.go('consDet'); }
+    }));
+
+    const hoyEntregas = this.trabajos.filter(t => t.entrega === '2026-09-08' || t.entrega === '2026-09-09').map(t => {
+      const c = this.cons(t.cons); const ch = this.estadoChip(t.estado);
+      return {
+        titulo: (t.cant > 1 ? t.cant + ' × ' : '') + t.titulo, cliente: c.nombre + ' · ' + t.doctor,
+        color: c.color, hoy: t.entrega === '2026-09-08' ? 'Hoy' : 'Mañana',
+        hoyBg: t.entrega === '2026-09-08' ? 'var(--dangerSoft)' : 'var(--accentSoft)',
+        hoyFg: t.entrega === '2026-09-08' ? 'var(--danger)' : 'var(--accent)',
+        chipT: ch.t, chipBg: ch.bg, chipFg: ch.fg, precio: this.money(t.precio),
+        abrir: () => { this.setState({ trabajoId: t.id }); this.go('trabajoDet'); }
+      };
+    });
+
+    const t = this.trabajos.find(x => x.id === s.trabajoId) || this.trabajos[0];
+    const tc = this.cons(t.cons);
+    const pagado = s.abonos.reduce((a, b) => a + b.monto, 0) + t.pagado;
+    const etapasAplic = s.etapas.filter(e => e.e !== 'excluida');
+    const progreso = etapasAplic.length ? Math.round(etapasAplic.filter(e => e.e === 'completada').length / etapasAplic.length * 100) : 0;
+
+    const lineasVals = s.lineas.map((l, i) => {
+      const tp = this.tipo(l.tipoId);
+      return {
+        nombre: tp ? tp.n : 'Elegir tipo de trabajo…',
+        vacio: !tp, precio: tp ? this.money(tp.p) : '',
+        cant: l.cant, sub: this.money(tp ? tp.p * l.cant : 0), pieza: l.pieza,
+        abrirPicker: () => this.setState({ pickerFor: i, pickerQ: '' }),
+        mas: () => this.setState({ lineas: s.lineas.map((x, j) => j === i ? { ...x, cant: x.cant + 1 } : x) }),
+        menos: () => this.setState({ lineas: s.lineas.map((x, j) => j === i ? { ...x, cant: Math.max(1, x.cant - 1) } : x) }),
+        setPieza: (ev) => { const v = ev.target.value; this.setState({ lineas: s.lineas.map((x, j) => j === i ? { ...x, pieza: v } : x) }); },
+        quitar: () => this.setState({ lineas: s.lineas.filter((x, j) => j !== i) }),
+        puedeQuitar: s.lineas.length > 1
+      };
+    });
+
+    const pq = s.pickerQ.trim().toLowerCase();
+    const pickerGrupos = this.catalogo.map(g => ({
+      cat: g.cat,
+      items: g.items.filter(i => !pq || i.n.toLowerCase().includes(pq)).map(i => ({
+        n: i.n, p: this.money(i.p),
+        elegir: () => { const idx = s.pickerFor; this.setState({ lineas: s.lineas.map((x, j) => j === idx ? { ...x, tipoId: i.id } : x), pickerFor: null }); }
+      }))
+    })).filter(g => g.items.length);
+
+    const cq = s.consQ.trim().toLowerCase();
+    const consLista = this.consultorios.filter(c => !cq || c.nombre.toLowerCase().includes(cq)).map(c => ({
+      nombre: c.nombre, inicial: c.nombre[0], color: c.color, tel: c.tel || 'sin contacto',
+      doctores: c.doctores.length + (c.doctores.length === 1 ? ' doctor' : ' doctores'),
+      deuda: c.deuda > 0 ? this.money(c.deuda) : '—',
+      deudaFg: c.deuda > 0 ? 'var(--danger)' : 'var(--muted)',
+      abrir: () => { this.setState({ consId: c.id }); this.go('consDet'); }
+    }));
+
+    const c = this.cons(s.consId);
+    const consDoctores = c.doctores.map(d => ({
+      nombre: d.nombre, tel: d.tel || 'sin contacto', inicial: d.nombre[0], color: c.color,
+      abrir: () => { this.setState({ docId: d.id }); this.go('doctor'); },
+      nuevoTrabajo: () => { this.setState({ doctorSel: d.nombre, lineas: [{ tipoId: '', cant: 1, pieza: '' }] }); this.go('trabajoNuevo'); }
+    }));
+
+    const catQ = s.catQ.trim().toLowerCase();
+    const mover = (g, from, dir) => {
+      const to = from + dir;
+      if (to < 0 || to >= g.items.length) return;
+      const arr = g.items.slice();
+      const [x] = arr.splice(from, 1);
+      arr.splice(to, 0, x);
+      g.items = arr;
+      this.forceUpdate();
+      this.flash('Orden actualizado');
+    };
+    const catGrupos = this.catalogo.map(g => {
+      const vis = g.items.filter(i => !catQ || i.n.toLowerCase().includes(catQ));
+      return {
+        cat: g.cat, n: g.items.length,
+        items: vis.map(i => {
+          const idx = g.items.indexOf(i);
+          return {
+            n: i.n, p: this.money(i.p), extra: i.extra ? '+ ' + this.money(i.extraP) + ' / ' + i.extra : '',
+            ordenable: !catQ,
+            subirOp: idx > 0 ? 1 : 0.3,
+            bajarOp: idx < g.items.length - 1 ? 1 : 0.3,
+            subir: () => mover(g, idx, -1),
+            bajar: () => mover(g, idx, 1),
+            abrir: () => { this.setState({ catId: i.id }); this.go('catDet'); }
+          };
+        })
+      };
+    }).filter(g => g.items.length);
+    const catFiltrado = !!catQ;
+
+    const kt = this.tipo(s.catId) || this.catalogo[1].items[0];
+
+    return {
+      sLogin: scr === 'login', inApp: scr !== 'login', wide, narrow: !wide, navItems,
+      toast: s.toast, confirm: s.confirm,
+      entrar: () => this.go('hoy'),
+      salir: () => this.go('login'),
+      goConfig: () => this.go('config'),
+      toggleTheme: () => {
+        const t2 = s.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = t2;
+        try { localStorage.setItem('gl-theme', t2); } catch (e) {}
+        this.setState({ theme: t2 });
+      },
+      cerrarConfirm: () => this.setState({ confirm: null }),
+      confirmarAccion: () => { const a = s._after; this.setState({ confirm: null }); if (a) a(); },
+
+      sHoy: scr === 'hoy', hoyA: s.hoyVar === 'A', hoyB: s.hoyVar === 'B',
+      verA: () => this.setState({ hoyVar: 'A' }), verB: () => this.setState({ hoyVar: 'B' }),
+      bgA: s.hoyVar === 'A' ? 'var(--surface)' : 'transparent', fgA: s.hoyVar === 'A' ? 'var(--text)' : 'var(--muted)',
+      bgB: s.hoyVar === 'B' ? 'var(--surface)' : 'transparent', fgB: s.hoyVar === 'B' ? 'var(--text)' : 'var(--muted)',
+      hoyEntregas, hoyHay: hoyEntregas.length > 0, hoyCount: hoyEntregas.length,
+      kpiDeuda: this.money(this.deudaTotal()),
+      kpiEnCurso: this.trabajos.filter(x => x.estado === 'en_curso').length,
+      kpiEntregados: this.trabajos.filter(x => x.estado === 'entregado').length,
+      kpiMes: this.money(this.trabajos.reduce((a, b) => a + b.precio, 0)),
+      cuentas, cuentasTop: cuentas.slice(0, 4),
+      nuevoTrabajo: () => { this.setState({ lineas: [{ tipoId: '', cant: 1, pieza: '' }], doctorSel: '', paciente: '', entrega: '' }); this.go('trabajoNuevo'); },
+      irTrabajos: () => this.go('trabajos'),
+      irCuentas: () => this.go('cuentas'),
+      irReportes: () => this.go('reportes'),
+
+      sTrabajos: scr === 'trabajos', lista, listaVacia: lista.length === 0,
+      q: s.q, setQ: (e) => this.setState({ q: e.target.value }),
+      filtros: [
+        { k: 'todos', label: 'Todos', n: this.trabajos.length },
+        { k: 'en_curso', label: 'En curso', n: this.trabajos.filter(x => x.estado === 'en_curso').length },
+        { k: 'cerrado', label: 'Cerrados', n: this.trabajos.filter(x => x.estado === 'cerrado').length },
+        { k: 'entregado', label: 'Entregados', n: this.trabajos.filter(x => x.estado === 'entregado').length }
+      ].map(f => ({
+        label: f.label, n: f.n,
+        bg: s.filtro === f.k ? 'var(--accent)' : 'var(--surface)',
+        fg: s.filtro === f.k ? 'var(--accentOn)' : 'var(--muted)',
+        bd: s.filtro === f.k ? 'var(--accent)' : 'var(--border)',
+        set: () => this.setState({ filtro: f.k })
+      })),
+
+      sTrabajoNuevo: scr === 'trabajoNuevo', sTrabajoEdit: scr === 'trabajoEdit',
+      sForm: scr === 'trabajoNuevo' || scr === 'trabajoEdit',
+      formTitulo: scr === 'trabajoEdit' ? 'Editar trabajo' : 'Nuevo trabajo',
+      formCta: scr === 'trabajoEdit' ? 'Guardar cambios' : 'Crear trabajo',
+      formAccion: scr === 'trabajoEdit' ? () => { this.flash('Cambios guardados'); this.go('trabajoDet'); } : () => { this.flash('Trabajo creado'); this.go('trabajoDet'); },
+      formVolver: scr === 'trabajoEdit' ? () => this.go('trabajoDet') : () => this.go('trabajos'),
+      avisoEtapas: scr === 'trabajoEdit',
+      sTrabajoDet: scr === 'trabajoDet', sRecibo: scr === 'recibo',
+      lineasVals, totalCuenta: this.money(this.totalLineas()), nLineas: s.lineas.length,
+      agregarLinea: () => this.setState({ lineas: [...s.lineas, { tipoId: '', cant: 1, pieza: '' }] }),
+      doctorSel: s.doctorSel, setDoctor: (e) => this.setState({ doctorSel: e.target.value }),
+      doctoresOpts: this.consultorios.flatMap(x => x.doctores.map(d => ({ v: x.nombre + ' — ' + d.nombre }))),
+      paciente: s.paciente, setPaciente: (e) => this.setState({ paciente: e.target.value }),
+      entrega: s.entrega, setEntrega: (e) => this.setState({ entrega: e.target.value }),
+      notas: s.notas, setNotas: (e) => this.setState({ notas: e.target.value }),
+      manual: s.manual, toggleManual: () => this.setState({ manual: !s.manual }),
+      crearTrabajo: () => { this.flash('Trabajo creado'); this.go('trabajoDet'); },
+      guardarTrabajo: () => { this.flash('Cambios guardados'); this.go('trabajoDet'); },
+      pickerAbierto: s.pickerFor !== null, pickerQ: s.pickerQ,
+      setPickerQ: (e) => this.setState({ pickerQ: e.target.value }),
+      cerrarPicker: () => this.setState({ pickerFor: null }), pickerGrupos,
+
+      tTitulo: (t.cant > 1 ? t.cant + ' × ' : '') + t.titulo,
+      tCliente: tc.nombre + ' · ' + t.doctor, tColor: tc.color,
+      tPaciente: t.paciente || 'Sin paciente', tPieza: t.pieza ? 'Pza ' + t.pieza : 'Sin pieza',
+      tPrecio: this.money(t.precio), tIngreso: t.ingreso, tEntrega: t.entrega || 'sin fecha',
+      tChip: this.estadoChip(t.estado).t, tChipBg: this.estadoChip(t.estado).bg, tChipFg: this.estadoChip(t.estado).fg,
+      tPagado: this.money(pagado), tSaldo: this.money(t.precio - pagado),
+      tSaldoFg: t.precio - pagado > 0 ? 'var(--danger)' : 'var(--success)',
+      tInsumos: this.money(0), tMargen: this.money(t.precio),
+      tLineas: [{ n: (t.cant > 1 ? t.cant + ' × ' : '') + t.titulo, p: this.money(t.precio) }],
+      etapas: s.etapas.map((e, i) => ({
+        n: e.n, estado: e.e === 'completada' ? 'Completada' : e.e === 'en_progreso' ? 'En progreso' : e.e === 'excluida' ? 'Excluida' : 'Pendiente',
+        bg: e.e === 'completada' ? 'var(--successSoft)' : e.e === 'en_progreso' ? 'var(--accentSoft)' : 'var(--surface2)',
+        fg: e.e === 'completada' ? 'var(--success)' : e.e === 'en_progreso' ? 'var(--accent)' : 'var(--muted)',
+        avanzar: () => this.setState({ etapas: s.etapas.map((x, j) => j === i ? { ...x, e: x.e === 'pendiente' ? 'en_progreso' : x.e === 'en_progreso' ? 'completada' : x.e } : x) }),
+        excluir: () => this.setState({ etapas: s.etapas.map((x, j) => j === i ? { ...x, e: x.e === 'excluida' ? 'pendiente' : 'excluida' } : x) })
+      })),
+      progreso: progreso + '%', progresoTxt: progreso + '% completado',
+      abonos: s.abonos.map(a => ({ monto: this.money(a.monto), metodo: a.metodo, fecha: a.fecha, nota: a.nota || '—' })),
+      sinAbonos: s.abonos.length === 0,
+      abonoMonto: s.abonoMonto, setAbonoMonto: (e) => this.setState({ abonoMonto: e.target.value }),
+      abonoMetodo: s.abonoMetodo, setAbonoMetodo: (e) => this.setState({ abonoMetodo: e.target.value }),
+      abonoNota: s.abonoNota, setAbonoNota: (e) => this.setState({ abonoNota: e.target.value }),
+      registrarAbono: () => {
+        const m = parseFloat(s.abonoMonto);
+        if (!m) { this.flash('Ingresa un monto'); return; }
+        this.setState({ abonos: [...s.abonos, { monto: m, metodo: s.abonoMetodo, fecha: '2026-09-08', nota: s.abonoNota }], abonoMonto: '', abonoNota: '' });
+        this.flash('Abono registrado');
+      },
+      irRecibo: () => this.go('recibo'),
+      irEditar: () => this.go('trabajoEdit'),
+      cerrarTrabajo: () => this.flash('Trabajo cerrado · insumos descontados'),
+      marcarEntregado: () => this.flash('Marcado como entregado'),
+      eliminarTrabajo: () => this.askConfirm('Eliminar trabajo', 'Se borra el trabajo, sus etapas y sus abonos. No se puede deshacer.', 'Sí, eliminar', () => { this.flash('Trabajo eliminado'); this.go('trabajos'); }),
+      volverTrabajos: () => this.go('trabajos'), volverDet: () => this.go('trabajoDet'),
+      imprimir: () => this.flash('Enviado a la impresora'),
+      exportarPdf: () => this.flash('PDF generado'),
+
+      sConsultorios: scr === 'consultorios', consLista, consQ: s.consQ,
+      setConsQ: (e) => this.setState({ consQ: e.target.value }),
+      archivados: s.archivados, toggleArchivados: () => this.setState({ archivados: !s.archivados }),
+      nuevoConsultorio: () => this.go('consNuevo'),
+      sConsNuevo: scr === 'consNuevo', sConsEdit: scr === 'consEdit', sConsDet: scr === 'consDet',
+      sConsForm: scr === 'consNuevo' || scr === 'consEdit',
+      consFormTitulo: scr === 'consEdit' ? 'Editar consultorio' : 'Nuevo consultorio',
+      consFormNombre: scr === 'consEdit' ? c.nombre : '',
+      consFormTel: scr === 'consEdit' ? c.tel : '',
+      consFormNotas: scr === 'consEdit' ? c.notas : '',
+      consFormVolver: scr === 'consEdit' ? () => this.go('consDet') : () => this.go('consultorios'),
+      cNombre: c.nombre, cInicial: c.nombre[0], cColor: c.color, cTel: c.tel || 'sin contacto',
+      cNotas: c.notas || 'Sin notas', cDeuda: this.money(c.deuda), cTrab: c.trab,
+      consDoctores, sinDoctores: c.doctores.length === 0,
+      volverConsultorios: () => this.go('consultorios'), volverCons: () => this.go('consDet'),
+      guardarConsultorio: () => { this.flash('Consultorio guardado'); this.go('consDet'); },
+      editarConsultorio: () => this.go('consEdit'),
+      archivarConsultorio: () => this.flash('Consultorio archivado'),
+      eliminarConsultorio: () => this.askConfirm('Eliminar definitivo', 'Se borra ' + c.nombre + ', sus doctores y su historial. ¿Prefieres archivar?', 'Sí, eliminar', () => { this.flash('Consultorio eliminado'); this.go('consultorios'); }),
+      agregarDoctor: () => this.flash('Doctor agregado'),
+      sCuentas: scr === 'cuentas', totalCobrar: this.money(this.deudaTotal()),
+      sDoctor: scr === 'doctor', dNombre: (c.doctores[0] || { nombre: 'Doctor' }).nombre,
+
+      sInv: scr === 'inventario', sInvNuevo: scr === 'invNuevo', sInvDet: scr === 'invDet',
+      sInvEdit: scr === 'invEdit', sLiq: scr === 'liquidacion',
+      sInvForm: scr === 'invNuevo' || scr === 'invEdit',
+      invFormTitulo: scr === 'invEdit' ? 'Editar insumo' : 'Nuevo insumo',
+      invFormNombre: scr === 'invEdit' ? this.insumos[0].n : '',
+      invFormMin: scr === 'invEdit' ? String(this.insumos[0].min) : '0',
+      invFormCosto: scr === 'invEdit' ? String(this.insumos[0].costo) : '0',
+      invFormNuevo: scr === 'invNuevo',
+      invFormVolver: scr === 'invEdit' ? () => this.go('invDet') : () => this.go('inventario'),
+      invVacio: this.insumos.length === 0,
+      teorico: s.stock + ' g',
+      invQ: s.invQ, setInvQ: (e) => this.setState({ invQ: e.target.value }),
+      insumosLista: this.insumos.filter(i => !s.invQ || i.n.toLowerCase().includes(s.invQ.toLowerCase())).map(i => ({
+        n: i.n, costo: this.money(i.costo) + ' / ' + i.unidad, stock: i.stock + ' ' + i.unidad,
+        bajo: i.stock < i.min, estadoT: i.stock < i.min ? 'Stock bajo' : 'En rango',
+        estadoBg: i.stock < i.min ? 'var(--dangerSoft)' : 'var(--successSoft)',
+        estadoFg: i.stock < i.min ? 'var(--danger)' : 'var(--success)',
+        abrir: () => { this.setState({ insumoId: i.id }); this.go('invDet'); }
+      })),
+      iN: this.insumos[0].n, iStock: this.state.stock + ' g', iCosto: this.money(this.insumos[0].costo) + ' / g',
+      iMin: this.insumos[0].min + ' g',
+      movTipo: s.movTipo, setMovTipo: (e) => this.setState({ movTipo: e.target.value }),
+      movCant: s.movCant, setMovCant: (e) => this.setState({ movCant: e.target.value }),
+      registrarMov: () => {
+        const n = parseFloat(s.movCant); if (!n) { this.flash('Ingresa una cantidad'); return; }
+        this.setState({ stock: s.movTipo === 'ingreso' ? s.stock + n : s.stock - n, movCant: '' });
+        this.flash('Movimiento registrado');
+      },
+      conteo: s.conteo, setConteo: (e) => this.setState({ conteo: e.target.value }),
+      registrarConteo: () => this.flash('Liquidación registrada'),
+      nuevoInsumo: () => this.go('invNuevo'), volverInv: () => this.go('inventario'),
+      guardarInsumo: () => { this.flash('Insumo guardado'); this.go('invDet'); },
+      editarInsumo: () => this.go('invEdit'), irLiquidacion: () => this.go('liquidacion'),
+      archivarInsumo: () => this.flash('Insumo archivado'),
+      eliminarInsumo: () => this.askConfirm('Eliminar definitivo', 'Esto borra "' + this.insumos[0].n + '" y todo su historial de movimientos. No se puede deshacer.', 'Sí, eliminar', () => { this.flash('Insumo eliminado'); this.go('inventario'); }),
+
+      sFin: scr === 'finanzas', sRep: scr === 'reportes', sRepTicket: scr === 'repTicket',
+      repGrupos: this.consultorios.filter(x => x.deuda > 0).sort((a, b) => b.deuda - a.deuda).map(x => ({
+        nombre: x.nombre, color: x.color, monto: this.money(x.deuda),
+        doctor: x.doctores.map(d => d.nombre).join(', '),
+        cobrado: this.money(0) + ' de ' + this.money(x.deuda),
+        lineas: this.trabajos.filter(t => t.cons === x.id).map(t => ({
+          f: t.ingreso.slice(5), n: (t.cant > 1 ? t.cant + ' × ' : '') + t.titulo, m: this.money(t.precio - t.pagado)
+        }))
+      })),
+      topConsultorios: this.consultorios.filter(x => x.deuda > 0).sort((a, b) => b.deuda - a.deuda).slice(0, 5).map((x, i, arr) => ({
+        nombre: x.nombre, color: x.color, monto: this.money(x.deuda),
+        w: Math.round(x.deuda / arr[0].deuda * 100) + '%'
+      })),
+      finIngresos: this.money(3400), finGastos: this.money(1180),
+      finUtilidad: this.money(2220), finMargen: '65%',
+      finMateriales: this.money(680), finPagos: this.money(500),
+      repIncluir: s.repIncluir, setPorCobrar: () => this.setState({ repIncluir: 'porcobrar' }),
+      setTodos: () => this.setState({ repIncluir: 'todos' }),
+      bgPor: s.repIncluir === 'porcobrar' ? 'var(--accent)' : 'var(--surface)',
+      fgPor: s.repIncluir === 'porcobrar' ? 'var(--accentOn)' : 'var(--muted)',
+      bgTod: s.repIncluir === 'todos' ? 'var(--accent)' : 'var(--surface)',
+      fgTod: s.repIncluir === 'todos' ? 'var(--accentOn)' : 'var(--muted)',
+      repDesde: s.repDesde, repHasta: s.repHasta,
+      setDesde: (e) => this.setState({ repDesde: e.target.value }), setHasta: (e) => this.setState({ repHasta: e.target.value }),
+      verReporte: () => this.flash('Reporte actualizado'),
+      irTicket: () => this.go('repTicket'), volverFin: () => this.go('finanzas'), volverRep: () => this.go('reportes'),
+      exportarCsv: () => this.flash('CSV descargado'),
+      nTrabajosDeuda: this.trabajos.length, montoFinal: this.money(this.trabajos.reduce((a, b) => a + b.precio, 0)),
+      abonado: this.money(this.trabajos.reduce((a, b) => a + b.pagado, 0)),
+      barras: [
+        { m: 'abr', ing: 42, gas: 26 }, { m: 'may', ing: 55, gas: 31 }, { m: 'jun', ing: 48, gas: 29 },
+        { m: 'jul', ing: 63, gas: 34 }, { m: 'ago', ing: 71, gas: 38 }, { m: 'sep', ing: 58, gas: 30 }
+      ].map(b => ({ m: b.m, hi: b.ing + '%', hg: b.gas + '%' })),
+
+      sConfig: scr === 'config', sCat: scr === 'catalogo', sCatNuevo: scr === 'catNuevo',
+      sCatDet: scr === 'catDet', sCatEdit: scr === 'catEdit', sTrabs: scr === 'trabajadores',
+      sTrabNuevo: scr === 'trabNuevo', sTrabDet: scr === 'trabDet', sUsuarios: scr === 'usuarios',
+      sAuditoria: scr === 'auditoria',
+      catGrupos, catFiltrado, catQ: s.catQ, setCatQ: (e) => this.setState({ catQ: e.target.value }),
+      ktN: kt.n, ktP: this.money(kt.p), ktCat: 'Prótesis fija',
+      sCatForm: scr === 'catNuevo' || scr === 'catEdit',
+      catFormTitulo: scr === 'catEdit' ? 'Editar tipo de trabajo' : 'Nuevo tipo de trabajo',
+      catFormCat: scr === 'catEdit' ? 'Prótesis fija' : '',
+      catFormN: scr === 'catEdit' ? kt.n : '',
+      catFormP: scr === 'catEdit' ? String(kt.p) : '',
+      catFormVolver: scr === 'catEdit' ? () => this.go('catDet') : () => this.go('catalogo'),
+      trabajadores: [{ nombre: 'Daniel', pagos: this.money(0), tipos: 3 }],
+      usuarios: [
+        { nombre: 'Lab kevin', correo: 'masterlab.ch@gmail.com', rol: 'Técnico', esYo: false, editable: true },
+        { nombre: 'Marlon Chávez (tú)', correo: 'prueba@gmail.com', rol: 'Admin', esYo: true, editable: false }
+      ],
+      irCatalogo: () => this.go('catalogo'), irTrabajadores: () => this.go('trabajadores'),
+      irUsuarios: () => this.go('usuarios'), irAuditoria: () => this.go('auditoria'),
+      volverConfig: () => this.go('config'), volverCat: () => this.go('catalogo'),
+      volverTrabs: () => this.go('trabajadores'),
+      nuevoTipo: () => this.go('catNuevo'), editarTipo: () => this.go('catEdit'),
+      guardarTipo: () => { this.flash('Tipo de trabajo guardado'); this.go('catDet'); },
+      abrirTipo: () => this.go('catDet'),
+      nuevoTrabajador: () => this.go('trabNuevo'), abrirTrabajador: () => this.go('trabDet'),
+      guardarTrabajador: () => { this.flash('Trabajador guardado'); this.go('trabDet'); },
+      registrarPago: () => this.flash('Pago registrado'),
+      agregarEtapa: () => this.flash('Etapa agregada'),
+      permisos: s.permisos,
+      togglePermiso: (k) => this.setState({ permisos: { ...s.permisos, [k]: !s.permisos[k] } }),
+      permisosList: [
+        { k: 'reportes', n: 'Ver reportes', d: 'Reportes por consultorio y doctor, sin importes en soles.' },
+        { k: 'importes', n: 'Reportes con importes', d: 'Los reportes que emita incluyen montos y deuda. Incluye ver reportes.' },
+        { k: 'inv_ver', n: 'Ver inventario', d: 'Consultar stock de insumos (sin costos).' },
+        { k: 'inv_mov', n: 'Registrar movimientos', d: 'Entradas, salidas y mermas. Incluye ver inventario.' }
+      ].map(p => ({
+        n: p.n, d: p.d, on: !!s.permisos[p.k],
+        bg: s.permisos[p.k] ? 'var(--accent)' : 'var(--surface)',
+        bd: s.permisos[p.k] ? 'var(--accent)' : 'var(--border)',
+        toggle: () => this.setState({ permisos: { ...s.permisos, [p.k]: !s.permisos[p.k] } })
+      })),
+      guardarPermisos: () => this.flash('Permisos guardados'),
+      crearUsuario: () => this.flash('Usuario creado'),
+      auditoria: [
+        { q: 'Marlon Chávez', a: 'creó', o: 'Trabajo · 2 × Parcial acrílico wipla', f: 'Hoy 09:47' },
+        { q: 'Lab kevin', a: 'actualizó', o: 'Insumo · Yeso piedra', f: 'Hoy 09:31' },
+        { q: 'Marlon Chávez', a: 'eliminó', o: 'Trabajo · Reparación', f: 'Ayer 18:02' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
