@@ -34,6 +34,7 @@
 | 7 `screen` en `localStorage` | No aplica: en producción la pantalla activa la resuelve el App Router. |
 | 5.2 Login: columna derecha de presentación | **Se omite.** El spec la marca opcional y la app es de uso interno. |
 | 11 Marca Skardiam | Pendiente. Esta fase no la aborda; queda aislada en `--color-accent` y derivados. |
+| 4.1 Cinco destinos de navegación | Son los del administrador. Se conserva `Reportes` como destino condicional del técnico con permiso: es su única vía de acceso (ver Tarea 6). |
 
 ## File Structure
 
@@ -1247,9 +1248,21 @@ describe('NAV_PRINCIPAL', () => {
 })
 ```
 
-Nota: `Reportes` deja de ser un destino de la barra; el técnico con permiso llega por
-`/reportes` desde Hoy y desde Estado de cuenta, igual que el administrador desde Finanzas.
-Ajustar `navItemsFor` y sus tests para reflejarlo.
+**Corrección sobre el spec (4.1):** el spec describe 5 destinos, que son los del
+administrador. `Reportes` **se conserva** como destino condicional del técnico con permiso
+`reportes`: sin él no tendría ninguna vía de acceso, porque Finanzas y Estado de cuenta son
+solo de administrador, y el spec exige no quitar funcionalidad. Un técnico ve como máximo
+Hoy · Consultorios · Trabajos · Inventario · Reportes, nunca más de cinco.
+
+```ts
+describe('acceso a Reportes', () => {
+  it('el técnico con permiso conserva su destino de Reportes', () => {
+    const labels = navItemsFor(perfil({ permisos: ['reportes'] })).map((i) => i.label)
+    expect(labels).toContain('Reportes')
+    expect(labels.length).toBeLessThanOrEqual(5)
+  })
+})
+```
 
 - [ ] **Step 4: Ejecutar, ver fallar, implementar**
 
