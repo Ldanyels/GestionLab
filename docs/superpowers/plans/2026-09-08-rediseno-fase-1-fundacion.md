@@ -1,6 +1,6 @@
 # Rediseño GestionLab — Fase 1: Fundación visual y navegación
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Dejar instalada la base visual del rediseño —paleta, tipografía, primitivos y navegación (barra inferior móvil + barra lateral de escritorio)— de modo que todas las pantallas existentes ya se vean con la nueva identidad y el sistema sea usable en escritorio.
 
@@ -92,7 +92,7 @@ Equivalencias con el spec (sección 9):
 | `--warn` / `--warnSoft` | `--color-warn` *(nuevo)* / `--color-warn-soft` *(nuevo)* |
 | `--shadow` / `--pop` | `--shadow-card` / `--shadow-pop` |
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 Crear `lib/__tests__/tokens.test.ts`:
 
@@ -199,12 +199,12 @@ describe('paleta del rediseño', () => {
 })
 ```
 
-- [ ] **Step 2: Ejecutar el test y verificar que falla**
+- [x] **Step 2: Ejecutar el test y verificar que falla**
 
 Run: `pnpm vitest run lib/__tests__/tokens.test.ts`
 Expected: FAIL — los valores actuales están en `oklch(...)`, no en los hex del spec.
 
-- [ ] **Step 3: Reescribir la paleta en `app/globals.css`**
+- [x] **Step 3: Reescribir la paleta en `app/globals.css`**
 
 Sustituir los bloques `:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme='dark']` y `@theme inline` por:
 
@@ -359,18 +359,18 @@ h3 {
 }
 ```
 
-- [ ] **Step 4: Ejecutar el test y verificar que pasa**
+- [x] **Step 4: Ejecutar el test y verificar que pasa**
 
 Run: `pnpm vitest run lib/__tests__/tokens.test.ts`
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Verificar que no se rompió ninguna pantalla**
+- [x] **Step 5: Verificar que no se rompió ninguna pantalla**
 
 Run: `pnpm vitest run && pnpm build`
 Expected: los 123 tests previos siguen en verde y la build compila. Los componentes que
 usaban `--color-accent-soft` y compañía siguen funcionando porque los nombres no cambiaron.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/globals.css lib/__tests__/tokens.test.ts
@@ -392,7 +392,7 @@ git commit -m "feat(diseno): paleta y tokens del rediseno"
   - `Card({ children, tono?, colorLateral?, className?, as? })` — `tono: 'seccion' | 'lista' | 'destacada'` (radios 16 / 14 / 20), `colorLateral?: string` pinta el borde izquierdo de 4 px.
   - `Chip({ children, tono, conPunto? })` — `tono: 'neutro' | 'acento' | 'exito' | 'peligro' | 'aviso'`.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Crear `components/ui/Card.test.tsx`:
 
@@ -464,12 +464,12 @@ describe('Chip', () => {
 })
 ```
 
-- [ ] **Step 2: Ejecutar y verificar que fallan**
+- [x] **Step 2: Ejecutar y verificar que fallan**
 
 Run: `pnpm vitest run components/ui/Card.test.tsx components/ui/Chip.test.tsx`
 Expected: FAIL — "Failed to resolve import ./Card".
 
-- [ ] **Step 3: Implementar los primitivos**
+- [x] **Step 3: Implementar los primitivos**
 
 Crear `components/ui/Card.tsx`:
 
@@ -540,12 +540,12 @@ export function Chip({ children, tono, conPunto }: Props) {
 }
 ```
 
-- [ ] **Step 4: Ejecutar y verificar que pasan**
+- [x] **Step 4: Ejecutar y verificar que pasan**
 
 Run: `pnpm vitest run components/ui/Card.test.tsx components/ui/Chip.test.tsx`
 Expected: PASS (8 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/ui/Card.tsx components/ui/Chip.tsx components/ui/Card.test.tsx components/ui/Chip.test.tsx
@@ -567,7 +567,7 @@ git commit -m "feat(ui): primitivos Card y Chip"
   - `KpiTile({ etiqueta, valor, tono? })` — `tono: 'normal' | 'peligro' | 'exito' | 'acento' | 'aviso'`; valor en `.num` a 26 px/700.
   - `BackRow({ href, titulo, migaDePan? })` — botón cuadrado de 40 px con chevron + `h1` de 24 px.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Crear `components/ui/KpiTile.test.tsx`:
 
@@ -621,12 +621,12 @@ describe('BackRow', () => {
 })
 ```
 
-- [ ] **Step 2: Ejecutar y verificar que fallan**
+- [x] **Step 2: Ejecutar y verificar que fallan**
 
 Run: `pnpm vitest run components/ui/KpiTile.test.tsx components/ui/BackRow.test.tsx`
 Expected: FAIL — imports sin resolver.
 
-- [ ] **Step 3: Implementar los primitivos**
+- [x] **Step 3: Implementar los primitivos**
 
 Crear `components/ui/KpiTile.tsx`:
 
@@ -706,12 +706,12 @@ export function BackRow({ href, titulo, migaDePan }: Props) {
 }
 ```
 
-- [ ] **Step 4: Ejecutar y verificar que pasan**
+- [x] **Step 4: Ejecutar y verificar que pasan**
 
 Run: `pnpm vitest run components/ui/KpiTile.test.tsx components/ui/BackRow.test.tsx`
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/ui/KpiTile.tsx components/ui/BackRow.tsx components/ui/KpiTile.test.tsx components/ui/BackRow.test.tsx
@@ -732,7 +732,7 @@ git commit -m "feat(ui): primitivos KpiTile y BackRow"
 - Produces: `Sheet({ abierta, onCerrar, titulo, children, anchoMax? })` — overlay `rgba(10,13,18,.5)`,
   panel anclado abajo, radio superior 22, cierre por clic en el overlay, por botón y con `Escape`.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Crear `components/ui/Sheet.test.tsx`:
 
@@ -836,14 +836,14 @@ describe('ConfirmDialog', () => {
 })
 ```
 
-- [ ] **Step 2: Ejecutar y verificar que fallan**
+- [x] **Step 2: Ejecutar y verificar que fallan**
 
 Run: `pnpm vitest run components/ui/Sheet.test.tsx components/ui/ConfirmDialog.test.tsx`
 Expected: FAIL — `Sheet` no existe; los tests de `ConfirmDialog` fallan al no encontrar el rol `dialog` con el marcado nuevo.
 
 Si `@testing-library/user-event` no está instalado: `pnpm add -D @testing-library/user-event`.
 
-- [ ] **Step 3: Implementar `Sheet`**
+- [x] **Step 3: Implementar `Sheet`**
 
 Crear `components/ui/Sheet.tsx`:
 
@@ -930,7 +930,7 @@ Añadir la animación al final de `app/globals.css`:
 }
 ```
 
-- [ ] **Step 4: Reescribir `ConfirmDialog` sobre `Sheet`**
+- [x] **Step 4: Reescribir `ConfirmDialog` sobre `Sheet`**
 
 Reemplazar el contenido de `components/ui/ConfirmDialog.tsx`:
 
@@ -1002,12 +1002,12 @@ export function ConfirmDialog({
 }
 ```
 
-- [ ] **Step 5: Ejecutar y verificar que pasan**
+- [x] **Step 5: Ejecutar y verificar que pasan**
 
 Run: `pnpm vitest run components/ui/Sheet.test.tsx components/ui/ConfirmDialog.test.tsx`
 Expected: PASS (8 tests)
 
-- [ ] **Step 6: Ajustar los textos de confirmación del spec 6.2**
+- [x] **Step 6: Ajustar los textos de confirmación del spec 6.2**
 
 Los tres textos exactos, en sus llamadas actuales:
 
@@ -1017,7 +1017,7 @@ Los tres textos exactos, en sus llamadas actuales:
 | `app/(app)/consultorios/[id]/page.tsx` | `Eliminar definitivo` | `Se borra {nombre}, sus doctores y su historial. ¿Prefieres archivar?` | `Sí, eliminar` |
 | `app/(app)/inventario/[id]/page.tsx` | `Eliminar definitivo` | `Esto borra «{nombre}» y todo su historial de movimientos. No se puede deshacer.` | `Sí, eliminar` |
 
-- [ ] **Step 7: Verificación completa y commit**
+- [x] **Step 7: Verificación completa y commit**
 
 Run: `pnpm vitest run && pnpm build`
 Expected: todo en verde.
@@ -1042,7 +1042,7 @@ git commit -m "feat(ui): hoja inferior Sheet y confirmaciones del rediseno"
   - `ToastProvider({ children })` — monta la región de avisos.
   - `useToast(): (mensaje: string) => void` — muestra un aviso con autocierre a 2200 ms.
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 Crear `components/ui/Toast.test.tsx`:
 
@@ -1103,12 +1103,12 @@ describe('Toast', () => {
 })
 ```
 
-- [ ] **Step 2: Ejecutar y verificar que falla**
+- [x] **Step 2: Ejecutar y verificar que falla**
 
 Run: `pnpm vitest run components/ui/Toast.test.tsx`
 Expected: FAIL — import sin resolver.
 
-- [ ] **Step 3: Implementar el proveedor**
+- [x] **Step 3: Implementar el proveedor**
 
 Crear `components/ui/Toast.tsx`:
 
@@ -1184,12 +1184,12 @@ Añadir la animación al final de `app/globals.css`:
 }
 ```
 
-- [ ] **Step 4: Ejecutar y verificar que pasa**
+- [x] **Step 4: Ejecutar y verificar que pasa**
 
 Run: `pnpm vitest run components/ui/Toast.test.tsx`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/ui/Toast.tsx components/ui/Toast.test.tsx app/globals.css
@@ -1212,19 +1212,19 @@ git commit -m "feat(ui): avisos con autocierre"
   - `destinos.ts`: `NavItem { label, href, roles, permiso? }`, `NAV_PRINCIPAL: NavItem[]`, `navItemsFor(perfil): NavItem[]`.
   - `Sidebar({ perfil })` — barra de 236 px, oculta bajo 980 px.
 
-- [ ] **Step 1: Mover la lógica de destinos y escribir su test**
+- [x] **Step 1: Mover la lógica de destinos y escribir su test**
 
 Crear `components/nav/destinos.ts` con el contenido actual de `ALL_ITEMS` y `navItemsFor`
 de `components/nav/BottomNav.tsx` (sin cambios de comportamiento), y mover
 `components/nav/BottomNav.test.tsx` a `components/nav/destinos.test.ts` ajustando el import
 a `./destinos`.
 
-- [ ] **Step 2: Ejecutar y verificar que pasa**
+- [x] **Step 2: Ejecutar y verificar que pasa**
 
 Run: `pnpm vitest run components/nav/destinos.test.ts`
 Expected: PASS (4 tests, los mismos de antes)
 
-- [ ] **Step 3: Escribir el test de la barra lateral**
+- [x] **Step 3: Escribir el test de la barra lateral**
 
 Añadir a `components/nav/destinos.test.ts`:
 
@@ -1264,7 +1264,7 @@ describe('acceso a Reportes', () => {
 })
 ```
 
-- [ ] **Step 4: Ejecutar, ver fallar, implementar**
+- [x] **Step 4: Ejecutar, ver fallar, implementar**
 
 Run: `pnpm vitest run components/nav/destinos.test.ts`
 Expected: FAIL — `NAV_PRINCIPAL` no exportado / incluye Reportes.
@@ -1341,12 +1341,12 @@ export function Sidebar({ perfil }: { perfil: Perfil }) {
 En `components/nav/BottomNav.tsx`: eliminar `ALL_ITEMS`/`navItemsFor` (ahora en `destinos.ts`),
 importar `navItemsFor` desde `./destinos`, y añadir `min-[980px]:hidden` a la clase del `<nav>`.
 
-- [ ] **Step 5: Ejecutar y verificar que pasa**
+- [x] **Step 5: Ejecutar y verificar que pasa**
 
 Run: `pnpm vitest run components/nav/`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add components/nav/
@@ -1367,7 +1367,7 @@ git commit -m "feat(nav): barra lateral de escritorio y destinos compartidos"
 - Produces: `AppShell({ perfil, children })` — header móvil de 56 px (logo, Tema, Configuración, Salir),
   barra lateral en ≥980 px, contenido con `max-width: 880px` y `padding: 18px 16px 110px`.
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 Crear `components/nav/AppShell.test.tsx`:
 
@@ -1424,12 +1424,12 @@ describe('AppShell', () => {
 })
 ```
 
-- [ ] **Step 2: Ejecutar y verificar que falla**
+- [x] **Step 2: Ejecutar y verificar que falla**
 
 Run: `pnpm vitest run components/nav/AppShell.test.tsx`
 Expected: FAIL — import sin resolver.
 
-- [ ] **Step 3: Implementar el shell**
+- [x] **Step 3: Implementar el shell**
 
 Crear `components/nav/AppShell.tsx`:
 
@@ -1519,12 +1519,12 @@ export function AppShell({
 }
 ```
 
-- [ ] **Step 4: Ejecutar y verificar que pasa**
+- [x] **Step 4: Ejecutar y verificar que pasa**
 
 Run: `pnpm vitest run components/nav/AppShell.test.tsx`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Enchufar el shell en el layout**
+- [x] **Step 5: Enchufar el shell en el layout**
 
 En `app/(app)/layout.tsx`, sustituir el `<div className="min-h-dvh pb-16">…</div>` final
 (header + `<main>` + `<BottomNav>`) por:
@@ -1537,7 +1537,7 @@ Conservar intactos el `redirect('/login')` sin sesión y la pantalla de "No pudi
 perfil" / "Cuenta sin laboratorio". Eliminar los imports que queden sin uso
 (`Link`, `BottomNav`, `LogoDiente`, `ThemeToggle`) y añadir el de `AppShell`.
 
-- [ ] **Step 6: Verificación completa**
+- [x] **Step 6: Verificación completa**
 
 Run: `pnpm vitest run && pnpm lint && pnpm build`
 Expected: tests en verde, sin errores nuevos de lint, build compila.
@@ -1559,7 +1559,7 @@ node scripts/capturar-pantallas.mjs
 Comprobar en las imágenes: la paleta nueva en todas las pantallas, la barra lateral en la
 tanda de 1280 px (sin barra inferior), y que ninguna pantalla desborde en horizontal.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add components/nav/AppShell.tsx components/nav/AppShell.test.tsx "app/(app)/layout.tsx" docs/capturas/
@@ -1586,3 +1586,19 @@ cada uno entregando software funcionando:
 
 Se escriben al terminar la fase anterior, para que cada plan se apoye en primitivos que ya
 existen y no en supuestos.
+
+## Hallazgos de la verificación visual (para la fase 2)
+
+1. **Título del trabajo aplastado.** En `app/(app)/trabajos/[id]/page.tsx` la cabecera es
+   una fila con el título a la izquierda y tres botones (`Recibo`, `Editar`, `Eliminar`)
+   con `shrink-0` a la derecha: los botones ocupan 226 px de los 358 disponibles y el
+   título queda en 132 px, mostrando solo «2 …». Defecto **preexistente** (visible ya en
+   `docs/capturas/05-trabajo-detalle.png`, anterior a esta fase). Lo resuelve el spec 5.5,
+   que pone las acciones en su propia fila de enlaces bajo la cabecera.
+2. **Lección sobre `text-wrap`.** Una regla `h1 { text-wrap: balance }` sin capa vence a
+   `.truncate` de Tailwind (que vive en `@layer utilities`) y hace que el título envuelva y
+   se recorte línea por línea. `balance` solo debe aplicarse con `.titulo-balance` donde el
+   título tenga ancho propio. Hay test de regresión en `lib/__tests__/tokens.test.ts`.
+3. **Caché de CSS del servidor de desarrollo.** Tras editar `app/globals.css`, el servidor
+   puede seguir sirviendo la hoja anterior. Antes de capturar para verificar, reinícialo y
+   borra `.next`, o las imágenes mostrarán el estado viejo.

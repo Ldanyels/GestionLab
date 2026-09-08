@@ -124,12 +124,19 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Títulos: apretados y con quiebre equilibrado */
+/* Títulos: interletraje apretado. Ojo: `text-wrap: balance` NO va aquí —
+   altera el ancho mínimo del texto y colapsa los títulos dentro de un flex
+   (rompía el título del trabajo letra por letra). Se aplica solo donde
+   corresponde con .titulo-balance. */
 h1,
 h2,
 h3 {
-  text-wrap: balance;
   letter-spacing: -0.02em;
+}
+
+/* Quiebre equilibrado para títulos de tarjeta (spec 9). */
+.titulo-balance {
+  text-wrap: balance;
 }
 
 /* Foco accesible y consistente en toda la app */

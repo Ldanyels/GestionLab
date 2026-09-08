@@ -97,4 +97,16 @@ describe('paleta del rediseño', () => {
   it('activa text-wrap: pretty de forma global', () => {
     expect(css).toMatch(/text-wrap:\s*pretty/)
   })
+
+  it('no aplica text-wrap: balance a todos los encabezados', () => {
+    // Regresión: `balance` global colapsaba los títulos dentro de un flex
+    // (el título del trabajo se partía letra por letra en móvil).
+    const encabezados = bloque('h1,\nh2,\nh3')
+    expect(encabezados).not.toContain('text-wrap: balance')
+    expect(encabezados).toContain('letter-spacing')
+  })
+
+  it('ofrece .titulo-balance para los títulos de tarjeta', () => {
+    expect(css).toMatch(/\.titulo-balance\s*\{[^}]*text-wrap:\s*balance/)
+  })
 })
