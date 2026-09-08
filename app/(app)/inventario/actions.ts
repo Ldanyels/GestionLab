@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requirePermiso } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
 import { productoSchema, movimientoSchema } from '@/lib/inventario/schema'
 import {
   crearProducto,
@@ -68,7 +69,7 @@ export async function registrarMovimientoAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  await requireAdmin()
+  const perfil = await requirePermiso('inventario_editar')
   const productoId = String(formData.get('producto_id') ?? '')
   if (!productoId) return { error: 'Falta el producto' }
   const parsed = movimientoSchema.safeParse({
@@ -76,7 +77,8 @@ export async function registrarMovimientoAction(
     cantidad: String(formData.get('cantidad') ?? ''),
     ajuste_resta: formData.get('ajuste_resta') === 'on',
     origen: String(formData.get('origen') ?? '') || undefined,
-    costo_unitario: String(formData.get('costo_unitario') ?? ''),
+    // Solo el admin fija costos: al técnico se le ignora este campo.
+    costo_unitario: veMontos(perfil) ? String(formData.get('costo_unitario') ?? '') : '',
     motivo: String(formData.get('motivo') ?? ''),
     fecha: String(formData.get('fecha') ?? ''),
   })
@@ -88,7 +90,7 @@ export async function registrarMovimientoAction(
 }
 
 export async function eliminarMovimientoAction(formData: FormData): Promise<void> {
-  await requireAdmin()
+  await requirePermiso('inventario_editar')
   const id = String(formData.get('id') ?? '')
   const productoId = String(formData.get('producto_id') ?? '')
   if (!id) return
@@ -111,7 +113,7 @@ export async function archivarProductoAction(formData: FormData): Promise<void> 
 }
 
 export async function liquidarProductoAction(formData: FormData): Promise<void> {
-  await requireAdmin()
+  await requirePermiso('inventario_editar')
   const productoId = String(formData.get('producto_id') ?? '')
   const conteo = Number(formData.get('conteo_real'))
   if (!productoId || Number.isNaN(conteo) || conteo < 0) return

@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { requireAdmin } from '@/lib/auth'
+import { requirePermiso } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
 import { nombreLaboratorioActual } from '@/lib/tenant'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
@@ -18,7 +19,8 @@ export default async function ReporteTicketPage({
     mostrar?: string
   }>
 }) {
-  await requireAdmin()
+  const perfil = await requirePermiso('reportes')
+  const montos = veMontos(perfil)
   const sp = await searchParams
   const f = resolverFiltros(sp)
   const [todas, laboratorio] = await Promise.all([
@@ -38,6 +40,7 @@ export default async function ReporteTicketPage({
     }).format(new Date()),
     rango: etiquetaRango(f.desde, f.hasta),
     soloPendientes: f.soloPendientes,
+    montos,
     filtro: f.doctorId
       ? grupos[0]?.doctores[0]?.doctor
       : f.consultorioId
@@ -54,7 +57,7 @@ export default async function ReporteTicketPage({
           ‹
         </Link>
         <h1 className="text-xl font-semibold tracking-tight">
-          {f.soloPendientes ? 'Cobranza en ticket' : 'Reporte en ticket'}
+          {montos && f.soloPendientes ? 'Cobranza en ticket' : 'Reporte en ticket'}
         </h1>
       </div>
       <ReciboTicket lineas={lineas} pdfHref={`/reportes/pdf?${query}`} pdfLabel="PDF A4" />

@@ -12,4 +12,6 @@ export interface Perfil {
   laboratorio_id: string
   nombre: string
   rol: Rol
+  /** Permisos extra del técnico. El admin los tiene todos implícitamente. */
+  permisos: string[]
 }

@@ -6,8 +6,10 @@ import {
   usuarioSchema,
   crearUsuario,
   cambiarRolUsuario,
+  guardarPermisosUsuario,
   eliminarUsuario,
 } from '@/lib/usuarios/data'
+import { PERMISOS } from '@/lib/permisos'
 import type { Rol } from '@/lib/supabase/types'
 
 export interface FormState {
@@ -42,6 +44,16 @@ export async function cambiarRolAction(formData: FormData): Promise<void> {
   const rol = String(formData.get('rol') ?? '') as Rol
   if (!id || !['admin', 'tecnico'].includes(rol)) return
   await cambiarRolUsuario(id, rol)
+  revalidatePath('/configuracion/usuarios')
+}
+
+export async function guardarPermisosAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  if (!id) return
+  // Las casillas marcadas llegan con el nombre del permiso.
+  const marcados = PERMISOS.filter((p) => formData.get(p) === 'on')
+  await guardarPermisosUsuario(id, marcados)
   revalidatePath('/configuracion/usuarios')
 }
 

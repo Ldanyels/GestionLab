@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { requireAdmin } from '@/lib/auth'
+import { requirePermiso } from '@/lib/auth'
+import { puede, veMontos } from '@/lib/permisos'
 import { listProductos } from '@/lib/inventario/data'
 import { formatMoney } from '@/lib/format'
 import { SearchBox } from '@/components/ui/SearchBox'
@@ -9,7 +10,10 @@ export default async function InventarioPage({
 }: {
   searchParams: Promise<{ q?: string; archivados?: string }>
 }) {
-  await requireAdmin()
+  const perfil = await requirePermiso('inventario_ver')
+  const montos = veMontos(perfil)
+  const puedeEditar = puede(perfil, 'inventario_editar')
+  const esAdmin = perfil.rol === 'admin'
   const { q, archivados } = await searchParams
   const verArchivados = archivados === '1'
   const productos = await listProductos(q, verArchivados)
@@ -27,18 +31,22 @@ export default async function InventarioPage({
           ) : null}
         </div>
         <div className="flex gap-2">
-          <Link
-            href="/inventario/liquidacion"
-            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
-          >
-            Liquidar
-          </Link>
-          <Link
-            href="/inventario/nuevo"
-            className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-contrast)]"
-          >
-            + Nuevo
-          </Link>
+          {puedeEditar ? (
+            <Link
+              href="/inventario/liquidacion"
+              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+            >
+              Liquidar
+            </Link>
+          ) : null}
+          {esAdmin ? (
+            <Link
+              href="/inventario/nuevo"
+              className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-contrast)]"
+            >
+              + Nuevo
+            </Link>
+          ) : null}
         </div>
       </div>
 
@@ -53,7 +61,9 @@ export default async function InventarioPage({
 
       {productos.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          Aún no hay insumos. Toca “+ Nuevo”.
+          {esAdmin
+            ? 'Aún no hay insumos. Toca “+ Nuevo”.'
+            : 'Aún no hay insumos registrados.'}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -68,7 +78,9 @@ export default async function InventarioPage({
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{p.nombre}</span>
                     <span className="block text-xs text-[var(--color-muted)]">
-                      {formatMoney(p.costo_unitario)} / {p.unidad}
+                      {montos
+                        ? `${formatMoney(p.costo_unitario)} / ${p.unidad}`
+                        : `mínimo ${p.stock_minimo} ${p.unidad}`}
                     </span>
                   </span>
                   <span

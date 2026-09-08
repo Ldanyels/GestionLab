@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { requireAdmin } from '@/lib/auth'
+import { requirePermiso } from '@/lib/auth'
+import { puede, veMontos } from '@/lib/permisos'
 import { getProducto } from '@/lib/inventario/data'
 import { ETIQUETA_MOV } from '@/lib/inventario/types'
 import { formatMoney } from '@/lib/format'
@@ -17,7 +18,10 @@ export default async function ProductoDetallePage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await requireAdmin()
+  const perfil = await requirePermiso('inventario_ver')
+  const montos = veMontos(perfil)
+  const puedeEditar = puede(perfil, 'inventario_editar')
+  const esAdmin = perfil.rol === 'admin'
   const { id } = await params
   const p = await getProducto(id)
   if (!p) notFound()
@@ -32,7 +36,8 @@ export default async function ProductoDetallePage({
           </Link>
           <h1 className="truncate text-xl font-semibold tracking-tight">{p.nombre}</h1>
           <p className="text-sm text-[var(--color-muted)]">
-            {formatMoney(p.costo_unitario)} / {p.unidad} · mínimo {p.stock_minimo}
+            {montos ? `${formatMoney(p.costo_unitario)} / ${p.unidad} · ` : ''}
+            mínimo {p.stock_minimo} {p.unidad}
           </p>
           {!p.activo ? (
             <span className="mt-1 inline-block rounded-full bg-[var(--color-muted)]/15 px-2 py-0.5 text-xs text-[var(--color-muted)]">
@@ -41,6 +46,8 @@ export default async function ProductoDetallePage({
           ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-2">
+          {esAdmin ? (
+            <>
           <Link
             href={`/inventario/${p.id}/editar`}
             className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
@@ -66,6 +73,8 @@ export default async function ProductoDetallePage({
             message={`Esto borra "${p.nombre}" y todo su historial de movimientos. No se puede deshacer. ¿Prefieres archivar? Si estás seguro, confirma.`}
             confirmLabel="Sí, eliminar"
           />
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -83,10 +92,12 @@ export default async function ProductoDetallePage({
         ) : null}
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-medium">Registrar movimiento</h2>
-        <MovimientoForm productoId={p.id} />
-      </div>
+      {puedeEditar ? (
+        <div className="space-y-3">
+          <h2 className="text-lg font-medium">Registrar movimiento</h2>
+          <MovimientoForm productoId={p.id} montos={montos} />
+        </div>
+      ) : null}
 
       <div className="space-y-2">
         <h2 className="text-lg font-medium">Historial</h2>
@@ -116,18 +127,22 @@ export default async function ProductoDetallePage({
                   <span className="block text-xs text-[var(--color-muted)]">
                     {m.fecha}
                     {m.motivo ? ` · ${m.motivo}` : ''}
-                    {m.costo_unitario != null ? ` · ${formatMoney(m.costo_unitario)}/${p.unidad}` : ''}
+                    {montos && m.costo_unitario != null
+                      ? ` · ${formatMoney(m.costo_unitario)}/${p.unidad}`
+                      : ''}
                     {m.trabajo_id ? ' · por trabajo' : ''}
                   </span>
                 </span>
-                <ConfirmDialog
-                  action={eliminarMovimientoAction}
-                  fields={{ id: m.id, producto_id: p.id }}
-                  triggerLabel="Eliminar"
-                  triggerClassName="shrink-0 text-[var(--color-danger)]"
-                  title="Eliminar movimiento"
-                  message="¿Eliminar este movimiento? El stock se ajustará."
-                />
+                {puedeEditar ? (
+                  <ConfirmDialog
+                    action={eliminarMovimientoAction}
+                    fields={{ id: m.id, producto_id: p.id }}
+                    triggerLabel="Eliminar"
+                    triggerClassName="shrink-0 text-[var(--color-danger)]"
+                    title="Eliminar movimiento"
+                    message="¿Eliminar este movimiento? El stock se ajustará."
+                  />
+                ) : null}
               </li>
             ))}
           </ul>

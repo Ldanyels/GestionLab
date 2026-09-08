@@ -1,11 +1,13 @@
 import Link from 'next/link'
-import { requireAdmin } from '@/lib/auth'
+import { requirePermiso } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
 import { resolverFiltros, etiquetaRango, queryFiltros } from '@/lib/reportes/filtros'
 import { opcionesFiltro } from '@/lib/reportes/opciones'
 import { FiltrosReporte } from '@/components/reportes/FiltrosReporte'
 import { colorConsultorio } from '@/lib/consultorios/color'
+import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { formatMoney } from '@/lib/format'
 
 export default async function ReportesPage({
@@ -19,7 +21,8 @@ export default async function ReportesPage({
     mostrar?: string
   }>
 }) {
-  await requireAdmin()
+  const perfil = await requirePermiso('reportes')
+  const montos = veMontos(perfil)
   const sp = await searchParams
   const f = resolverFiltros(sp)
   const [todas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
@@ -34,7 +37,11 @@ export default async function ReportesPage({
           ‹ Finanzas
         </Link>
         <h1 className="text-xl font-semibold tracking-tight">
-          {f.soloPendientes ? 'Pendiente por cobrar' : 'Reporte de trabajos'}
+          {!montos
+            ? 'Trabajos por consultorio'
+            : f.soloPendientes
+              ? 'Pendiente por cobrar'
+              : 'Reporte de trabajos'}
         </h1>
         <p className="text-sm text-[var(--color-muted)]">
           {etiquetaRango(f.desde, f.hasta)}
@@ -51,26 +58,30 @@ export default async function ReportesPage({
         doctores={opciones.doctores}
       />
 
-      {/* Resumen del periodo */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Resumen del periodo. Sin permiso de finanzas, solo el conteo. */}
+      <div className={montos ? 'grid grid-cols-2 gap-3' : ''}>
         <Tile
           label={f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos'}
           valor={String(totales.trabajos)}
         />
-        <Tile label="Facturado" valor={formatMoney(totales.facturado)} />
-        <Tile
-          label={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
-          valor={formatMoney(totales.pagado)}
-        />
-        <Tile
-          label="Por cobrar"
-          valor={formatMoney(totales.saldo)}
-          className={
-            totales.saldo > 0.001
-              ? 'text-[var(--color-danger)]'
-              : 'text-[var(--color-success)]'
-          }
-        />
+        {montos ? (
+          <>
+            <Tile label="Facturado" valor={formatMoney(totales.facturado)} />
+            <Tile
+              label={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
+              valor={formatMoney(totales.pagado)}
+            />
+            <Tile
+              label="Por cobrar"
+              valor={formatMoney(totales.saldo)}
+              className={
+                totales.saldo > 0.001
+                  ? 'text-[var(--color-danger)]'
+                  : 'text-[var(--color-success)]'
+              }
+            />
+          </>
+        ) : null}
       </div>
 
       <div className="flex gap-2">
@@ -111,7 +122,9 @@ export default async function ReportesPage({
                       : 'text-[var(--color-success)]'
                   }`}
                 >
-                  {formatMoney(g.saldo)}
+                  {montos
+                    ? formatMoney(g.saldo)
+                    : `${g.doctores.reduce((s, d) => s + d.filas.length, 0)} trab.`}
                 </span>
               </div>
 
@@ -125,7 +138,9 @@ export default async function ReportesPage({
                       {d.doctor}
                     </Link>
                     <span className="num shrink-0 text-[var(--color-muted)]">
-                      {formatMoney(d.pagado)} de {formatMoney(d.facturado)}
+                      {montos
+                        ? `${formatMoney(d.pagado)} de ${formatMoney(d.facturado)}`
+                        : `${d.filas.length} trab.`}
                     </span>
                   </div>
                   <ul className="space-y-1 border-l border-[var(--color-border)] pl-3">
@@ -142,11 +157,15 @@ export default async function ReportesPage({
                               {t.paciente ? ` · ${t.paciente}` : ''}
                             </span>
                             <span
-                              className={`num shrink-0 ${
-                                saldo > 0.001 ? 'text-[var(--color-danger)]' : ''
+                              className={`shrink-0 text-xs ${
+                                montos
+                                  ? `num ${saldo > 0.001 ? 'text-[var(--color-danger)]' : ''}`
+                                  : 'text-[var(--color-muted)]'
                               }`}
                             >
-                              {formatMoney(saldo)}
+                              {montos
+                                ? formatMoney(saldo)
+                                : (ETIQUETA_TRABAJO[t.estado as EstadoTrabajo] ?? t.estado)}
                             </span>
                           </Link>
                         </li>

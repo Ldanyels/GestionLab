@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAdmin, getSessionContext } from '@/lib/auth'
 import { listUsuarios } from '@/lib/usuarios/data'
 import { UsuarioForm } from '@/components/usuarios/UsuarioForm'
+import { PermisosEditor } from '@/components/usuarios/PermisosEditor'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { cambiarRolAction, eliminarUsuarioAction } from './actions'
 
@@ -25,7 +26,10 @@ export default async function UsuariosPage() {
         </Link>
         <h1 className="text-xl font-semibold tracking-tight">Usuarios</h1>
         <p className="text-sm text-[var(--color-muted)]">
-          Crea accesos para tu equipo. El técnico no ve finanzas ni inventario.
+          Crea accesos para tu equipo. El técnico parte sin reportes ni inventario;
+          abajo le habilitas lo que necesite. En reportes e inventario verá el detalle
+          sin importes en soles: los montos de esas pantallas son solo para
+          administradores.
         </p>
       </div>
 
@@ -45,8 +49,9 @@ export default async function UsuariosPage() {
             {usuarios.map((u) => (
               <li
                 key={u.id}
-                className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+                className="space-y-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
               >
+                <div className="flex items-center justify-between gap-2">
                 <span className="min-w-0">
                   <span className="block truncate font-medium">
                     {u.nombre}
@@ -90,6 +95,22 @@ export default async function UsuariosPage() {
                     </>
                   )}
                 </span>
+                </div>
+
+                {u.rol === 'tecnico' ? (
+                  <div className="border-t border-[var(--color-border)] pt-3">
+                    <PermisosEditor
+                      usuarioId={u.id}
+                      nombre={u.nombre}
+                      permisos={u.permisos}
+                    />
+                  </div>
+                ) : (
+                  <p className="border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-muted)]">
+                    Como administrador tiene acceso completo: finanzas, inventario,
+                    reportes y configuración.
+                  </p>
+                )}
               </li>
             ))}
           </ul>

@@ -1,11 +1,13 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
-import { requireAdmin } from '@/lib/auth'
+import { requirePermiso } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
 import { nombreLaboratorioActual } from '@/lib/tenant'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
 import { resolverFiltros, etiquetaRango } from '@/lib/reportes/filtros'
 import { textoSeguro } from '@/lib/recibos/lineas'
 import { truncar } from '@/lib/pdf/util'
+import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { formatMoney } from '@/lib/format'
 
 // A4 en puntos.
@@ -20,7 +22,8 @@ const ROJO = rgb(0.72, 0.16, 0.16)
 
 export async function GET(req: Request): Promise<Response> {
   try {
-    await requireAdmin()
+    const perfil = await requirePermiso('reportes')
+    const montos = veMontos(perfil)
     const url = new URL(req.url)
     const f = resolverFiltros({
       desde: url.searchParams.get('desde') ?? undefined,
@@ -77,7 +80,11 @@ export async function GET(req: Request): Promise<Response> {
     texto(laboratorio, { size: 16, font: bold })
     y -= 18
     texto(
-      f.soloPendientes ? 'Pendiente por cobrar' : 'Reporte de trabajos',
+      !montos
+        ? 'Trabajos por consultorio'
+        : f.soloPendientes
+          ? 'Pendiente por cobrar'
+          : 'Reporte de trabajos',
       { size: 11, font: bold },
     )
     y -= 14
@@ -100,12 +107,17 @@ export async function GET(req: Request): Promise<Response> {
     y -= 20
 
     // Resumen
-    const cajas: [string, string][] = [
-      [f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos', String(totales.trabajos)],
-      ['Facturado', formatMoney(totales.facturado)],
-      [f.soloPendientes ? 'Abonado a cuenta' : 'Pagado', formatMoney(totales.pagado)],
-      ['Por cobrar', formatMoney(totales.saldo)],
-    ]
+    const cajas: [string, string][] = montos
+      ? [
+          [f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos', String(totales.trabajos)],
+          ['Facturado', formatMoney(totales.facturado)],
+          [f.soloPendientes ? 'Abonado a cuenta' : 'Pagado', formatMoney(totales.pagado)],
+          ['Por cobrar', formatMoney(totales.saldo)],
+        ]
+      : [
+          ['Trabajos', String(totales.trabajos)],
+          ['Consultorios', String(grupos.length)],
+        ]
     const anchoCaja = UTIL / cajas.length
     cajas.forEach(([label, valor], i) => {
       const x = MARGEN + i * anchoCaja
@@ -115,7 +127,7 @@ export async function GET(req: Request): Promise<Response> {
         y: y - 14,
         size: 12,
         font: bold,
-        color: i === 3 && totales.saldo > 0.001 ? ROJO : NEGRO,
+        color: montos && i === 3 && totales.saldo > 0.001 ? ROJO : NEGRO,
       })
     })
     y -= 34
@@ -140,12 +152,13 @@ export async function GET(req: Request): Promise<Response> {
         height: 18,
         color: rgb(0.95, 0.95, 0.96),
       })
+      const trabajosGrupo = g.doctores.reduce((s, d) => s + d.filas.length, 0)
       texto(truncar(bold, g.consultorio, 10, UTIL - 120), { x: MARGEN + 6, size: 10, font: bold })
-      texto(`Debe ${formatMoney(g.saldo)}`, {
+      texto(montos ? `Debe ${formatMoney(g.saldo)}` : `${trabajosGrupo} trabajos`, {
         size: 10,
         font: bold,
         alDerecha: true,
-        color: g.saldo > 0.001 ? ROJO : NEGRO,
+        color: montos && g.saldo > 0.001 ? ROJO : NEGRO,
       })
       y -= 22
 
@@ -153,7 +166,9 @@ export async function GET(req: Request): Promise<Response> {
         saltoPagina(40)
         texto(truncar(bold, d.doctor, 9, UTIL - 200), { x: MARGEN + 8, size: 9, font: bold })
         texto(
-          `${d.filas.length} trab. · Fact. ${formatMoney(d.facturado)} · Pag. ${formatMoney(d.pagado)} · Debe ${formatMoney(d.saldo)}`,
+          montos
+            ? `${d.filas.length} trab. · Fact. ${formatMoney(d.facturado)} · Pag. ${formatMoney(d.pagado)} · Debe ${formatMoney(d.saldo)}`
+            : `${d.filas.length} trab.`,
           { size: 8, color: GRIS, alDerecha: true },
         )
         y -= 14
@@ -162,10 +177,16 @@ export async function GET(req: Request): Promise<Response> {
           saltoPagina(16)
           const saldo = Math.round((t.total - t.pagado) * 100) / 100
           const desc = `${t.fecha_ingreso} · ${t.resumen}${t.paciente ? ` · ${t.paciente}` : ''}`
-          texto(truncar(normal, desc, 8.5, UTIL - 180), { x: MARGEN + 18, size: 8.5, color: GRIS })
+          texto(truncar(normal, desc, 8.5, UTIL - (montos ? 180 : 70)), {
+            x: MARGEN + 18,
+            size: 8.5,
+            color: GRIS,
+          })
           texto(
-            `${formatMoney(t.total)}   ${formatMoney(t.pagado)}   ${formatMoney(saldo)}`,
-            { size: 8.5, alDerecha: true, color: saldo > 0.001 ? ROJO : GRIS },
+            montos
+              ? `${formatMoney(t.total)}   ${formatMoney(t.pagado)}   ${formatMoney(saldo)}`
+              : (ETIQUETA_TRABAJO[t.estado as EstadoTrabajo] ?? t.estado),
+            { size: 8.5, alDerecha: true, color: montos && saldo > 0.001 ? ROJO : GRIS },
           )
           y -= 12
         }
@@ -177,7 +198,7 @@ export async function GET(req: Request): Promise<Response> {
     return new Response(Buffer.from(bytes), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${f.soloPendientes ? 'cobranza' : 'trabajos'}-${f.desde}-a-${f.hasta}.pdf"`,
+        'Content-Disposition': `attachment; filename="${montos && f.soloPendientes ? 'cobranza' : 'trabajos'}-${f.desde}-a-${f.hasta}.pdf"`,
       },
     })
   } catch {

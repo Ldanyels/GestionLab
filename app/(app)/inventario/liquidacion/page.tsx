@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { requireAdmin } from '@/lib/auth'
+import { requirePermiso } from '@/lib/auth'
 import { listProductos } from '@/lib/inventario/data'
 import { liquidarProductoAction } from '../actions'
 
 export default async function LiquidacionPage() {
-  await requireAdmin()
+  await requirePermiso('inventario_editar')
   const productos = await listProductos()
 
   return (

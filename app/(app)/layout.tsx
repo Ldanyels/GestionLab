@@ -60,7 +60,7 @@ export default async function AppLayout({
         </nav>
       </header>
       <main className="mx-auto max-w-2xl p-4">{children}</main>
-      <BottomNav rol={perfil.rol} />
+      <BottomNav perfil={perfil} />
     </div>
   )
 }

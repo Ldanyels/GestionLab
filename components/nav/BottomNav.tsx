@@ -2,28 +2,45 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { Rol } from '@/lib/supabase/types'
+import { puede, type Permiso } from '@/lib/permisos'
+import type { Perfil, Rol } from '@/lib/supabase/types'
 import { ICONOS } from './icons'
 
 export interface NavItem {
   label: string
   href: string
   roles: Rol[]
+  /** Si se indica, el técnico solo lo ve con este permiso. */
+  permiso?: Permiso
 }
 
 const ALL_ITEMS: NavItem[] = [
   { label: 'Hoy', href: '/hoy', roles: ['admin', 'tecnico'] },
   { label: 'Consultorios', href: '/consultorios', roles: ['admin', 'tecnico'] },
   { label: 'Trabajos', href: '/trabajos', roles: ['admin', 'tecnico'] },
-  { label: 'Inventario', href: '/inventario', roles: ['admin'] },
+  {
+    label: 'Inventario',
+    href: '/inventario',
+    roles: ['admin', 'tecnico'],
+    permiso: 'inventario_ver',
+  },
   { label: 'Finanzas', href: '/finanzas', roles: ['admin'] },
+  {
+    label: 'Reportes',
+    href: '/reportes',
+    roles: ['tecnico'],
+    permiso: 'reportes',
+  },
 ]
 
-export function navItemsFor(rol: Rol): NavItem[] {
-  return ALL_ITEMS.filter((i) => i.roles.includes(rol))
+/** Entradas visibles para un perfil: por rol y, si aplica, por permiso. */
+export function navItemsFor(perfil: Perfil): NavItem[] {
+  return ALL_ITEMS.filter(
+    (i) => i.roles.includes(perfil.rol) && (!i.permiso || puede(perfil, i.permiso)),
+  )
 }
 
-export function BottomNav({ rol }: { rol: Rol }) {
+export function BottomNav({ perfil }: { perfil: Perfil }) {
   const pathname = usePathname()
 
   return (
@@ -32,7 +49,7 @@ export function BottomNav({ rol }: { rol: Rol }) {
       className="fixed inset-x-0 bottom-0 z-10 flex border-t border-[var(--color-border)] bg-[var(--color-surface)]/85 backdrop-blur-md"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {navItemsFor(rol).map((item) => {
+      {navItemsFor(perfil).map((item) => {
         const Icono = ICONOS[item.href as keyof typeof ICONOS]
         const activo =
           pathname === item.href || pathname.startsWith(`${item.href}/`)

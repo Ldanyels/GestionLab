@@ -2,7 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { requireRol } from '@/lib/auth'
 import type { Perfil } from '@/lib/supabase/types'
 
-const admin: Perfil = { id: '1', laboratorio_id: 'l', nombre: 'A', rol: 'admin' }
+const admin: Perfil = {
+  id: '1',
+  laboratorio_id: 'l',
+  nombre: 'A',
+  rol: 'admin',
+  permisos: [],
+}
 const tec: Perfil = { ...admin, rol: 'tecnico' }
 
 describe('requireRol', () => {

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { laboratorioIdActual } from '@/lib/tenant'
+import { normalizarPermisos } from '@/lib/permisos'
 import type { Rol } from '@/lib/supabase/types'
 
 export const usuarioSchema = z.object({
@@ -16,6 +17,7 @@ export interface UsuarioItem {
   nombre: string
   rol: Rol
   email: string
+  permisos: string[]
 }
 
 export async function listUsuarios(): Promise<UsuarioItem[]> {
@@ -23,7 +25,7 @@ export async function listUsuarios(): Promise<UsuarioItem[]> {
   const admin = createAdminSupabase()
   const { data: perfiles, error } = await admin
     .from('perfil')
-    .select('id, nombre, rol')
+    .select('id, nombre, rol, permisos')
     .eq('laboratorio_id', labId)
     .order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
@@ -31,8 +33,10 @@ export async function listUsuarios(): Promise<UsuarioItem[]> {
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 200 })
   const emailPorId = new Map((list?.users ?? []).map((u) => [u.id, u.email ?? '']))
 
-  return (perfiles as { id: string; nombre: string; rol: Rol }[]).map((p) => ({
+  type Fila = { id: string; nombre: string; rol: Rol; permisos: string[] | null }
+  return (perfiles as Fila[]).map((p) => ({
     ...p,
+    permisos: p.permisos ?? [],
     email: emailPorId.get(p.id) ?? '',
   }))
 }
@@ -84,6 +88,21 @@ export async function cambiarRolUsuario(id: string, rol: Rol): Promise<void> {
   if (!(await perteneceALab(id, labId))) return
   const admin = createAdminSupabase()
   const { error } = await admin.from('perfil').update({ rol }).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+/** Reemplaza los permisos de un usuario del mismo laboratorio. */
+export async function guardarPermisosUsuario(
+  id: string,
+  permisos: readonly string[],
+): Promise<void> {
+  const labId = await laboratorioIdActual()
+  if (!(await perteneceALab(id, labId))) return
+  const admin = createAdminSupabase()
+  const { error } = await admin
+    .from('perfil')
+    .update({ permisos: normalizarPermisos(permisos) })
+    .eq('id', id)
   if (error) throw new Error(error.message)
 }
 

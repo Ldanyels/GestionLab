@@ -11,13 +11,21 @@ export function lineasReporteTicket(args: {
   rango: string
   filtro?: string
   soloPendientes?: boolean
+  /** false = sin importes (técnicos): solo conteo de trabajos. */
+  montos?: boolean
   grupos: GrupoConsultorio[]
   totales: TotalesReporte
 }): LineaRecibo[] {
+  const montos = args.montos !== false
+  const cuenta = (n: number) => `${n} trab.`
   const lineas: LineaRecibo[] = [
     { izq: args.laboratorio, centrada: true, bold: true },
     {
-      izq: args.soloPendientes ? 'Pendiente por cobrar' : 'Reporte de trabajos',
+      izq: !montos
+        ? 'Trabajos por consultorio'
+        : args.soloPendientes
+          ? 'Pendiente por cobrar'
+          : 'Reporte de trabajos',
       centrada: true,
     },
     { izq: args.rango, centrada: true },
@@ -34,18 +42,27 @@ export function lineasReporteTicket(args: {
     })
   }
   for (const g of args.grupos) {
-    lineas.push({ izq: g.consultorio, der: formatMoney(g.saldo), bold: true })
+    const totalGrupo = g.doctores.reduce((s, d) => s + d.filas.length, 0)
+    lineas.push({
+      izq: g.consultorio,
+      der: montos ? formatMoney(g.saldo) : cuenta(totalGrupo),
+      bold: true,
+    })
     for (const d of g.doctores) {
-      lineas.push({ izq: `  ${d.doctor} (${d.filas.length})`, der: formatMoney(d.saldo) })
+      lineas.push({
+        izq: `  ${d.doctor}${montos ? ` (${d.filas.length})` : ''}`,
+        der: montos ? formatMoney(d.saldo) : cuenta(d.filas.length),
+      })
     }
   }
 
-  lineas.push(
-    SEP,
-    { izq: `Trabajos: ${args.totales.trabajos}` },
-    { izq: 'Facturado', der: formatMoney(args.totales.facturado) },
-    { izq: 'Pagado', der: formatMoney(args.totales.pagado) },
-    { izq: 'Saldo por cobrar', der: formatMoney(args.totales.saldo), bold: true },
-  )
+  lineas.push(SEP, { izq: `Trabajos: ${args.totales.trabajos}` })
+  if (montos) {
+    lineas.push(
+      { izq: 'Facturado', der: formatMoney(args.totales.facturado) },
+      { izq: 'Pagado', der: formatMoney(args.totales.pagado) },
+      { izq: 'Saldo por cobrar', der: formatMoney(args.totales.saldo), bold: true },
+    )
+  }
   return lineas
 }

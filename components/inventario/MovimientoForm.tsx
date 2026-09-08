@@ -13,7 +13,14 @@ function hoyLocal(): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 }
 
-export function MovimientoForm({ productoId }: { productoId: string }) {
+export function MovimientoForm({
+  productoId,
+  montos = true,
+}: {
+  productoId: string
+  /** false = sin campo de costo (técnicos). */
+  montos?: boolean
+}) {
   const [state, formAction, pending] = useActionState(registrarMovimientoAction, initial)
   const [tipo, setTipo] = useState('ingreso')
   const [origen, setOrigen] = useState('compra')
@@ -34,7 +41,8 @@ export function MovimientoForm({ productoId }: { productoId: string }) {
     prev.current = state
   }, [state])
 
-  const mostrarCosto = tipo === 'ingreso' && (origen === 'compra' || origen === 'otro')
+  const mostrarCosto =
+    montos && tipo === 'ingreso' && (origen === 'compra' || origen === 'otro')
 
   return (
     <form ref={formRef} action={formAction} className="space-y-2">
