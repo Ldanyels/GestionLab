@@ -6,7 +6,7 @@ export async function GET() {
   await requireAdmin()
   const cuentas = await estadoCuentaConsultorios()
   const csv = construirCsv(
-    ['Consultorio', 'Facturado', 'Pagado', 'Saldo'],
+    ['Consultorio', 'Monto final', 'Pagado', 'Saldo'],
     cuentas.map((c) => [c.consultorio, c.facturado, c.pagado, c.saldo]),
   )
   return respuestaCsv('estado-de-cuenta.csv', csv)

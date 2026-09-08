@@ -59,7 +59,7 @@ export function lineasReporteTicket(args: {
   lineas.push(SEP, { izq: `Trabajos: ${args.totales.trabajos}` })
   if (montos) {
     lineas.push(
-      { izq: 'Facturado', der: formatMoney(args.totales.facturado) },
+      { izq: 'Monto final', der: formatMoney(args.totales.facturado) },
       { izq: 'Pagado', der: formatMoney(args.totales.pagado) },
       { izq: 'Saldo por cobrar', der: formatMoney(args.totales.saldo), bold: true },
     )

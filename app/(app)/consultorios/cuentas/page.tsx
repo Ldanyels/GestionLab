@@ -70,7 +70,8 @@ export default async function CuentasPage({
           {formatMoney(totales.saldo)}
         </p>
         <p className="text-xs text-[var(--color-muted)]">
-          {formatMoney(totales.pagado)} cobrado de {formatMoney(totales.facturado)} facturado
+          {formatMoney(totales.pagado)} cobrado de {formatMoney(totales.facturado)} de monto
+          final
         </p>
       </div>
 

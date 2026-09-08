@@ -66,7 +66,7 @@ export default async function ReportesPage({
         />
         {montos ? (
           <>
-            <Tile label="Facturado" valor={formatMoney(totales.facturado)} />
+            <Tile label="Monto final" valor={formatMoney(totales.facturado)} />
             <Tile
               label={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
               valor={formatMoney(totales.pagado)}

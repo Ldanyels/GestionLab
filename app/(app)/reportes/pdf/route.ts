@@ -110,7 +110,7 @@ export async function GET(req: Request): Promise<Response> {
     const cajas: [string, string][] = montos
       ? [
           [f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos', String(totales.trabajos)],
-          ['Facturado', formatMoney(totales.facturado)],
+          ['Monto final', formatMoney(totales.facturado)],
           [f.soloPendientes ? 'Abonado a cuenta' : 'Pagado', formatMoney(totales.pagado)],
           ['Por cobrar', formatMoney(totales.saldo)],
         ]
@@ -167,7 +167,7 @@ export async function GET(req: Request): Promise<Response> {
         texto(truncar(bold, d.doctor, 9, UTIL - 200), { x: MARGEN + 8, size: 9, font: bold })
         texto(
           montos
-            ? `${d.filas.length} trab. · Fact. ${formatMoney(d.facturado)} · Pag. ${formatMoney(d.pagado)} · Debe ${formatMoney(d.saldo)}`
+            ? `${d.filas.length} trab. · Monto ${formatMoney(d.facturado)} · Pag. ${formatMoney(d.pagado)} · Debe ${formatMoney(d.saldo)}`
             : `${d.filas.length} trab.`,
           { size: 8, color: GRIS, alDerecha: true },
         )
