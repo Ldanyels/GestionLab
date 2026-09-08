@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { intentar, intentarSinEstado } from '@/lib/acciones'
 import { consultorioSchema, doctorSchema } from '@/lib/consultorios/schema'
 import {
   crearConsultorio,
@@ -34,7 +35,12 @@ export async function crearConsultorioAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
-  await crearConsultorio(parsed.data)
+
+  const r = await intentar('crearConsultorioAction', 'No se pudo guardar el consultorio', () =>
+    crearConsultorio(parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   revalidatePath('/consultorios')
   redirect('/consultorios')
 }
@@ -49,7 +55,12 @@ export async function editarConsultorioAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
-  await editarConsultorio(id, parsed.data)
+
+  const r = await intentar('editarConsultorioAction', 'No se pudieron guardar los cambios', () =>
+    editarConsultorio(id, parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   revalidatePath('/consultorios')
   revalidatePath(`/consultorios/${id}`)
   redirect(`/consultorios/${id}`)
@@ -58,7 +69,11 @@ export async function editarConsultorioAction(
 export async function eliminarConsultorioAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  await eliminarConsultorio(id)
+
+  await intentarSinEstado('eliminarConsultorioAction', 'No se pudo eliminar el consultorio', () =>
+    eliminarConsultorio(id),
+  )
+
   revalidatePath('/consultorios')
   redirect('/consultorios')
 }
@@ -67,7 +82,13 @@ export async function archivarConsultorioAction(formData: FormData): Promise<voi
   const id = String(formData.get('id') ?? '')
   const activo = String(formData.get('activo') ?? '') === 'true'
   if (!id) return
-  await archivarConsultorio(id, activo)
+
+  await intentarSinEstado(
+    'archivarConsultorioAction',
+    activo ? 'No se pudo reactivar el consultorio' : 'No se pudo archivar el consultorio',
+    () => archivarConsultorio(id, activo),
+  )
+
   revalidatePath('/consultorios')
   revalidatePath(`/consultorios/${id}`)
   redirect(activo ? `/consultorios/${id}` : '/consultorios')
@@ -78,7 +99,13 @@ export async function archivarDoctorAction(formData: FormData): Promise<void> {
   const consultorioId = String(formData.get('consultorio_id') ?? '')
   const activo = String(formData.get('activo') ?? '') === 'true'
   if (!id) return
-  await archivarDoctor(id, activo)
+
+  await intentarSinEstado(
+    'archivarDoctorAction',
+    activo ? 'No se pudo reactivar el doctor' : 'No se pudo archivar el doctor',
+    () => archivarDoctor(id, activo),
+  )
+
   if (consultorioId) revalidatePath(`/consultorios/${consultorioId}`)
 }
 
@@ -95,7 +122,12 @@ export async function crearDoctorAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
-  await crearDoctor(consultorioId, parsed.data)
+
+  const r = await intentar('crearDoctorAction', 'No se pudo guardar el doctor', () =>
+    crearDoctor(consultorioId, parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   revalidatePath(`/consultorios/${consultorioId}`)
   return { error: '' }
 }
@@ -114,7 +146,12 @@ export async function editarDoctorAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
-  await editarDoctor(id, parsed.data)
+
+  const r = await intentar('editarDoctorAction', 'No se pudieron guardar los cambios', () =>
+    editarDoctor(id, parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   if (consultorioId) revalidatePath(`/consultorios/${consultorioId}`)
   return { error: '' }
 }
@@ -123,6 +160,10 @@ export async function eliminarDoctorAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '')
   const consultorioId = String(formData.get('consultorio_id') ?? '')
   if (!id) return
-  await eliminarDoctor(id)
+
+  await intentarSinEstado('eliminarDoctorAction', 'No se pudo eliminar el doctor', () =>
+    eliminarDoctor(id),
+  )
+
   if (consultorioId) revalidatePath(`/consultorios/${consultorioId}`)
 }

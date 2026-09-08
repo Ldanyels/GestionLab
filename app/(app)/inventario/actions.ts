@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { intentar, intentarSinEstado } from '@/lib/acciones'
 import { requireAdmin, requirePermiso } from '@/lib/auth'
 import { veMontos } from '@/lib/permisos'
 import { productoSchema, movimientoSchema } from '@/lib/inventario/schema'
@@ -36,9 +37,14 @@ export async function crearProductoAction(
   await requireAdmin()
   const parsed = leerProducto(formData)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
-  const id = await crearProducto(parsed.data)
+
+  const r = await intentar('crearProductoAction', 'No se pudo guardar el insumo', () =>
+    crearProducto(parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   revalidatePath('/inventario')
-  redirect(`/inventario/${id}`)
+  redirect(`/inventario/${r.valor}`)
 }
 
 export async function editarProductoAction(
@@ -50,7 +56,12 @@ export async function editarProductoAction(
   const parsed = leerProducto(formData)
   if (!id) return { error: 'Falta el identificador' }
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
-  await editarProducto(id, parsed.data)
+
+  const r = await intentar('editarProductoAction', 'No se pudieron guardar los cambios', () =>
+    editarProducto(id, parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   revalidatePath('/inventario')
   revalidatePath(`/inventario/${id}`)
   redirect(`/inventario/${id}`)
@@ -60,7 +71,11 @@ export async function eliminarProductoAction(formData: FormData): Promise<void> 
   await requireAdmin()
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  await eliminarProducto(id)
+
+  await intentarSinEstado('eliminarProductoAction', 'No se pudo eliminar el insumo', () =>
+    eliminarProducto(id),
+  )
+
   revalidatePath('/inventario')
   redirect('/inventario')
 }
@@ -83,7 +98,12 @@ export async function registrarMovimientoAction(
     fecha: String(formData.get('fecha') ?? ''),
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
-  await registrarMovimiento(productoId, parsed.data)
+
+  const r = await intentar('registrarMovimientoAction', 'No se pudo registrar el movimiento', () =>
+    registrarMovimiento(productoId, parsed.data),
+  )
+  if (!r.ok) return r.estado
+
   revalidatePath(`/inventario/${productoId}`)
   revalidatePath('/inventario')
   return { error: '' }
@@ -94,7 +114,11 @@ export async function eliminarMovimientoAction(formData: FormData): Promise<void
   const id = String(formData.get('id') ?? '')
   const productoId = String(formData.get('producto_id') ?? '')
   if (!id) return
-  await eliminarMovimiento(id)
+
+  await intentarSinEstado('eliminarMovimientoAction', 'No se pudo eliminar el movimiento', () =>
+    eliminarMovimiento(id),
+  )
+
   if (productoId) {
     revalidatePath(`/inventario/${productoId}`)
     revalidatePath('/inventario')
@@ -106,7 +130,13 @@ export async function archivarProductoAction(formData: FormData): Promise<void> 
   const id = String(formData.get('id') ?? '')
   const activo = String(formData.get('activo') ?? '') === 'true'
   if (!id) return
-  await archivarProducto(id, activo)
+
+  await intentarSinEstado(
+    'archivarProductoAction',
+    activo ? 'No se pudo reactivar el insumo' : 'No se pudo archivar el insumo',
+    () => archivarProducto(id, activo),
+  )
+
   revalidatePath('/inventario')
   revalidatePath(`/inventario/${id}`)
   redirect(activo ? `/inventario/${id}` : '/inventario')
@@ -117,7 +147,11 @@ export async function liquidarProductoAction(formData: FormData): Promise<void> 
   const productoId = String(formData.get('producto_id') ?? '')
   const conteo = Number(formData.get('conteo_real'))
   if (!productoId || Number.isNaN(conteo) || conteo < 0) return
-  await liquidarProducto(productoId, conteo)
+
+  await intentarSinEstado('liquidarProductoAction', 'No se pudo registrar la liquidación', () =>
+    liquidarProducto(productoId, conteo),
+  )
+
   revalidatePath('/inventario/liquidacion')
   revalidatePath('/inventario')
 }
