@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
-import { requirePermiso } from '@/lib/auth'
+import { requirePermiso, respuestaSiSuspendido } from '@/lib/auth'
 import { veMontosReportes } from '@/lib/permisos'
 import { nombreLaboratorioActual } from '@/lib/tenant'
 import { filasReporte } from '@/lib/reportes/data'
@@ -23,6 +23,11 @@ const ROJO = rgb(0.72, 0.16, 0.16)
 export async function GET(req: Request): Promise<Response> {
   try {
     const perfil = await requirePermiso('reportes')
+    // Esta ruta no pasa por app/(app)/layout.tsx, así que comprueba aquí el
+    // estado de la cuenta.
+    const bloqueo = await respuestaSiSuspendido()
+    if (bloqueo) return bloqueo
+
     const montos = veMontosReportes(perfil)
     const url = new URL(req.url)
     const f = resolverFiltros({

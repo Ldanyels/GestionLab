@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { respuestaSiSuspendido } from '@/lib/auth'
 import { getTrabajo } from '@/lib/trabajos/data'
 import { listAbonos } from '@/lib/abonos/data'
 import { nombreLaboratorioActual } from '@/lib/tenant'
@@ -63,6 +64,11 @@ export async function GET(
 ): Promise<Response> {
   // Sin sesión, con id inválido o de otro laboratorio: siempre 404 (no revelar nada).
   try {
+    // Esta ruta no pasa por app/(app)/layout.tsx, así que comprueba aquí el
+    // estado de la cuenta.
+    const bloqueo = await respuestaSiSuspendido()
+    if (bloqueo) return bloqueo
+
     const { id } = await params
     const [t, abonos, laboratorio] = await Promise.all([
       getTrabajo(id),
