@@ -422,10 +422,16 @@ async function limpiar(laboratorios, usuarios) {
       await admin.from('perfil').delete().eq('id', p.id)
     }
 
-    // `auditoria.laboratorio_id` es un uuid suelto, sin llave foránea, así que
-    // borrar el laboratorio NO arrastra sus registros de auditoría: los
-    // disparadores de la migración 0010 escriben una fila por cada inserción
-    // de la siembra y quedarían huérfanos para siempre.
+    const { error } = await admin.from('laboratorio').delete().eq('id', id)
+    console.log(`  ${error ? '✗' : '·'} laboratorio ${id}${error ? ` — ${error.message}` : ''}`)
+
+    // El barrido de auditoría va DESPUÉS de borrar el laboratorio, y el orden
+    // no es negociable: `auditoria.laboratorio_id` es un uuid suelto sin llave
+    // foránea, así que la cascada no lo arrastra, y además el borrado en
+    // cascada vuelve a disparar los triggers de la migración 0010, que escriben
+    // una fila DELETE por cada tabla auditada. Barrer antes deja justo esas
+    // filas huérfanas para siempre, invisibles porque su laboratorio ya no
+    // existe.
     const { error: errAuditoria, count } = await admin
       .from('auditoria')
       .delete({ count: 'exact' })
@@ -435,9 +441,6 @@ async function limpiar(laboratorios, usuarios) {
     } else if (count) {
       console.log(`  · auditoría de ${id}: ${count} registro(s)`)
     }
-
-    const { error } = await admin.from('laboratorio').delete().eq('id', id)
-    console.log(`  ${error ? '✗' : '·'} laboratorio ${id}${error ? ` — ${error.message}` : ''}`)
   }
 }
 
