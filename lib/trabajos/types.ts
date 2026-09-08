@@ -17,6 +17,26 @@ export interface Trabajo {
   creado_en: string
 }
 
+/** Línea de la cuenta: un tipo del catálogo con su cantidad y subtotal. */
+export interface TrabajoItem {
+  id: string
+  laboratorio_id: string
+  trabajo_id: string
+  catalogo_trabajo_id: string
+  cantidad: number
+  variable_cantidad: number
+  precio_unitario: number
+  subtotal: number
+  pieza: string | null
+  orden: number
+  creado_en: string
+}
+
+export interface TrabajoItemDetalle extends TrabajoItem {
+  tipo_nombre: string
+  variable_etiqueta: string | null
+}
+
 export interface TrabajoEtapa {
   id: string
   laboratorio_id: string
@@ -41,4 +61,5 @@ export interface TrabajoListItem extends Trabajo {
 export interface TrabajoDetalle extends TrabajoListItem {
   variable_etiqueta: string | null
   etapas: TrabajoEtapa[]
+  items: TrabajoItemDetalle[]
 }

@@ -1,31 +1,42 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { laboratorioIdActual } from '@/lib/tenant'
-import { precioTotalTrabajo } from '@/lib/catalogo/precio'
+import { precioEfectivo, precioTotalTrabajo } from '@/lib/catalogo/precio'
+import { resumenItems } from './resumen'
 import type { EstadoEtapa, EstadoTrabajo } from './estado'
 import type {
   Trabajo,
   TrabajoDetalle,
   TrabajoEtapa,
+  TrabajoItem,
+  TrabajoItemDetalle,
   TrabajoListItem,
 } from './types'
 import type { TrabajoInput } from './schema'
 
 const SELECT_LIST =
-  '*, doctor:doctor_id(nombre, consultorio:consultorio_id(nombre)), catalogo:catalogo_trabajo_id(nombre, categoria, variable_etiqueta), abonos:abono(monto)'
+  '*, doctor:doctor_id(nombre, consultorio:consultorio_id(nombre)), catalogo:catalogo_trabajo_id(nombre, categoria, variable_etiqueta), abonos:abono(monto), items:trabajo_item(cantidad, orden, catalogo:catalogo_trabajo_id(nombre))'
+
+type ItemLite = { cantidad: number; orden: number; catalogo: { nombre: string } | null }
 
 type Joined = Trabajo & {
   doctor: { nombre: string; consultorio: { nombre: string } | null } | null
   catalogo: { nombre: string; categoria: string; variable_etiqueta: string | null } | null
   abonos: { monto: number }[] | null
+  items: ItemLite[] | null
 }
 
 function aListItem(row: Joined): TrabajoListItem {
   const total_pagado = (row.abonos ?? []).reduce((s, a) => s + a.monto, 0)
+  const items = [...(row.items ?? [])].sort((a, b) => a.orden - b.orden)
+  const tipo_nombre =
+    items.length > 0
+      ? resumenItems(items.map((i) => ({ cantidad: i.cantidad, nombre: i.catalogo?.nombre ?? '—' })))
+      : (row.catalogo?.nombre ?? '—')
   return {
     ...row,
     doctor_nombre: row.doctor?.nombre ?? '—',
     consultorio_nombre: row.doctor?.consultorio?.nombre ?? '—',
-    tipo_nombre: row.catalogo?.nombre ?? '—',
+    tipo_nombre,
     total_pagado,
     saldo: Math.round((row.precio_acordado - total_pagado) * 100) / 100,
   }
@@ -48,59 +59,102 @@ export async function listTrabajos(opts?: {
   return (data as unknown as Joined[]).map(aListItem)
 }
 
+const SELECT_DETALLE =
+  '*, doctor:doctor_id(nombre, consultorio:consultorio_id(nombre)), catalogo:catalogo_trabajo_id(nombre, categoria, variable_etiqueta), abonos:abono(monto), items:trabajo_item(*, catalogo:catalogo_trabajo_id(nombre, variable_etiqueta)), etapas:trabajo_etapa(*)'
+
+type ItemJoined = TrabajoItem & {
+  catalogo: { nombre: string; variable_etiqueta: string | null } | null
+}
+
 export async function getTrabajo(id: string): Promise<TrabajoDetalle | null> {
   const supabase = await createServerSupabase()
   const { data, error } = await supabase
     .from('trabajo')
-    .select(`${SELECT_LIST}, etapas:trabajo_etapa(*)`)
+    .select(SELECT_DETALLE)
     .eq('id', id)
     .maybeSingle()
   if (error) throw new Error(error.message)
   if (!data) return null
-  const row = data as unknown as Joined & { etapas: TrabajoEtapa[] }
+  const row = data as unknown as Joined & {
+    items: ItemJoined[]
+    etapas: TrabajoEtapa[]
+  }
   const etapas = [...(row.etapas ?? [])].sort((a, b) => a.orden - b.orden)
+  const items: TrabajoItemDetalle[] = [...(row.items ?? [])]
+    .sort((a, b) => a.orden - b.orden)
+    .map((i) => ({
+      ...i,
+      tipo_nombre: i.catalogo?.nombre ?? '—',
+      variable_etiqueta: i.catalogo?.variable_etiqueta ?? null,
+    }))
   return {
-    ...aListItem(row),
+    ...aListItem(row as unknown as Joined),
     variable_etiqueta: row.catalogo?.variable_etiqueta ?? null,
     etapas,
+    items,
   }
 }
 
-/** Crea un trabajo, calcula el precio y copia las etapas de la plantilla. */
+interface LineaCalculada {
+  catalogo_trabajo_id: string
+  cantidad: number
+  variable_cantidad: number
+  pieza: string | null
+  precio_unitario: number
+  subtotal: number
+  orden: number
+}
+
+/** Valora cada línea con el catálogo y devuelve las líneas + el total de la cuenta. */
+async function valorarLineas(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  input: TrabajoInput,
+): Promise<{ lineas: LineaCalculada[]; total: number }> {
+  const ids = [...new Set(input.items.map((i) => i.catalogo_trabajo_id))]
+  const { data: cats, error } = await supabase
+    .from('catalogo_trabajo')
+    .select('id, precio_base, variable_precio_unitario')
+    .in('id', ids)
+  if (error) throw new Error(error.message)
+  type Cat = { id: string; precio_base: number; variable_precio_unitario: number | null }
+  const porId = new Map((cats as Cat[]).map((c) => [c.id, c]))
+  if (porId.size !== ids.length) throw new Error('Tipo de trabajo no encontrado')
+
+  const lineas = input.items.map((it, idx) => {
+    const cat = porId.get(it.catalogo_trabajo_id)!
+    return {
+      catalogo_trabajo_id: it.catalogo_trabajo_id,
+      cantidad: it.cantidad,
+      variable_cantidad: it.variable_cantidad,
+      pieza: it.pieza,
+      precio_unitario: Math.round(precioEfectivo(cat, it.variable_cantidad) * 100) / 100,
+      subtotal: precioTotalTrabajo(cat, it.cantidad, it.variable_cantidad),
+      orden: idx + 1,
+    }
+  })
+  const total = Math.round(lineas.reduce((s, l) => s + l.subtotal, 0) * 100) / 100
+  return { lineas, total }
+}
+
+/** Crea una cuenta: calcula precios, guarda las líneas y copia las etapas. */
 export async function crearTrabajo(input: TrabajoInput): Promise<string> {
   const supabase = await createServerSupabase()
   const laboratorioId = await laboratorioIdActual()
-
-  const { data: cat, error: catErr } = await supabase
-    .from('catalogo_trabajo')
-    .select('precio_base, variable_precio_unitario')
-    .eq('id', input.catalogo_trabajo_id)
-    .maybeSingle()
-  if (catErr) throw new Error(catErr.message)
-  if (!cat) throw new Error('Tipo de trabajo no encontrado')
-
-  const precio =
-    input.precio_manual ??
-    precioTotalTrabajo(
-      {
-        precio_base: cat.precio_base,
-        variable_precio_unitario: cat.variable_precio_unitario,
-      },
-      input.cantidad,
-      input.variable_cantidad,
-    )
+  const { lineas, total } = await valorarLineas(supabase, input)
+  const precio = input.precio_manual ?? total
+  const totalPiezas = lineas.reduce((s, l) => s + l.cantidad, 0)
 
   const { data: nuevo, error } = await supabase
     .from('trabajo')
     .insert({
       laboratorio_id: laboratorioId,
       doctor_id: input.doctor_id,
-      catalogo_trabajo_id: input.catalogo_trabajo_id,
+      catalogo_trabajo_id: lineas[0].catalogo_trabajo_id,
       paciente_nombre: input.paciente_nombre,
-      pieza: input.pieza,
+      pieza: null,
       fecha_entrega: input.fecha_entrega,
-      cantidad: input.cantidad,
-      variable_cantidad: input.variable_cantidad,
+      cantidad: totalPiezas,
+      variable_cantidad: lineas[0].variable_cantidad,
       precio_acordado: precio,
       notas: input.notas,
     })
@@ -109,62 +163,105 @@ export async function crearTrabajo(input: TrabajoInput): Promise<string> {
   if (error) throw new Error(error.message)
   const trabajoId = (nuevo as { id: string }).id
 
-  // Copiar etapas de la plantilla del tipo
-  const { data: plantilla } = await supabase
-    .from('plantilla_etapa')
-    .select('nombre, orden')
-    .eq('catalogo_trabajo_id', input.catalogo_trabajo_id)
-    .order('orden', { ascending: true })
+  // Si algo falla después de crear la cabecera, se borra para no dejar
+  // cuentas incompletas (las líneas y etapas caen por cascada).
+  try {
+    const { error: iErr } = await supabase.from('trabajo_item').insert(
+      lineas.map((l) => ({ ...l, laboratorio_id: laboratorioId, trabajo_id: trabajoId })),
+    )
+    if (iErr) throw new Error(iErr.message)
 
-  if (plantilla && plantilla.length > 0) {
-    const filas = (plantilla as { nombre: string; orden: number }[]).map((e) => ({
-      laboratorio_id: laboratorioId,
-      trabajo_id: trabajoId,
-      nombre: e.nombre,
-      orden: e.orden,
-      estado: 'pendiente' as EstadoEtapa,
-    }))
-    const { error: eErr } = await supabase.from('trabajo_etapa').insert(filas)
-    if (eErr) throw new Error(eErr.message)
+    // Copiar etapas de las plantillas de todos los tipos (sin repetir tipos).
+    const tiposUnicos = [...new Set(lineas.map((l) => l.catalogo_trabajo_id))]
+    const { data: plantilla } = await supabase
+      .from('plantilla_etapa')
+      .select('catalogo_trabajo_id, nombre, orden')
+      .in('catalogo_trabajo_id', tiposUnicos)
+      .order('orden', { ascending: true })
+
+    if (plantilla && plantilla.length > 0) {
+      type Pe = { catalogo_trabajo_id: string; nombre: string; orden: number }
+      let n = 0
+      const filas = tiposUnicos.flatMap((tipoId) =>
+        (plantilla as Pe[])
+          .filter((e) => e.catalogo_trabajo_id === tipoId)
+          .map((e) => ({
+            laboratorio_id: laboratorioId,
+            trabajo_id: trabajoId,
+            nombre: e.nombre,
+            orden: ++n,
+            estado: 'pendiente' as EstadoEtapa,
+          })),
+      )
+      const { error: eErr } = await supabase.from('trabajo_etapa').insert(filas)
+      if (eErr) throw new Error(eErr.message)
+    }
+  } catch (e: unknown) {
+    await supabase.from('trabajo').delete().eq('id', trabajoId)
+    throw e instanceof Error ? e : new Error('No se pudo crear el trabajo')
   }
 
   return trabajoId
 }
 
+/** Edita la cuenta: reemplaza las líneas y recalcula el precio. No toca las etapas. */
 export async function editarTrabajo(
   id: string,
   input: TrabajoInput,
 ): Promise<void> {
   const supabase = await createServerSupabase()
-  const { data: cat } = await supabase
-    .from('catalogo_trabajo')
-    .select('precio_base, variable_precio_unitario')
-    .eq('id', input.catalogo_trabajo_id)
-    .maybeSingle()
-  const precio =
-    input.precio_manual ??
-    precioTotalTrabajo(
-      {
-        precio_base: cat?.precio_base ?? 0,
-        variable_precio_unitario: cat?.variable_precio_unitario ?? null,
-      },
-      input.cantidad,
-      input.variable_cantidad,
-    )
+  const laboratorioId = await laboratorioIdActual()
+  const { lineas, total } = await valorarLineas(supabase, input)
+  const precio = input.precio_manual ?? total
+  const totalPiezas = lineas.reduce((s, l) => s + l.cantidad, 0)
+
   const { error } = await supabase
     .from('trabajo')
     .update({
       doctor_id: input.doctor_id,
+      catalogo_trabajo_id: lineas[0].catalogo_trabajo_id,
       paciente_nombre: input.paciente_nombre,
-      pieza: input.pieza,
+      pieza: null,
       fecha_entrega: input.fecha_entrega,
-      cantidad: input.cantidad,
-      variable_cantidad: input.variable_cantidad,
+      cantidad: totalPiezas,
+      variable_cantidad: lineas[0].variable_cantidad,
       precio_acordado: precio,
       notas: input.notas,
     })
     .eq('id', id)
   if (error) throw new Error(error.message)
+
+  // Insertar primero y borrar después: si el insert falla, la cuenta conserva
+  // sus líneas anteriores (no queda vacía). Las nuevas van con orden negativo
+  // para no chocar y se normalizan al final.
+  const { data: insertadas, error: iErr } = await supabase
+    .from('trabajo_item')
+    .insert(
+      lineas.map((l) => ({
+        ...l,
+        orden: -l.orden,
+        laboratorio_id: laboratorioId,
+        trabajo_id: id,
+      })),
+    )
+    .select('id, orden')
+  if (iErr) throw new Error(iErr.message)
+
+  const nuevasIds = (insertadas as { id: string; orden: number }[]) ?? []
+  const { error: dErr } = await supabase
+    .from('trabajo_item')
+    .delete()
+    .eq('trabajo_id', id)
+    .not('id', 'in', `(${nuevasIds.map((r) => r.id).join(',')})`)
+  if (dErr) throw new Error(dErr.message)
+
+  for (const fila of nuevasIds) {
+    const { error } = await supabase
+      .from('trabajo_item')
+      .update({ orden: Math.abs(fila.orden) })
+      .eq('id', fila.id)
+    if (error) throw new Error(error.message)
+  }
 }
 
 export async function eliminarTrabajo(id: string): Promise<void> {

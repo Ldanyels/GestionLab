@@ -37,7 +37,6 @@ export default async function TrabajoDetallePage({
           </Link>
           <div className="flex items-center gap-2">
             <h1 className="truncate text-xl font-semibold tracking-tight">
-              {t.cantidad > 1 ? `${t.cantidad} × ` : ''}
               {t.tipo_nombre}
             </h1>
             <EstadoBadge estado={t.estado} />
@@ -91,11 +90,6 @@ export default async function TrabajoDetallePage({
           <p className="num text-lg font-semibold">
             {formatMoney(t.precio_acordado)}
           </p>
-          {t.cantidad > 1 ? (
-            <p className="text-xs text-[var(--color-muted)]">
-              {t.cantidad} piezas
-            </p>
-          ) : null}
         </div>
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
           <p className="text-[var(--color-muted)]">Ingreso</p>
@@ -105,6 +99,25 @@ export default async function TrabajoDetallePage({
           ) : null}
         </div>
       </div>
+
+      {/* Líneas de la cuenta */}
+      {t.items.length > 0 ? (
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3 text-sm">
+          <p className="font-medium">Trabajos de la cuenta</p>
+          <ul className="mt-1 space-y-1">
+            {t.items.map((i) => (
+              <li key={i.id} className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-[var(--color-muted)]">
+                  {i.cantidad > 1 ? `${i.cantidad} × ` : ''}
+                  {i.tipo_nombre}
+                  {i.pieza ? ` · pza ${i.pieza}` : ''}
+                </span>
+                <span className="num shrink-0">{formatMoney(i.subtotal)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {t.notas ? (
         <p className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">

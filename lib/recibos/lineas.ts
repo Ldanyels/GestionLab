@@ -1,14 +1,19 @@
 import { formatMoney } from '@/lib/format'
 
+export interface ItemRecibo {
+  nombre: string
+  cantidad: number
+  subtotal: number
+  pieza?: string | null
+}
+
 export interface ReciboDatos {
   laboratorio: string
   fecha: string
   doctor: string
   consultorio: string
   paciente: string | null
-  pieza: string | null
-  tipo: string
-  cantidad: number
+  items: ItemRecibo[]
   precioTotal: number
   abonos: { fecha: string; metodo: string; monto: number }[]
 }
@@ -71,12 +76,14 @@ export function lineasRecibo(d: ReciboDatos): LineaRecibo[] {
     { izq: 'Consultorio', der: d.consultorio },
   ]
   if (d.paciente) lineas.push({ izq: 'Paciente', der: d.paciente })
-  if (d.pieza) lineas.push({ izq: 'Pieza', der: d.pieza })
-  lineas.push(SEP, {
-    izq: `${d.cantidad > 1 ? `${d.cantidad} × ` : ''}${d.tipo}`,
-    der: formatMoney(d.precioTotal),
-    bold: true,
-  })
+  lineas.push(SEP)
+  for (const item of d.items) {
+    const pieza = item.pieza ? ` (pza ${item.pieza})` : ''
+    lineas.push({
+      izq: `${item.cantidad > 1 ? `${item.cantidad} × ` : ''}${item.nombre}${pieza}`,
+      der: formatMoney(item.subtotal),
+    })
+  }
   if (d.abonos.length > 0) {
     lineas.push(SEP, { izq: 'Abonos', bold: true })
     for (const a of d.abonos) {

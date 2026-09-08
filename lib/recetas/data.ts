@@ -45,6 +45,47 @@ export function filasConsumoPorReceta(
   }))
 }
 
+/**
+ * Consumo agregado de una cuenta con varias líneas: por cada línea se aplica
+ * la receta de su tipo × su cantidad, y se suma por producto. Puro y testeable.
+ */
+export function filasConsumoPorItems(
+  items: ReadonlyArray<{ catalogo_trabajo_id: string; cantidad: number }>,
+  recetas: ReadonlyArray<{
+    catalogo_trabajo_id: string
+    producto_id: string
+    cantidad: number
+  }>,
+  ctx: { laboratorioId: string; trabajoId: string },
+): Array<{
+  laboratorio_id: string
+  producto_id: string
+  trabajo_id: string
+  tipo: 'salida'
+  cantidad: number
+  motivo: string
+}> {
+  const porProducto = new Map<string, number>()
+  for (const item of items) {
+    const mult = Number.isFinite(item.cantidad) ? Math.max(1, Math.trunc(item.cantidad)) : 1
+    for (const r of recetas) {
+      if (r.catalogo_trabajo_id !== item.catalogo_trabajo_id) continue
+      porProducto.set(
+        r.producto_id,
+        (porProducto.get(r.producto_id) ?? 0) + Math.abs(r.cantidad) * mult,
+      )
+    }
+  }
+  return [...porProducto.entries()].map(([producto_id, cantidad]) => ({
+    laboratorio_id: ctx.laboratorioId,
+    producto_id,
+    trabajo_id: ctx.trabajoId,
+    tipo: 'salida',
+    cantidad: -(Math.round(cantidad * 1000) / 1000),
+    motivo: 'Consumo por trabajo',
+  }))
+}
+
 export async function listReceta(catalogoId: string): Promise<RecetaItem[]> {
   const supabase = await createServerSupabase()
   const { data, error } = await supabase

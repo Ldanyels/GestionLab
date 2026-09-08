@@ -8,10 +8,11 @@ const btnClass =
 interface Props {
   lineas: LineaRecibo[]
   pdfHref: string
+  pdfLabel?: string
 }
 
 /** Vista previa del recibo (ticket 80mm) con acciones de imprimir y exportar PDF. */
-export function ReciboTicket({ lineas, pdfHref }: Props) {
+export function ReciboTicket({ lineas, pdfHref, pdfLabel = 'Exportar PDF' }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
@@ -26,7 +27,7 @@ export function ReciboTicket({ lineas, pdfHref }: Props) {
           href={pdfHref}
           className={`${btnClass} border border-[var(--color-border)]`}
         >
-          Exportar PDF
+          {pdfLabel}
         </a>
       </div>
 

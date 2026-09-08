@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import {
   resumen,
@@ -33,12 +34,20 @@ export default async function FinanzasPage() {
           <h1 className="text-xl font-semibold tracking-tight">Finanzas</h1>
           <p className="text-sm text-[var(--color-muted)]">Mes actual</p>
         </div>
-        <a
-          href="/finanzas/export"
-          className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
-        >
-          Exportar CSV
-        </a>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/reportes"
+            className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-3 text-sm font-medium text-[var(--color-accent-contrast)]"
+          >
+            Reportes
+          </Link>
+          <Link
+            href="/finanzas/export"
+            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+          >
+            CSV
+          </Link>
+        </div>
       </div>
 
       {/* KPIs (stat tiles) */}

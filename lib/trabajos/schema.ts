@@ -18,17 +18,34 @@ const fechaOpcional = z
   .optional()
   .transform((v) => (v ? v : null))
 
-export const trabajoSchema = z.object({
-  doctor_id: z.string().uuid('Selecciona un doctor'),
-  catalogo_trabajo_id: z.string().uuid('Selecciona un tipo de trabajo'),
-  paciente_nombre: opcionalTexto,
-  pieza: opcionalTexto,
+export const itemTrabajoSchema = z.object({
+  catalogo_trabajo_id: z.string().uuid('Selecciona un tipo de trabajo en cada línea'),
   cantidad: z.coerce
     .number()
     .int('La cantidad debe ser un número entero')
     .min(1, 'La cantidad mínima es 1')
     .default(1),
   variable_cantidad: z.coerce.number().int().min(0).default(0),
+  pieza: opcionalTexto,
+})
+
+export type ItemTrabajoInput = z.infer<typeof itemTrabajoSchema>
+
+export const trabajoSchema = z.object({
+  doctor_id: z.string().uuid('Selecciona un doctor'),
+  // Llega como JSON desde el formulario (líneas de la cuenta).
+  items: z.preprocess(
+    (v) => {
+      if (typeof v !== 'string') return v
+      try {
+        return JSON.parse(v)
+      } catch {
+        return []
+      }
+    },
+    z.array(itemTrabajoSchema).min(1, 'Agrega al menos un trabajo'),
+  ),
+  paciente_nombre: opcionalTexto,
   precio_manual: precioManualOpcional,
   fecha_entrega: fechaOpcional,
   notas: z

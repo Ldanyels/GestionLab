@@ -3,25 +3,33 @@
 import { useActionState, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { formatMoney } from '@/lib/format'
-import { precioEfectivo, precioTotalTrabajo } from '@/lib/catalogo/precio'
+import { precioTotalTrabajo } from '@/lib/catalogo/precio'
 import { TipoCombobox } from './TipoCombobox'
 import type { FormState } from '@/app/(app)/trabajos/actions'
 import type { DoctorOpcion } from '@/lib/consultorios/data'
 import type { CatalogoTrabajo } from '@/lib/catalogo/types'
-import type { Trabajo } from '@/lib/trabajos/types'
+import type { TrabajoDetalle } from '@/lib/trabajos/types'
 
 const initial: FormState = { error: '' }
 const inputClass =
   'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 const labelText = 'text-sm text-[var(--color-muted)]'
 const stepperBtnClass =
-  'h-11 w-12 shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] text-xl leading-none active:border-[var(--color-accent)]'
+  'h-11 w-11 shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] text-xl leading-none active:border-[var(--color-accent)]'
+
+interface Linea {
+  key: number
+  tipoId: string
+  cantidad: number
+  varCantidad: number
+  pieza: string
+}
 
 interface Props {
   action: (prev: FormState, formData: FormData) => Promise<FormState>
   doctores: DoctorOpcion[]
   tipos: CatalogoTrabajo[]
-  trabajo?: Trabajo
+  trabajo?: TrabajoDetalle
   doctorInicial?: string
   submitLabel: string
 }
@@ -35,29 +43,70 @@ export function TrabajoForm({
   submitLabel,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, initial)
-  const [tipoId, setTipoId] = useState(trabajo?.catalogo_trabajo_id ?? '')
-  const [tipoError, setTipoError] = useState('')
-  const [piezas, setPiezas] = useState(trabajo?.cantidad ?? 1)
-  const [varCantidad, setVarCantidad] = useState(trabajo?.variable_cantidad ?? 1)
+  const [lineas, setLineas] = useState<Linea[]>(() =>
+    trabajo && trabajo.items.length > 0
+      ? trabajo.items.map((it, i) => ({
+          key: i,
+          tipoId: it.catalogo_trabajo_id,
+          cantidad: it.cantidad,
+          varCantidad: it.variable_cantidad,
+          pieza: it.pieza ?? '',
+        }))
+      : [{ key: 0, tipoId: '', cantidad: 1, varCantidad: 1, pieza: '' }],
+  )
+  const [lineasError, setLineasError] = useState('')
   const [manual, setManual] = useState(false)
 
-  const tipo = useMemo(() => tipos.find((t) => t.id === tipoId), [tipos, tipoId])
-  const cantidadVariable = tipo?.variable_etiqueta ? varCantidad : 0
-  const precioUnitario = tipo ? precioEfectivo(tipo, cantidadVariable) : 0
-  const precioCalculado = tipo ? precioTotalTrabajo(tipo, piezas, cantidadVariable) : 0
+  const porId = useMemo(() => new Map(tipos.map((t) => [t.id, t])), [tipos])
+
+  const subtotales = lineas.map((l) => {
+    const tipo = porId.get(l.tipoId)
+    if (!tipo) return 0
+    return precioTotalTrabajo(tipo, l.cantidad, tipo.variable_etiqueta ? l.varCantidad : 0)
+  })
+  const total = Math.round(subtotales.reduce((s, x) => s + x, 0) * 100) / 100
+
+  const itemsJson = JSON.stringify(
+    lineas.map((l) => {
+      const tipo = porId.get(l.tipoId)
+      return {
+        catalogo_trabajo_id: l.tipoId,
+        cantidad: l.cantidad,
+        variable_cantidad: tipo?.variable_etiqueta ? l.varCantidad : 0,
+        pieza: l.pieza,
+      }
+    }),
+  )
+
+  function actualizar(key: number, cambios: Partial<Linea>) {
+    setLineas((prev) => prev.map((l) => (l.key === key ? { ...l, ...cambios } : l)))
+    setLineasError('')
+  }
+
+  function agregarLinea() {
+    setLineas((prev) => [
+      ...prev,
+      { key: Math.max(...prev.map((l) => l.key)) + 1, tipoId: '', cantidad: 1, varCantidad: 1, pieza: '' },
+    ])
+  }
+
+  function quitarLinea(key: number) {
+    setLineas((prev) => (prev.length > 1 ? prev.filter((l) => l.key !== key) : prev))
+  }
 
   return (
     <form
       action={formAction}
       onSubmit={(e) => {
-        if (!tipoId) {
+        if (lineas.some((l) => !l.tipoId)) {
           e.preventDefault()
-          setTipoError('Selecciona un tipo de trabajo')
+          setLineasError('Selecciona el tipo de trabajo en todas las líneas')
         }
       }}
       className="space-y-4"
     >
       {trabajo ? <input type="hidden" name="id" value={trabajo.id} /> : null}
+      <input type="hidden" name="items" value={itemsJson} />
 
       <label className="block space-y-1">
         <span className={labelText}>Doctor</span>
@@ -78,101 +127,127 @@ export function TrabajoForm({
         </select>
       </label>
 
-      <div className="space-y-1">
-        <span id="tipo-trabajo-label" className={labelText}>
-          Tipo de trabajo
-        </span>
-        <TipoCombobox
-          tipos={tipos}
-          value={tipoId}
-          onChange={(id) => {
-            setTipoId(id)
-            setTipoError('')
-          }}
-          disabled={!!trabajo}
-          labelId="tipo-trabajo-label"
-        />
-        <input type="hidden" name="catalogo_trabajo_id" value={tipoId} />
-        {tipoError ? (
+      <div className="space-y-2">
+        <span className={labelText}>Trabajos de la cuenta</span>
+        {lineas.map((l, idx) => {
+          const tipo = porId.get(l.tipoId)
+          return (
+            <div
+              key={l.key}
+              className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+            >
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <TipoCombobox
+                    tipos={tipos}
+                    value={l.tipoId}
+                    onChange={(id) => actualizar(l.key, { tipoId: id })}
+                  />
+                </div>
+                {lineas.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-label={`Quitar línea ${idx + 1}`}
+                    onClick={() => quitarLinea(l.key)}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-danger)]"
+                  >
+                    ✕
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Quitar una pieza"
+                  onClick={() => actualizar(l.key, { cantidad: Math.max(1, l.cantidad - 1) })}
+                  className={stepperBtnClass}
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  aria-label="Cantidad"
+                  value={l.cantidad}
+                  onChange={(e) =>
+                    actualizar(l.key, { cantidad: Math.max(1, Number(e.target.value) || 1) })
+                  }
+                  className={`${inputClass} w-20 shrink-0 text-center`}
+                />
+                <button
+                  type="button"
+                  aria-label="Agregar una pieza"
+                  onClick={() => actualizar(l.key, { cantidad: l.cantidad + 1 })}
+                  className={stepperBtnClass}
+                >
+                  +
+                </button>
+                <input
+                  aria-label="Pieza o diente"
+                  value={l.pieza}
+                  onChange={(e) => actualizar(l.key, { pieza: e.target.value })}
+                  placeholder="Pieza (ej. 11, 21)"
+                  className={inputClass}
+                />
+              </div>
+
+              {tipo?.variable_etiqueta ? (
+                <label className="block space-y-1">
+                  <span className={labelText}>
+                    {tipo.variable_etiqueta} por pieza (×{' '}
+                    {formatMoney(tipo.variable_precio_unitario ?? 0)})
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={l.varCantidad}
+                    onChange={(e) => actualizar(l.key, { varCantidad: Number(e.target.value) })}
+                    className={inputClass}
+                  />
+                </label>
+              ) : null}
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--color-muted)]">Subtotal</span>
+                <span className="num font-medium">{formatMoney(subtotales[idx] ?? 0)}</span>
+              </div>
+            </div>
+          )
+        })}
+
+        <button
+          type="button"
+          onClick={agregarLinea}
+          className="h-11 w-full rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] text-sm font-medium text-[var(--color-accent)]"
+        >
+          + Agregar otro trabajo
+        </button>
+
+        {lineasError ? (
           <p role="alert" className="text-sm text-[var(--color-danger)]">
-            {tipoError}
+            {lineasError}
+          </p>
+        ) : null}
+
+        {trabajo ? (
+          <p className="text-xs text-[var(--color-muted)]">
+            Al cambiar los trabajos de la cuenta, las etapas ya creadas no se recalculan.
           </p>
         ) : null}
       </div>
 
-      <div className="space-y-1">
-        <span className={labelText}>
-          Cantidad (mismo trabajo para varios dientes)
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Quitar una pieza"
-            onClick={() => setPiezas((p) => Math.max(1, p - 1))}
-            className={stepperBtnClass}
-          >
-            −
-          </button>
-          <input
-            name="cantidad"
-            type="number"
-            min="1"
-            step="1"
-            value={piezas}
-            onChange={(e) => setPiezas(Math.max(1, Number(e.target.value) || 1))}
-            className={`${inputClass} text-center`}
-          />
-          <button
-            type="button"
-            aria-label="Agregar una pieza"
-            onClick={() => setPiezas((p) => p + 1)}
-            className={stepperBtnClass}
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      {tipo?.variable_etiqueta ? (
-        <label className="block space-y-1">
-          <span className={labelText}>
-            Cantidad de {tipo.variable_etiqueta} por pieza (×{' '}
-            {formatMoney(tipo.variable_precio_unitario ?? 0)})
-          </span>
-          <input
-            name="variable_cantidad"
-            type="number"
-            min="0"
-            step="1"
-            value={varCantidad}
-            onChange={(e) => setVarCantidad(Number(e.target.value))}
-            className={inputClass}
-          />
-        </label>
-      ) : (
-        <input type="hidden" name="variable_cantidad" value={0} />
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block space-y-1">
-          <span className={labelText}>Paciente (opcional)</span>
-          <input
-            name="paciente_nombre"
-            defaultValue={trabajo?.paciente_nombre ?? ''}
-            placeholder="Nombre del paciente"
-            className={inputClass}
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className={labelText}>Pieza / diente (opcional)</span>
-          <input
-            name="pieza"
-            defaultValue={trabajo?.pieza ?? ''}
-            placeholder="Ej. 11, 21"
-            className={inputClass}
-          />
-        </label>
-      </div>
+      <label className="block space-y-1">
+        <span className={labelText}>Paciente (opcional)</span>
+        <input
+          name="paciente_nombre"
+          defaultValue={trabajo?.paciente_nombre ?? ''}
+          placeholder="Nombre del paciente"
+          className={inputClass}
+        />
+      </label>
 
       <label className="block space-y-1">
         <span className={labelText}>Fecha de entrega (opcional)</span>
@@ -186,16 +261,12 @@ export function TrabajoForm({
 
       <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
         <div className="flex items-center justify-between">
-          <span className={labelText}>Precio</span>
-          <span className="text-right">
-            {!manual && piezas > 1 ? (
-              <span className="block text-xs text-[var(--color-muted)]">
-                {piezas} × {formatMoney(precioUnitario)}
-              </span>
-            ) : null}
-            <span className="text-lg font-semibold tabular-nums">
-              {manual ? 'Manual' : formatMoney(precioCalculado)}
-            </span>
+          <span className={labelText}>
+            Total de la cuenta
+            {lineas.length > 1 ? ` (${lineas.length} trabajos)` : ''}
+          </span>
+          <span className="text-lg font-semibold tabular-nums">
+            {manual ? 'Manual' : formatMoney(total)}
           </span>
         </div>
         <label className="mt-2 flex items-center gap-2 text-sm">

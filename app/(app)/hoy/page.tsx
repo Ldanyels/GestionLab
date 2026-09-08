@@ -70,10 +70,7 @@ export default async function HoyPage() {
                   className="block rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:border-[var(--color-accent)]"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate font-medium">
-                      {t.cantidad > 1 ? `${t.cantidad} × ` : ''}
-                      {t.tipo_nombre}
-                    </span>
+                    <span className="min-w-0 truncate font-medium">{t.tipo_nombre}</span>
                     <span className="flex shrink-0 items-center gap-2">
                       {vencido ? (
                         <span className="rounded-full bg-[var(--color-danger)]/12 px-2 py-0.5 text-xs font-medium text-[var(--color-danger)]">

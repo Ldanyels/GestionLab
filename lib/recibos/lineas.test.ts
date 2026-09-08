@@ -7,10 +7,11 @@ const base: ReciboDatos = {
   doctor: 'Dr. Pérez',
   consultorio: 'Clínica Sonrisa',
   paciente: 'Juan Díaz',
-  pieza: '11, 21',
-  tipo: 'Corona metal cerámica',
-  cantidad: 2,
-  precioTotal: 360,
+  items: [
+    { nombre: 'Corona metal cerámica', cantidad: 2, subtotal: 360, pieza: '11, 21' },
+    { nombre: 'Férula de descarga', cantidad: 1, subtotal: 150 },
+  ],
+  precioTotal: 510,
   abonos: [
     { fecha: '2026-09-01', metodo: 'efectivo', monto: 100 },
     { fecha: '2026-09-05', metodo: 'yape/plin', monto: 60 },
@@ -24,13 +25,14 @@ function textos(datos: ReciboDatos): string {
 }
 
 describe('lineasRecibo', () => {
-  it('incluye encabezado, detalle y totales', () => {
+  it('incluye encabezado, cada línea de trabajo y totales', () => {
     const t = textos(base)
     expect(t).toContain('MasterLab')
-    expect(t).toContain('2 × Corona metal cerámica')
-    expect(t).toContain('Total | S/ 360.00')
+    expect(t).toContain('2 × Corona metal cerámica (pza 11, 21) | S/ 360.00')
+    expect(t).toContain('Férula de descarga | S/ 150.00')
+    expect(t).toContain('Total | S/ 510.00')
     expect(t).toContain('Pagado | S/ 160.00')
-    expect(t).toContain('Saldo | S/ 200.00')
+    expect(t).toContain('Saldo | S/ 350.00')
   })
 
   it('muestra abonos con fecha legible', () => {
@@ -39,21 +41,19 @@ describe('lineasRecibo', () => {
     expect(t).toContain('S/ 100.00')
   })
 
-  it('sin cantidad múltiple no antepone el multiplicador', () => {
-    const t = textos({ ...base, cantidad: 1 })
-    expect(t).not.toContain('1 ×')
-    expect(t).toContain('Corona metal cerámica')
+  it('cantidad 1 no antepone el multiplicador', () => {
+    const t = textos(base)
+    expect(t).not.toContain('1 × Férula')
   })
 
-  it('omite paciente y pieza cuando no existen', () => {
-    const t = textos({ ...base, paciente: null, pieza: null })
+  it('omite paciente cuando no existe', () => {
+    const t = textos({ ...base, paciente: null })
     expect(t).not.toContain('Paciente')
-    expect(t).not.toContain('Pieza')
   })
 
   it('sin abonos no lista pagos pero sí el saldo completo', () => {
     const t = textos({ ...base, abonos: [] })
-    expect(t).toContain('Saldo | S/ 360.00')
+    expect(t).toContain('Saldo | S/ 510.00')
     expect(t).not.toContain('Abonos')
   })
 })

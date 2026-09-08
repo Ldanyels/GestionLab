@@ -1,6 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { laboratorioIdActual } from '@/lib/tenant'
-import { filasConsumoPorReceta } from '@/lib/recetas/data'
+import { filasConsumoPorItems, filasConsumoPorReceta } from '@/lib/recetas/data'
 import type { Movimiento, Producto, ProductoConMovimientos } from './types'
 import { deltaMovimiento, type MovimientoInput, type ProductoInput } from './schema'
 
@@ -197,6 +197,34 @@ export async function descontarInsumosPorTrabajo(trabajoId: string): Promise<voi
     .eq('tipo', 'salida')
   if ((count ?? 0) > 0) return // ya se descontó
 
+  const ctx = { laboratorioId: await laboratorioIdActual(), trabajoId }
+
+  // Cuenta con líneas: receta de cada tipo × cantidad de su línea.
+  const { data: items } = await supabase
+    .from('trabajo_item')
+    .select('catalogo_trabajo_id, cantidad')
+    .eq('trabajo_id', trabajoId)
+
+  if (items && items.length > 0) {
+    const lineas = items as { catalogo_trabajo_id: string; cantidad: number }[]
+    const tipos = [...new Set(lineas.map((i) => i.catalogo_trabajo_id))]
+    const { data: recetas } = await supabase
+      .from('receta')
+      .select('catalogo_trabajo_id, producto_id, cantidad')
+      .in('catalogo_trabajo_id', tipos)
+    if (!recetas || recetas.length === 0) return
+    const filas = filasConsumoPorItems(
+      lineas,
+      recetas as { catalogo_trabajo_id: string; producto_id: string; cantidad: number }[],
+      ctx,
+    )
+    if (filas.length === 0) return
+    const { error } = await supabase.from('movimiento_inventario').insert(filas)
+    if (error) throw new Error(error.message)
+    return
+  }
+
+  // Respaldo para trabajos antiguos sin líneas migradas.
   const { data: trabajo } = await supabase
     .from('trabajo')
     .select('catalogo_trabajo_id, cantidad')
@@ -212,8 +240,7 @@ export async function descontarInsumosPorTrabajo(trabajoId: string): Promise<voi
   if (!recetas || recetas.length === 0) return
 
   const filas = filasConsumoPorReceta(recetas as { producto_id: string; cantidad: number }[], {
-    laboratorioId: await laboratorioIdActual(),
-    trabajoId,
+    ...ctx,
     multiplicador: t.cantidad ?? 1,
   })
   const { error } = await supabase.from('movimiento_inventario').insert(filas)

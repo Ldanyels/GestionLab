@@ -1,8 +1,9 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { getTrabajo } from '@/lib/trabajos/data'
 import { listAbonos } from '@/lib/abonos/data'
 import { nombreLaboratorioActual } from '@/lib/tenant'
 import { lineasRecibo, textoSeguro, type LineaRecibo } from '@/lib/recibos/lineas'
+import { truncar } from '@/lib/pdf/util'
 
 // Ticket de 80mm: 80mm ≈ 226.77pt.
 const ANCHO = 226.77
@@ -10,15 +11,6 @@ const MARGEN = 10
 const ALTO_LINEA = 13
 const TAMANO = 8.5
 const TAMANO_TITULO = 11
-
-function truncar(font: PDFFont, texto: string, size: number, maxAncho: number): string {
-  if (font.widthOfTextAtSize(texto, size) <= maxAncho) return texto
-  let s = texto
-  while (s.length > 1 && font.widthOfTextAtSize(`${s}…`, size) > maxAncho) {
-    s = s.slice(0, -1)
-  }
-  return `${s}…`
-}
 
 async function generarPdf(lineas: LineaRecibo[]): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
@@ -92,9 +84,12 @@ export async function GET(
       doctor: t.doctor_nombre,
       consultorio: t.consultorio_nombre,
       paciente: t.paciente_nombre,
-      pieza: t.pieza,
-      tipo: t.tipo_nombre,
-      cantidad: t.cantidad,
+      items: t.items.map((i) => ({
+        nombre: i.tipo_nombre,
+        cantidad: i.cantidad,
+        subtotal: i.subtotal,
+        pieza: i.pieza,
+      })),
       precioTotal: t.precio_acordado,
       abonos: abonos.map((a) => ({ fecha: a.fecha, metodo: a.metodo, monto: a.monto })),
     }).map((l) => ({

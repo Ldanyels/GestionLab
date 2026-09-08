@@ -31,9 +31,12 @@ export default async function ReciboPage({
     doctor: t.doctor_nombre,
     consultorio: t.consultorio_nombre,
     paciente: t.paciente_nombre,
-    pieza: t.pieza,
-    tipo: t.tipo_nombre,
-    cantidad: t.cantidad,
+    items: t.items.map((i) => ({
+      nombre: i.tipo_nombre,
+      cantidad: i.cantidad,
+      subtotal: i.subtotal,
+      pieza: i.pieza,
+    })),
     precioTotal: t.precio_acordado,
     abonos: abonos.map((a) => ({ fecha: a.fecha, metodo: a.metodo, monto: a.monto })),
   })
