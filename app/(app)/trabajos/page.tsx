@@ -1,11 +1,11 @@
 import Link from 'next/link'
+import { getSessionPerfil } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
 import { listTrabajos } from '@/lib/trabajos/data'
-import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
-import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
-import { PagoChip } from '@/components/trabajos/PagoChip'
+import { filtrarTrabajos, contarPorEstado } from '@/lib/trabajos/filtro'
+import { type EstadoTrabajo } from '@/lib/trabajos/estado'
+import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
 import { SearchBox } from '@/components/ui/SearchBox'
-import { colorConsultorio } from '@/lib/consultorios/color'
-import { formatMoney } from '@/lib/format'
 
 const FILTROS: { label: string; estado?: EstadoTrabajo }[] = [
   { label: 'Todos' },
@@ -20,87 +20,77 @@ export default async function TrabajosPage({
   searchParams: Promise<{ estado?: string; q?: string }>
 }) {
   const { estado, q } = await searchParams
+  const perfil = await getSessionPerfil()
+  const montos = veMontos(perfil)
   const filtroEstado = (['en_curso', 'cerrado', 'entregado'] as const).find(
     (e) => e === estado,
   )
-  const trabajos = await listTrabajos({ estado: filtroEstado, q })
+
+  // Se trae la lista completa: permite contar cada filtro y buscar en varios campos.
+  const todos = await listTrabajos()
+  const conteo = contarPorEstado(todos)
+  const trabajos = filtrarTrabajos(
+    filtroEstado ? todos.filter((t) => t.estado === filtroEstado) : todos,
+    q ?? '',
+  )
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Trabajos</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-[28px] font-bold tracking-[-0.03em]">Trabajos</h1>
         <Link
           href="/trabajos/nuevo"
-          className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-contrast)]"
+          className="inline-flex h-11 shrink-0 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
         >
           + Nuevo
         </Link>
       </div>
 
       <SearchBox
-        placeholder="Buscar por paciente…"
+        placeholder="Buscar por paciente, doctor o tipo…"
         defaultValue={q}
         hidden={filtroEstado ? { estado: filtroEstado } : undefined}
       />
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {FILTROS.map((f) => {
           const activo = (f.estado ?? undefined) === filtroEstado
           const params = new URLSearchParams()
           if (f.estado) params.set('estado', f.estado)
           if (q) params.set('q', q)
           const qs = params.toString()
-          const href = `/trabajos${qs ? `?${qs}` : ''}`
+          const cuantos = f.estado ? conteo[f.estado] : conteo.todos
           return (
             <Link
               key={f.label}
-              href={href}
-              className={`shrink-0 rounded-full border px-3 py-1 text-sm ${
+              href={`/trabajos${qs ? `?${qs}` : ''}`}
+              className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm ${
                 activo
-                  ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)] font-semibold text-[var(--color-accent-contrast)]'
                   : 'border-[var(--color-border)] text-[var(--color-muted)]'
               }`}
             >
               {f.label}
+              <span className="num text-xs opacity-70">{cuantos}</span>
             </Link>
           )
         })}
       </div>
 
       {trabajos.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          No hay trabajos {filtroEstado ? `(${ETIQUETA_TRABAJO[filtroEstado]})` : ''}. Toca
-          “+ Nuevo”.
-        </p>
+        <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
+          <p className="text-[15px] font-semibold">Sin resultados</p>
+          <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
+            {conteo.todos === 0
+              ? 'Aún no hay trabajos. Toca «+ Nuevo» para registrar el primero.'
+              : 'Cambia el filtro o limpia la búsqueda.'}
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {trabajos.map((t) => (
             <li key={t.id}>
-              <Link
-                href={`/trabajos/${t.id}`}
-                className="block rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:border-[var(--color-accent)]"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate font-medium">{t.tipo_nombre}</span>
-                  <EstadoBadge estado={t.estado} />
-                </div>
-                <div className="mt-1 flex items-center justify-between gap-2 text-sm text-[var(--color-muted)]">
-                  <span className="flex min-w-0 items-center gap-1.5 truncate">
-                    <span
-                      aria-hidden
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: colorConsultorio(t.consultorio_nombre) }}
-                    />
-                    {t.doctor_nombre} · {t.consultorio_nombre}
-                    {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
-                    {t.pieza ? ` · pza ${t.pieza}` : ''}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    <PagoChip saldo={t.saldo} />
-                    <span className="num">{formatMoney(t.precio_acordado)}</span>
-                  </span>
-                </div>
-              </Link>
+              <TrabajoCard trabajo={t} montos={montos} />
             </li>
           ))}
         </ul>

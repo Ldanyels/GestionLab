@@ -42,16 +42,19 @@ function aListItem(row: Joined): TrabajoListItem {
   }
 }
 
+/**
+ * Lista de trabajos del laboratorio. La búsqueda por texto y el conteo por
+ * estado se hacen en memoria (ver `lib/trabajos/filtro.ts`): permite buscar en
+ * varios campos a la vez y mostrar el conteo de cada filtro.
+ */
 export async function listTrabajos(opts?: {
   estado?: EstadoTrabajo
-  q?: string
   doctorId?: string
 }): Promise<TrabajoListItem[]> {
   const supabase = await createServerSupabase()
   let query = supabase.from('trabajo').select(SELECT_LIST)
   if (opts?.estado) query = query.eq('estado', opts.estado)
   if (opts?.doctorId) query = query.eq('doctor_id', opts.doctorId)
-  if (opts?.q?.trim()) query = query.ilike('paciente_nombre', `%${opts.q.trim()}%`)
   const { data, error } = await query
     .order('fecha_ingreso', { ascending: false })
     .order('creado_en', { ascending: false })
