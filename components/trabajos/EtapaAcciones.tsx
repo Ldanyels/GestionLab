@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { marcarEtapaAction } from '@/app/(app)/trabajos/actions'
 import {
   ETIQUETA_ETAPA,
@@ -15,9 +16,6 @@ const colorEstado: Record<EstadoEtapa, string> = {
   completada: 'text-[var(--color-success)]',
   excluida: 'text-[var(--color-muted)] line-through',
 }
-
-const inputClass =
-  'w-full h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm outline-none focus:border-[var(--color-accent)]'
 
 export function EtapaAcciones({ etapa }: { etapa: TrabajoEtapa }) {
   const [excluyendo, setExcluyendo] = useState(false)
@@ -83,7 +81,7 @@ export function EtapaAcciones({ etapa }: { etapa: TrabajoEtapa }) {
             name="motivo"
             required
             placeholder="Motivo (ej. la hace proveedor externo)"
-            className={inputClass}
+            className={`${CAMPO_COMPACTO} w-full`}
           />
           <button
             type="submit"

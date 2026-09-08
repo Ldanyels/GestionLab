@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import {
   agregarRecetaAction,
   editarRecetaAction,
@@ -12,8 +13,6 @@ import {
 import type { RecetaItem } from '@/lib/recetas/data'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm outline-none focus:border-[var(--color-accent)]'
 
 interface Producto {
   id: string
@@ -35,7 +34,7 @@ function RecetaFila({ item, catalogoId }: { item: RecetaItem; catalogoId: string
           min="0"
           step="0.001"
           defaultValue={item.cantidad}
-          className={`${inputClass} w-24`}
+          className={`${CAMPO_COMPACTO} w-24`}
         />
         <span className="text-xs text-[var(--color-muted)]">{item.unidad}</span>
         <button
@@ -78,7 +77,7 @@ function AgregarInsumo({
     <form ref={formRef} action={formAction} className="space-y-2">
       <input type="hidden" name="catalogo_trabajo_id" value={catalogoId} />
       <div className="flex flex-col gap-2 sm:flex-row">
-        <select name="producto_id" required defaultValue="" className={`${inputClass} flex-1`}>
+        <select name="producto_id" required defaultValue="" className={`${CAMPO_COMPACTO} flex-1`}>
           <option value="" disabled>
             Insumo…
           </option>
@@ -95,7 +94,7 @@ function AgregarInsumo({
           step="0.001"
           required
           placeholder="Cantidad"
-          className={`${inputClass} sm:w-32`}
+          className={`${CAMPO_COMPACTO} sm:w-32`}
         />
         <Button type="submit" className="sm:w-auto" disabled={pending}>
           Agregar

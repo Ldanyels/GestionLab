@@ -2,14 +2,12 @@
 
 import { useActionState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { CAMPO, ETIQUETA } from '@/components/ui/campos'
 import { UNIDADES } from '@/lib/inventario/types'
 import type { FormState } from '@/app/(app)/inventario/actions'
 import type { Producto } from '@/lib/inventario/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
-const labelText = 'text-sm text-[var(--color-muted)]'
 
 interface Props {
   action: (prev: FormState, formData: FormData) => Promise<FormState>
@@ -25,23 +23,23 @@ export function ProductoForm({ action, producto, submitLabel }: Props) {
       {producto ? <input type="hidden" name="id" value={producto.id} /> : null}
 
       <label className="block space-y-1">
-        <span className={labelText}>Nombre del insumo</span>
+        <span className={ETIQUETA}>Nombre del insumo</span>
         <input
           name="nombre"
           required
           defaultValue={producto?.nombre ?? ''}
           placeholder="Ej. Acrílico rosado"
-          className={inputClass}
+          className={CAMPO}
         />
       </label>
 
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-1">
-          <span className={labelText}>Unidad</span>
+          <span className={ETIQUETA}>Unidad</span>
           <select
             name="unidad"
             defaultValue={producto?.unidad ?? 'unidad'}
-            className={inputClass}
+            className={CAMPO}
           >
             {UNIDADES.map((u) => (
               <option key={u} value={u}>
@@ -51,37 +49,37 @@ export function ProductoForm({ action, producto, submitLabel }: Props) {
           </select>
         </label>
         <label className="block space-y-1">
-          <span className={labelText}>Stock mínimo</span>
+          <span className={ETIQUETA}>Stock mínimo</span>
           <input
             name="stock_minimo"
             type="number"
             min="0"
             step="0.001"
             defaultValue={producto?.stock_minimo ?? 0}
-            className={inputClass}
+            className={CAMPO}
           />
         </label>
         <label className="block space-y-1">
-          <span className={labelText}>Costo unitario (S/)</span>
+          <span className={ETIQUETA}>Costo unitario (S/)</span>
           <input
             name="costo_unitario"
             type="number"
             min="0"
             step="0.01"
             defaultValue={producto?.costo_unitario ?? 0}
-            className={inputClass}
+            className={CAMPO}
           />
         </label>
         {!producto ? (
           <label className="block space-y-1">
-            <span className={labelText}>Stock inicial</span>
+            <span className={ETIQUETA}>Stock inicial</span>
             <input
               name="stock_inicial"
               type="number"
               min="0"
               step="0.001"
               defaultValue={0}
-              className={inputClass}
+              className={CAMPO}
             />
           </label>
         ) : null}

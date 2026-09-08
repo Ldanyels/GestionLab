@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { CAMPO, BOTON_SECUNDARIO } from '@/components/ui/campos'
 import {
   crearEtapaAction,
   editarEtapaAction,
@@ -13,8 +14,6 @@ import {
 import type { PlantillaEtapa } from '@/lib/catalogo/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 function EtapaRow({
   etapa,
@@ -39,7 +38,7 @@ function EtapaRow({
         <form action={formAction} className="space-y-2">
           <input type="hidden" name="id" value={etapa.id} />
           <input type="hidden" name="catalogo_trabajo_id" value={etapa.catalogo_trabajo_id} />
-          <input name="nombre" required defaultValue={etapa.nombre} className={inputClass} />
+          <input name="nombre" required defaultValue={etapa.nombre} className={CAMPO} />
           {state.error ? (
             <p className="text-sm text-[var(--color-danger)]">{state.error}</p>
           ) : null}
@@ -47,7 +46,7 @@ function EtapaRow({
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="h-10 flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm"
+              className={`${BOTON_SECUNDARIO} flex-1`}
             >
               Cancelar
             </button>
@@ -138,7 +137,7 @@ function AgregarEtapa({ catalogoId }: { catalogoId: string }) {
         name="nombre"
         required
         placeholder="Nueva etapa (ej. Encerado)"
-        className={inputClass}
+        className={CAMPO}
       />
       <Button type="submit" className="sm:w-auto" disabled={pending}>
         {pending ? 'Agregando…' : 'Agregar etapa'}

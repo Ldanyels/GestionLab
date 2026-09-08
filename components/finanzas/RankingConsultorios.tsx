@@ -1,19 +1,9 @@
-'use client'
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { proporcion } from '@/lib/finanzas/escala'
+import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import type { RankingItem } from '@/lib/finanzas/data'
 
-const COLOR = '#2563eb'
-
+/** Top de consultorios por ingreso, con barra relativa al mayor (spec 5.16). */
 export function RankingConsultorios({ datos }: { datos: RankingItem[] }) {
   if (datos.length === 0) {
     return (
@@ -22,44 +12,28 @@ export function RankingConsultorios({ datos }: { datos: RankingItem[] }) {
       </p>
     )
   }
-  const alto = Math.max(160, datos.length * 44)
+
+  const maximo = Math.max(...datos.map((d) => d.ingreso))
 
   return (
-    <div style={{ height: alto }} className="w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={datos}
-          layout="vertical"
-          margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
-          <XAxis
-            type="number"
-            tick={{ fontSize: 11, fill: 'var(--color-muted)' }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => `S/${v}`}
-          />
-          <YAxis
-            type="category"
-            dataKey="consultorio"
-            tick={{ fontSize: 12, fill: 'var(--color-text)' }}
-            axisLine={false}
-            tickLine={false}
-            width={120}
-          />
-          <Tooltip
-            formatter={(v) => formatMoney(Number(v))}
-            contentStyle={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 12,
-              fontSize: 13,
-            }}
-          />
-          <Bar dataKey="ingreso" fill={COLOR} radius={[0, 4, 4, 0]} name="Ingreso" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <ul className="space-y-2.5">
+      {datos.map((d) => (
+        <li key={d.consultorio} className="space-y-1">
+          <div className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="min-w-0 truncate">{d.consultorio}</span>
+            <span className="num shrink-0 font-semibold">{formatMoney(d.ingreso)}</span>
+          </div>
+          <div className="h-[7px] overflow-hidden rounded-full bg-[var(--color-surface-2)]">
+            <div
+              style={{
+                width: `${proporcion(d.ingreso, maximo)}%`,
+                backgroundColor: colorConsultorio(d.consultorio),
+              }}
+              className="h-full rounded-full"
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
   )
 }

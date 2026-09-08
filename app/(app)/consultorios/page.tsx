@@ -1,8 +1,14 @@
 import Link from 'next/link'
 import { listConsultorios } from '@/lib/consultorios/data'
-import { colorConsultorio } from '@/lib/consultorios/color'
-import { SearchBox } from '@/components/ui/SearchBox'
 import { getSessionPerfil } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
+import { filasReporte } from '@/lib/reportes/data'
+import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
+import { colorConsultorio } from '@/lib/consultorios/color'
+import { formatMoney } from '@/lib/format'
+import { Avatar } from '@/components/ui/Avatar'
+import { Card } from '@/components/ui/Card'
+import { SearchBox } from '@/components/ui/SearchBox'
 
 export default async function ConsultoriosPage({
   searchParams,
@@ -11,87 +17,108 @@ export default async function ConsultoriosPage({
 }) {
   const { q, archivados } = await searchParams
   const verArchivados = archivados === '1'
-  const [consultorios, perfil] = await Promise.all([
+  const perfil = await getSessionPerfil()
+  const montos = veMontos(perfil)
+  const [consultorios, grupos] = await Promise.all([
     listConsultorios(q, verArchivados),
-    getSessionPerfil(),
+    montos
+      ? filasReporte().then((f) => agruparPorConsultorio(f).grupos)
+      : Promise.resolve([]),
   ])
+
+  const deudaPorId = new Map(grupos.map((g) => [g.consultorio_id, g.saldo]))
+  const doctoresPorId = new Map(grupos.map((g) => [g.consultorio_id, g.doctores.length]))
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Consultorios</h1>
-        <div className="flex gap-2">
-          {perfil?.rol === 'admin' ? (
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-[28px] font-bold tracking-[-0.03em]">Consultorios</h1>
+        <div className="flex shrink-0 gap-2">
+          {montos ? (
             <Link
               href="/consultorios/cuentas"
-              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+              className="inline-flex h-11 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold"
             >
-              Cuentas
+              Estado de cuenta
             </Link>
           ) : null}
           <Link
             href="/consultorios/nuevo"
-            className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-contrast)]"
+            className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
           >
             + Nuevo
           </Link>
         </div>
       </div>
 
-      <SearchBox placeholder="Buscar consultorio…" defaultValue={q} />
+      <SearchBox
+        placeholder="Buscar consultorio…"
+        defaultValue={q}
+        hidden={verArchivados ? { archivados: '1' } : undefined}
+      />
 
       <Link
         href={verArchivados ? '/consultorios' : '/consultorios?archivados=1'}
-        className="inline-block text-sm text-[var(--color-muted)] underline"
+        className="inline-block text-[13.5px] text-[var(--color-muted)] underline"
       >
         {verArchivados ? '← Ver activos' : 'Ver archivados'}
       </Link>
 
       {consultorios.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          {verArchivados
-            ? 'No hay consultorios archivados.'
-            : q
-              ? 'Sin resultados para tu búsqueda.'
-              : 'Aún no hay consultorios. Toca “+ Nuevo” para agregar el primero.'}
-        </p>
+        <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
+          <p className="text-[15px] font-semibold">
+            {verArchivados ? 'Sin consultorios archivados' : 'Sin consultorios'}
+          </p>
+          <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
+            {q
+              ? 'Prueba con otro nombre.'
+              : verArchivados
+                ? 'Los que archives aparecerán aquí.'
+                : 'Toca «+ Nuevo» para agregar el primero.'}
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-2">
-          {consultorios.map((c) => (
-            <li key={c.id}>
-              <Link
-                href={`/consultorios/${c.id}`}
-                style={{ borderLeftColor: colorConsultorio(c.nombre) }}
-                className="flex items-center justify-between rounded-[var(--radius-md)] border border-l-4 border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:border-[var(--color-accent)]"
-              >
-                <span className="flex min-w-0 items-center gap-2.5">
-                  <span
-                    aria-hidden
-                    className="h-8 w-8 shrink-0 rounded-full"
-                    style={{ backgroundColor: `${colorConsultorio(c.nombre)}1f` }}
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
+          {consultorios.map((c) => {
+            const deuda = deudaPorId.get(c.id) ?? 0
+            const doctores = doctoresPorId.get(c.id) ?? 0
+            return (
+              <li key={c.id}>
+                <Link href={`/consultorios/${c.id}`} className="block h-full">
+                  <Card
+                    tono="lista"
+                    colorLateral={colorConsultorio(c.nombre)}
+                    className="flex h-full items-center gap-3 p-3.5 transition-transform hover:-translate-y-px"
                   >
-                    <span
-                      className="flex h-full w-full items-center justify-center text-sm font-semibold"
-                      style={{ color: colorConsultorio(c.nombre) }}
-                    >
-                      {c.nombre.trim().charAt(0).toUpperCase()}
+                    <Avatar nombre={c.nombre} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15.5px] font-semibold">
+                        {c.nombre}
+                      </span>
+                      <span className="block truncate text-[12.5px] text-[var(--color-muted)]">
+                        {montos && doctores > 0
+                          ? `${doctores} doctor${doctores === 1 ? '' : 'es'}`
+                          : ''}
+                        {montos && doctores > 0 && c.contacto ? ' · ' : ''}
+                        {c.contacto ?? ''}
+                      </span>
                     </span>
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium">{c.nombre}</span>
-                    {c.contacto ? (
-                      <span className="block truncate text-sm text-[var(--color-muted)]">
-                        {c.contacto}
+                    {montos ? (
+                      <span
+                        className={`num shrink-0 text-sm font-bold ${
+                          deuda > 0.001
+                            ? 'text-[var(--color-danger)]'
+                            : 'text-[var(--color-muted)]'
+                        }`}
+                      >
+                        {deuda > 0.001 ? formatMoney(deuda) : '—'}
                       </span>
                     ) : null}
-                  </span>
-                </span>
-                <span aria-hidden className="text-[var(--color-muted)]">
-                  ›
-                </span>
-              </Link>
-            </li>
-          ))}
+                  </Card>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>

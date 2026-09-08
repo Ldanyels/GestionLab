@@ -2,11 +2,10 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { registrarMovimientoAction, type FormState } from '@/app/(app)/inventario/actions'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 function hoyLocal(): string {
   const d = new Date()
@@ -52,7 +51,7 @@ export function MovimientoForm({
           name="tipo"
           value={tipo}
           onChange={(e) => setTipo(e.target.value)}
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         >
           <option value="ingreso">Ingreso (+)</option>
           <option value="salida">Salida (−)</option>
@@ -66,16 +65,16 @@ export function MovimientoForm({
           step="0.001"
           required
           placeholder="Cantidad"
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         />
         <input
           name="fecha"
           type="date"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         />
-        <input name="motivo" placeholder="Motivo (opcional)" className={inputClass} />
+        <input name="motivo" placeholder="Motivo (opcional)" className={CAMPO_COMPACTO} />
       </div>
 
       {tipo === 'ingreso' ? (
@@ -84,7 +83,7 @@ export function MovimientoForm({
             name="origen"
             value={origen}
             onChange={(e) => setOrigen(e.target.value)}
-            className={inputClass}
+            className={CAMPO_COMPACTO}
           >
             <option value="compra">Origen: Compra</option>
             <option value="ajuste">Origen: Ajuste de stock</option>
@@ -97,7 +96,7 @@ export function MovimientoForm({
               min="0"
               step="0.01"
               placeholder="Costo unitario (S/)"
-              className={inputClass}
+              className={CAMPO_COMPACTO}
             />
           ) : (
             <span />

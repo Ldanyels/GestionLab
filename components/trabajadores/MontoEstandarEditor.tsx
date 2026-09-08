@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import {
   guardarMontoEstandarAction,
   eliminarMontoEstandarAction,
@@ -12,8 +13,6 @@ import { formatMoney } from '@/lib/format'
 import type { MontoEstandarItem } from '@/lib/trabajadores/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm outline-none focus:border-[var(--color-accent)]'
 
 interface Tipo {
   id: string
@@ -80,7 +79,7 @@ export function MontoEstandarEditor({
               name="catalogo_trabajo_id"
               required
               defaultValue=""
-              className={`${inputClass} flex-1`}
+              className={`${CAMPO_COMPACTO} flex-1`}
             >
               <option value="" disabled>
                 Tipo de trabajo…
@@ -98,7 +97,7 @@ export function MontoEstandarEditor({
               step="0.01"
               required
               placeholder="Monto (S/)"
-              className={`${inputClass} sm:w-32`}
+              className={`${CAMPO_COMPACTO} sm:w-32`}
             />
             <Button type="submit" className="sm:w-auto" disabled={pending}>
               Guardar

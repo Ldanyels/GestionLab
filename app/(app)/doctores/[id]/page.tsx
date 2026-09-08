@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getDoctor } from '@/lib/consultorios/data'
+import { getSessionPerfil } from '@/lib/auth'
+import { veMontos } from '@/lib/permisos'
 import { listTrabajos } from '@/lib/trabajos/data'
-import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
-import { PagoChip } from '@/components/trabajos/PagoChip'
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
+import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
 
 export default async function DoctorPage({
   params,
@@ -13,69 +14,56 @@ export default async function DoctorPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const doctor = await getDoctor(id)
+  const [doctor, perfil] = await Promise.all([getDoctor(id), getSessionPerfil()])
   if (!doctor) notFound()
+  const montos = veMontos(perfil)
   const trabajos = await listTrabajos({ doctorId: id })
-  const enCurso = trabajos.filter((t) => t.estado === 'en_curso').length
-  const color = colorConsultorio(doctor.consultorio_nombre)
+  const porCobrar =
+    Math.round(trabajos.reduce((s, t) => s + Math.max(0, t.saldo), 0) * 100) / 100
 
   return (
     <section className="space-y-4">
+      <Link
+        href={`/consultorios/${doctor.consultorio_id}`}
+        className="inline-block text-[13.5px] text-[var(--color-muted)]"
+      >
+        ‹ {doctor.consultorio_nombre}
+      </Link>
+
       <div>
-        <Link
-          href={`/consultorios/${doctor.consultorio_id}`}
-          className="text-sm text-[var(--color-muted)]"
-        >
-          ‹ {doctor.consultorio_nombre}
-        </Link>
-        <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+        <h1 className="flex items-center gap-2.5 text-[26px] font-bold leading-tight tracking-[-0.03em]">
           <span
             aria-hidden
-            className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: color }}
+            className="h-3 w-3 shrink-0 rounded-full"
+            style={{ backgroundColor: colorConsultorio(doctor.consultorio_nombre) }}
           />
-          {doctor.nombre}
+          <span className="min-w-0">{doctor.nombre}</span>
         </h1>
-        <p className="text-sm text-[var(--color-muted)]">
-          {trabajos.length} trabajo{trabajos.length === 1 ? '' : 's'} · {enCurso} en curso
+        <p className="mt-0.5 text-[13px] text-[var(--color-muted)]">
+          {trabajos.length} trabajo{trabajos.length === 1 ? '' : 's'}
+          {montos ? ` · ${formatMoney(porCobrar)} por cobrar` : ''}
         </p>
       </div>
 
       <Link
         href={`/trabajos/nuevo?doctor=${doctor.id}`}
-        className="flex h-12 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] font-medium text-[var(--color-accent-contrast)]"
+        className="flex h-[52px] items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-accent)] text-base font-semibold text-[var(--color-accent-contrast)] shadow-[0_6px_18px_var(--color-accent-glow)] transition-transform active:scale-[0.99]"
       >
         + Nuevo trabajo para {doctor.nombre}
       </Link>
 
       {trabajos.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          Este doctor aún no tiene trabajos. Toca el botón para crear el primero.
-        </p>
+        <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
+          <p className="text-[15px] font-semibold">Sin trabajos</p>
+          <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
+            Toca el botón para registrar el primero.
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {trabajos.map((t) => (
             <li key={t.id}>
-              <Link
-                href={`/trabajos/${t.id}`}
-                className="block rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:border-[var(--color-accent)]"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate font-medium">{t.tipo_nombre}</span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    <EstadoBadge estado={t.estado} />
-                    <PagoChip saldo={t.saldo} />
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between gap-2 text-sm text-[var(--color-muted)]">
-                  <span className="min-w-0 truncate">
-                    {t.paciente_nombre ?? 'Sin paciente'}
-                    {t.pieza ? ` · pza ${t.pieza}` : ''}
-                    {t.fecha_entrega ? ` · entrega ${t.fecha_entrega}` : ''}
-                  </span>
-                  <span className="num shrink-0">{formatMoney(t.precio_acordado)}</span>
-                </div>
-              </Link>
+              <TrabajoCard trabajo={t} montos={montos} />
             </li>
           ))}
         </ul>

@@ -27,7 +27,7 @@ export function PasswordInput({
         autoComplete={autoComplete}
         placeholder={placeholder}
         required={required}
-        className={`w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] pl-3 pr-11 outline-none focus:border-[var(--color-accent)] ${className}`}
+        className={`h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] pl-3 pr-12 text-[15px] outline-none focus:border-[var(--color-accent)] ${className}`}
       />
       <button
         type="button"

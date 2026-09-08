@@ -2,12 +2,11 @@
 
 import { useActionState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/Button'
+import { CAMPO } from '@/components/ui/campos'
 import { crearDoctorAction } from '@/app/(app)/consultorios/actions'
 import type { FormState } from '@/app/(app)/consultorios/actions'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 export function DoctorForm({ consultorioId }: { consultorioId: string }) {
   const [state, formAction, pending] = useActionState(crearDoctorAction, initial)
@@ -28,9 +27,9 @@ export function DoctorForm({ consultorioId }: { consultorioId: string }) {
           name="nombre"
           required
           placeholder="Nombre del doctor"
-          className={inputClass}
+          className={CAMPO}
         />
-        <input name="contacto" placeholder="Contacto (opcional)" className={inputClass} />
+        <input name="contacto" placeholder="Contacto (opcional)" className={CAMPO} />
       </div>
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">

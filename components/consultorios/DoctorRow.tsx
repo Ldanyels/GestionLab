@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { CAMPO, BOTON_SECUNDARIO } from '@/components/ui/campos'
 import {
   editarDoctorAction,
   eliminarDoctorAction,
@@ -13,8 +14,6 @@ import {
 import type { Doctor } from '@/lib/consultorios/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 export function DoctorRow({ doctor }: { doctor: Doctor }) {
   const [editing, setEditing] = useState(false)
@@ -36,13 +35,13 @@ export function DoctorRow({ doctor }: { doctor: Doctor }) {
             name="nombre"
             required
             defaultValue={doctor.nombre}
-            className={inputClass}
+            className={CAMPO}
           />
           <input
             name="contacto"
             defaultValue={doctor.contacto ?? ''}
             placeholder="Contacto (opcional)"
-            className={inputClass}
+            className={CAMPO}
           />
           {state.error ? (
             <p role="alert" className="text-sm text-[var(--color-danger)]">
@@ -53,7 +52,7 @@ export function DoctorRow({ doctor }: { doctor: Doctor }) {
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="h-10 flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm"
+              className={`${BOTON_SECUNDARIO} flex-1`}
             >
               Cancelar
             </button>

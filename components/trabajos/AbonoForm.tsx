@@ -2,12 +2,11 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { crearAbonoAction, type FormState } from '@/app/(app)/trabajos/actions'
 import { METODOS_PAGO } from '@/lib/abonos/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 /** Fecha de hoy en formato YYYY-MM-DD según la zona horaria local (evita el corrimiento por UTC). */
 function hoyLocal(): string {
@@ -45,9 +44,9 @@ export function AbonoForm({ trabajoId }: { trabajoId: string }) {
           step="0.01"
           required
           placeholder="Monto (S/)"
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         />
-        <select name="metodo" defaultValue="efectivo" className={inputClass}>
+        <select name="metodo" defaultValue="efectivo" className={CAMPO_COMPACTO}>
           {METODOS_PAGO.map((m) => (
             <option key={m} value={m}>
               {m}
@@ -59,9 +58,9 @@ export function AbonoForm({ trabajoId }: { trabajoId: string }) {
           type="date"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         />
-        <input name="nota" placeholder="Nota (opcional)" className={inputClass} />
+        <input name="nota" placeholder="Nota (opcional)" className={CAMPO_COMPACTO} />
       </div>
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">

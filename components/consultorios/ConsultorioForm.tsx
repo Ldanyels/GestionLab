@@ -2,12 +2,11 @@
 
 import { useActionState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { CAMPO, ETIQUETA } from '@/components/ui/campos'
 import type { FormState } from '@/app/(app)/consultorios/actions'
 import type { Consultorio } from '@/lib/consultorios/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 interface Props {
   action: (prev: FormState, formData: FormData) => Promise<FormState>
@@ -24,31 +23,31 @@ export function ConsultorioForm({ action, consultorio, submitLabel }: Props) {
         <input type="hidden" name="id" value={consultorio.id} />
       ) : null}
       <label className="block space-y-1">
-        <span className="text-sm text-[var(--color-muted)]">Nombre</span>
+        <span className={ETIQUETA}>Nombre</span>
         <input
           name="nombre"
           required
           defaultValue={consultorio?.nombre ?? ''}
           placeholder="Ej. Clínica Dental Sonrisa"
-          className={inputClass}
+          className={CAMPO}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm text-[var(--color-muted)]">Contacto (opcional)</span>
+        <span className={ETIQUETA}>Contacto (opcional)</span>
         <input
           name="contacto"
           defaultValue={consultorio?.contacto ?? ''}
           placeholder="Teléfono, correo…"
-          className={inputClass}
+          className={CAMPO}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm text-[var(--color-muted)]">Notas (opcional)</span>
+        <span className={ETIQUETA}>Notas (opcional)</span>
         <textarea
           name="notas"
           rows={3}
           defaultValue={consultorio?.notas ?? ''}
-          className={`${inputClass} h-auto py-2`}
+          className={`${CAMPO} h-auto py-2`}
         />
       </label>
       {state.error ? (

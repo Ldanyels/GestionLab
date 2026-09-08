@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { CAMPO_COMPACTO, ETIQUETA } from '@/components/ui/campos'
 import {
   crearPagoTrabajadorAction,
   type FormState,
@@ -9,8 +10,6 @@ import {
 import type { MontoEstandarItem } from '@/lib/trabajadores/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
 
 function hoyLocal(): string {
   const d = new Date()
@@ -55,14 +54,12 @@ export function PagoTrabajadorForm({
       <input type="hidden" name="trabajador_id" value={trabajadorId} />
       {montos.length > 0 ? (
         <label className="block space-y-1">
-          <span className="text-sm text-[var(--color-muted)]">
-            Usar monto estándar (opcional)
-          </span>
+          <span className={ETIQUETA}>Usar monto estándar (opcional)</span>
           <select
             name="catalogo_trabajo_id"
             value={preset}
             onChange={(e) => onPreset(e.target.value)}
-            className={`${inputClass} w-full`}
+            className={`${CAMPO_COMPACTO} w-full`}
           >
             <option value="">— Ninguno —</option>
             {montos.map((m) => (
@@ -83,17 +80,17 @@ export function PagoTrabajadorForm({
           value={monto}
           onChange={(e) => setMonto(e.target.value)}
           placeholder="Monto (S/)"
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         />
         <input
           name="fecha"
           type="date"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
-          className={inputClass}
+          className={CAMPO_COMPACTO}
         />
       </div>
-      <input name="nota" placeholder="Nota (opcional)" className={`${inputClass} w-full`} />
+      <input name="nota" placeholder="Nota (opcional)" className={`${CAMPO_COMPACTO} w-full`} />
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">
           {state.error}

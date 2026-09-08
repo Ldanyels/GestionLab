@@ -1,51 +1,61 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
+import { Card } from '@/components/ui/Card'
+
+const SECCIONES = [
+  {
+    href: '/configuracion/catalogo',
+    titulo: 'Catálogo de trabajos',
+    descripcion: 'Tipos de trabajo, precios, etapas y recetas.',
+  },
+  {
+    href: '/configuracion/trabajadores',
+    titulo: 'Trabajadores',
+    descripcion: 'Personal, montos estándar y pagos.',
+  },
+  {
+    href: '/configuracion/usuarios',
+    titulo: 'Usuarios y permisos',
+    descripcion: 'Accesos del equipo (admin / técnico).',
+  },
+  {
+    href: '/configuracion/auditoria',
+    titulo: 'Historial de actividad',
+    descripcion: 'Quién creó, cambió o eliminó registros.',
+  },
+]
 
 export default async function ConfiguracionPage() {
   await requireAdmin()
 
-  const secciones = [
-    {
-      href: '/configuracion/catalogo',
-      titulo: 'Catálogo de trabajos',
-      descripcion: 'Tipos de trabajo, precios, etapas y recetas.',
-    },
-    {
-      href: '/configuracion/trabajadores',
-      titulo: 'Trabajadores',
-      descripcion: 'Personal, montos estándar y pagos.',
-    },
-    {
-      href: '/configuracion/usuarios',
-      titulo: 'Usuarios',
-      descripcion: 'Accesos del equipo (admin / técnico).',
-    },
-    {
-      href: '/configuracion/auditoria',
-      titulo: 'Historial de actividad',
-      descripcion: 'Quién creó, cambió o eliminó registros.',
-    },
-  ]
-
   return (
-    <section className="space-y-4">
-      <h1 className="text-xl font-semibold tracking-tight">Configuración</h1>
-      <ul className="space-y-2">
-        {secciones.map((s) => (
+    <section className="mx-auto max-w-[620px] space-y-4">
+      <h1 className="text-[28px] font-bold tracking-[-0.03em]">Configuración</h1>
+      <ul className="space-y-2.5">
+        {SECCIONES.map((s) => (
           <li key={s.href}>
-            <Link
-              href={s.href}
-              className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:border-[var(--color-accent)]"
-            >
-              <span>
-                <span className="block font-medium">{s.titulo}</span>
-                <span className="block text-sm text-[var(--color-muted)]">
-                  {s.descripcion}
+            <Link href={s.href} className="block">
+              <Card className="flex items-center justify-between gap-3 p-4 transition-colors hover:border-[var(--color-accent)]">
+                <span className="min-w-0">
+                  <span className="block text-base font-semibold">{s.titulo}</span>
+                  <span className="block text-[13px] text-[var(--color-muted)]">
+                    {s.descripcion}
+                  </span>
                 </span>
-              </span>
-              <span aria-hidden className="text-[var(--color-muted)]">
-                ›
-              </span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  className="shrink-0 text-[var(--color-muted)]"
+                  aria-hidden
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </Card>
             </Link>
           </li>
         ))}
