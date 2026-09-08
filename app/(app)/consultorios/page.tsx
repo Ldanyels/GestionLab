@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { listConsultorios } from '@/lib/consultorios/data'
+import { listConsultoriosConConteo } from '@/lib/consultorios/data'
 import { getSessionPerfil } from '@/lib/auth'
 import { veMontos } from '@/lib/permisos'
-import { filasReporte } from '@/lib/reportes/data'
-import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
+import { deudaPorConsultorio } from '@/lib/consultorios/deuda'
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import { Avatar } from '@/components/ui/Avatar'
@@ -19,21 +18,20 @@ export default async function ConsultoriosPage({
   const verArchivados = archivados === '1'
   const perfil = await getSessionPerfil()
   const montos = veMontos(perfil)
-  const [consultorios, grupos] = await Promise.all([
-    listConsultorios(q, verArchivados),
-    montos
-      ? filasReporte().then((f) => agruparPorConsultorio(f).grupos)
-      : Promise.resolve([]),
+  // La deuda la agrega la base (RPC), no se traen todos los trabajos.
+  const [consultorios, cuentas] = await Promise.all([
+    listConsultoriosConConteo(q, verArchivados),
+    montos ? deudaPorConsultorio() : Promise.resolve([]),
   ])
 
-  const deudaPorId = new Map(grupos.map((g) => [g.consultorio_id, g.saldo]))
-  const doctoresPorId = new Map(grupos.map((g) => [g.consultorio_id, g.doctores.length]))
+  const deudaPorId = new Map(cuentas.map((c) => [c.consultorio_id, c.saldo]))
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      {/* En móvil los botones bajan a su propia fila: no caben junto al título. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h1 className="text-[28px] font-bold tracking-[-0.03em]">Consultorios</h1>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex gap-2">
           {montos ? (
             <Link
               href="/consultorios/cuentas"
@@ -81,7 +79,7 @@ export default async function ConsultoriosPage({
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
           {consultorios.map((c) => {
             const deuda = deudaPorId.get(c.id) ?? 0
-            const doctores = doctoresPorId.get(c.id) ?? 0
+            const doctores = c.doctores
             return (
               <li key={c.id}>
                 <Link href={`/consultorios/${c.id}`} className="block h-full">
@@ -96,11 +94,8 @@ export default async function ConsultoriosPage({
                         {c.nombre}
                       </span>
                       <span className="block truncate text-[12.5px] text-[var(--color-muted)]">
-                        {montos && doctores > 0
-                          ? `${doctores} doctor${doctores === 1 ? '' : 'es'}`
-                          : ''}
-                        {montos && doctores > 0 && c.contacto ? ' · ' : ''}
-                        {c.contacto ?? ''}
+                        {doctores} doctor{doctores === 1 ? '' : 'es'}
+                        {c.contacto ? ` · ${c.contacto}` : ''}
                       </span>
                     </span>
                     {montos ? (

@@ -18,6 +18,31 @@ export async function listConsultorios(
   return (data ?? []) as Consultorio[]
 }
 
+export interface ConsultorioConDoctoresCount extends Consultorio {
+  doctores: number
+}
+
+/**
+ * Igual que `listConsultorios` pero con el número de doctores, contado por la
+ * base (no trae las filas). Para la tarjeta de la lista.
+ */
+export async function listConsultoriosConConteo(
+  q?: string,
+  incluirArchivados = false,
+): Promise<ConsultorioConDoctoresCount[]> {
+  const supabase = await createServerSupabase()
+  let query = supabase.from('consultorio').select('*, doctor(count)')
+  query = incluirArchivados ? query.eq('activo', false) : query.eq('activo', true)
+  if (q?.trim()) query = query.ilike('nombre', `%${q.trim()}%`)
+  const { data, error } = await query.order('nombre', { ascending: true })
+  if (error) throw new Error(error.message)
+  type Fila = Consultorio & { doctor: { count: number }[] | null }
+  return (data as unknown as Fila[]).map((c) => ({
+    ...c,
+    doctores: c.doctor?.[0]?.count ?? 0,
+  }))
+}
+
 export async function archivarConsultorio(
   id: string,
   activo: boolean,

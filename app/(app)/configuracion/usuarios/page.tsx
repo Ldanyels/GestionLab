@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { requireAdmin, getSessionContext } from '@/lib/auth'
 import { listUsuarios } from '@/lib/usuarios/data'
 import { UsuarioForm } from '@/components/usuarios/UsuarioForm'

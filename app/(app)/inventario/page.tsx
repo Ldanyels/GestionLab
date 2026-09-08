@@ -23,7 +23,8 @@ export default async function InventarioPage({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      {/* En móvil los botones bajan a su propia fila: no caben junto al título. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <h1 className="text-[28px] font-bold tracking-[-0.03em]">Inventario</h1>
           {bajos > 0 ? (
@@ -32,7 +33,7 @@ export default async function InventarioPage({
             </p>
           ) : null}
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex gap-2">
           {puedeEditar ? (
             <Link
               href="/inventario/liquidacion"

@@ -47,14 +47,15 @@ export default async function FinanzasPage() {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      {/* En móvil los botones bajan a su propia fila: no caben junto al título. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <h1 className="text-[28px] font-bold tracking-[-0.03em]">Finanzas</h1>
           <p className="text-[13.5px] capitalize text-[var(--color-muted)]">
             {periodo} · mes actual
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex gap-2">
           <Link
             href="/reportes"
             className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
