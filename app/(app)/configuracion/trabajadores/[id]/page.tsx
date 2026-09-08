@@ -5,6 +5,7 @@ import { getTrabajador } from '@/lib/trabajadores/data'
 import { listCatalogo } from '@/lib/catalogo/data'
 import { formatMoney } from '@/lib/format'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { BackRow } from '@/components/ui/BackRow'
 import { MontoEstandarEditor } from '@/components/trabajadores/MontoEstandarEditor'
 import { PagoTrabajadorForm } from '@/components/trabajadores/PagoTrabajadorForm'
 import { TrabajadorForm } from '@/components/trabajadores/TrabajadorForm'
@@ -25,19 +26,20 @@ export default async function TrabajadorDetallePage({
   if (!t) notFound()
 
   return (
-    <section className="space-y-6">
-      <div>
-        <Link href="/configuracion/trabajadores" className="text-sm text-[var(--color-muted)]">
-          ‹ Trabajadores
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">{t.nombre}</h1>
-        <p className="text-sm text-[var(--color-muted)]">
-          Total pagado: {formatMoney(t.total_pagado)}
-        </p>
-      </div>
+    <section className="mx-auto max-w-[620px] space-y-4">
+      <BackRow
+        href="/configuracion/trabajadores"
+        migaDePan="Trabajadores"
+        titulo={t.nombre}
+      />
+      <p className="num pl-[52px] text-[13px] text-[var(--color-muted)]">
+        Total pagado: {formatMoney(t.total_pagado)}
+      </p>
 
-      <details className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
-        <summary className="cursor-pointer text-sm font-medium">Editar / eliminar</summary>
+      <details className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5">
+        <summary className="cursor-pointer text-sm font-semibold">
+          Editar / eliminar
+        </summary>
         <div className="mt-3 space-y-3">
           <TrabajadorForm
             action={editarTrabajadorAction}

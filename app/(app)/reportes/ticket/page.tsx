@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { BackRow } from '@/components/ui/BackRow'
 import { requirePermiso } from '@/lib/auth'
 import { veMontosReportes } from '@/lib/permisos'
 import { nombreLaboratorioActual } from '@/lib/tenant'
@@ -52,14 +52,11 @@ export default async function ReporteTicketPage({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link href={`/reportes?${query}`} className="text-[var(--color-muted)]">
-          ‹
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">
-          {montos && f.soloPendientes ? 'Cobranza en ticket' : 'Reporte en ticket'}
-        </h1>
-      </div>
+      <BackRow
+        href={`/reportes?${query}`}
+        migaDePan="Reportes"
+        titulo={montos && f.soloPendientes ? 'Cobranza en ticket' : 'Reporte en ticket'}
+      />
       <ReciboTicket lineas={lineas} pdfHref={`/reportes/pdf?${query}`} pdfLabel="PDF A4" />
     </section>
   )

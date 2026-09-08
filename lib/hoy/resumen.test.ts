@@ -35,52 +35,32 @@ describe('resumenHoy', () => {
 })
 
 describe('topDeuda', () => {
-  const grupos = [
-    {
-      consultorio_id: 'c1',
-      consultorio: 'Arte oral',
-      saldo: 750,
-      doctores: [{ doctor: 'Ivan', filas: [1, 2, 3, 4, 5] }],
-    },
-    {
-      consultorio_id: 'c2',
-      consultorio: 'Jean',
-      saldo: 470,
-      doctores: [{ doctor: 'Jean', filas: [1, 2, 3] }],
-    },
-    {
-      consultorio_id: 'c3',
-      consultorio: 'Sin deuda',
-      saldo: 0,
-      doctores: [{ doctor: 'X', filas: [1] }],
-    },
+  const cuentas = [
+    { consultorio_id: 'c1', consultorio: 'Arte oral', doctores: 2, trabajos: 5, saldo: 750 },
+    { consultorio_id: 'c2', consultorio: 'Jean', doctores: 1, trabajos: 3, saldo: 470 },
+    { consultorio_id: 'c3', consultorio: 'Sin deuda', doctores: 1, trabajos: 1, saldo: 0 },
   ]
 
   it('devuelve los que más deben, en orden', () => {
-    expect(topDeuda(grupos, 2).map((t) => t.nombre)).toEqual(['Arte oral', 'Jean'])
+    expect(topDeuda(cuentas, 2).map((t) => t.nombre)).toEqual(['Arte oral', 'Jean'])
   })
 
   it('descarta a los que no deben', () => {
-    expect(topDeuda(grupos, 5)).toHaveLength(2)
+    expect(topDeuda(cuentas, 5)).toHaveLength(2)
   })
 
   it('describe doctores y cantidad de trabajos', () => {
-    expect(topDeuda(grupos, 1)[0].detalle).toBe('Ivan · 5 trabajos')
+    expect(topDeuda(cuentas, 1)[0].detalle).toBe('2 doctores · 5 trabajos')
   })
 
-  it('un solo trabajo va en singular', () => {
+  it('usa el singular cuando corresponde', () => {
     const uno = [
-      {
-        consultorio_id: 'c',
-        consultorio: 'A',
-        saldo: 10,
-        doctores: [{ doctor: 'D', filas: [1] }],
-      },
+      { consultorio_id: 'c', consultorio: 'A', doctores: 1, trabajos: 1, saldo: 10 },
     ]
-    expect(topDeuda(uno, 1)[0].detalle).toBe('D · 1 trabajo')
+    expect(topDeuda(uno, 1)[0].detalle).toBe('1 doctor · 1 trabajo')
   })
 
-  it('sin grupos devuelve lista vacía', () => {
+  it('sin cuentas devuelve lista vacía', () => {
     expect(topDeuda([], 4)).toEqual([])
   })
 })

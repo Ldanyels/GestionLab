@@ -1,6 +1,5 @@
 import { listTrabajos } from '@/lib/trabajos/data'
-import { filasReporte } from '@/lib/reportes/data'
-import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
+import { deudaPorConsultorio } from '@/lib/consultorios/deuda'
 import { entregasDelDia, hoyLima } from '@/lib/trabajos/agenda'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
@@ -34,27 +33,26 @@ export interface FilaDeuda {
 
 /** Consultorios que más deben, con su detalle legible. Puro. */
 export function topDeuda(
-  grupos: readonly {
+  filas: readonly {
     consultorio_id: string
     consultorio: string
+    doctores: number
+    trabajos: number
     saldo: number
-    doctores: readonly { doctor: string; filas: readonly unknown[] }[]
   }[],
   n: number,
 ): FilaDeuda[] {
-  return grupos
-    .filter((g) => g.saldo > 0.001)
+  return filas
+    .filter((c) => c.saldo > 0.001)
     .slice(0, n)
-    .map((g) => {
-      const trabajos = g.doctores.reduce((s, d) => s + d.filas.length, 0)
-      const doctores = g.doctores.map((d) => d.doctor).join(', ')
-      return {
-        id: g.consultorio_id,
-        nombre: g.consultorio,
-        detalle: `${doctores} · ${trabajos} trabajo${trabajos === 1 ? '' : 's'}`,
-        saldo: g.saldo,
-      }
-    })
+    .map((c) => ({
+      id: c.consultorio_id,
+      nombre: c.consultorio,
+      detalle: `${c.doctores} doctor${c.doctores === 1 ? '' : 'es'} · ${c.trabajos} trabajo${
+        c.trabajos === 1 ? '' : 's'
+      }`,
+      saldo: c.saldo,
+    }))
 }
 
 export interface DatosHoy {
@@ -65,17 +63,27 @@ export interface DatosHoy {
   montos: boolean
 }
 
-/** Todo lo que pinta la pantalla Hoy. La deuda solo para quien ve importes. */
+/**
+ * Todo lo que pinta la pantalla Hoy. La deuda solo para quien ve importes.
+ * Las dos consultas van en paralelo y la deuda la agrega la base: antes se
+ * traía la tabla de trabajos dos veces.
+ */
 export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
   const hoy = hoyLima()
   const montos = veMontos(perfil)
-  const trabajos = await listTrabajos()
+  const [trabajos, cuentas] = await Promise.all([
+    listTrabajos(),
+    montos ? deudaPorConsultorio() : Promise.resolve([]),
+  ])
   const entregas = entregasDelDia(
     trabajos.filter((t) => t.estado === 'en_curso'),
     hoy,
   )
-  const deuda = montos
-    ? topDeuda(agruparPorConsultorio(soloConSaldo(await filasReporte())).grupos, 4)
-    : []
-  return { hoy, entregas, resumen: resumenHoy(trabajos, hoy), deuda, montos }
+  return {
+    hoy,
+    entregas,
+    resumen: resumenHoy(trabajos, hoy),
+    deuda: topDeuda(cuentas, 4),
+    montos,
+  }
 }

@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { BackRow } from '@/components/ui/BackRow'
+import { Card } from '@/components/ui/Card'
+import { KpiTile } from '@/components/ui/KpiTile'
 import { requirePermiso } from '@/lib/auth'
 import { veMontosReportes } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
@@ -33,17 +36,18 @@ export default async function ReportesPage({
   return (
     <section className="space-y-4">
       <div>
-        <Link href="/finanzas" className="text-sm text-[var(--color-muted)]">
-          ‹ Finanzas
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">
-          {!montos
-            ? 'Trabajos por consultorio'
-            : f.soloPendientes
-              ? 'Pendiente por cobrar'
-              : 'Reporte de trabajos'}
-        </h1>
-        <p className="text-sm text-[var(--color-muted)]">
+        <BackRow
+          href="/finanzas"
+          migaDePan="Finanzas"
+          titulo={
+            !montos
+              ? 'Trabajos por consultorio'
+              : f.soloPendientes
+                ? 'Pendiente por cobrar'
+                : 'Reporte de trabajos'
+          }
+        />
+        <p className="num mt-1 pl-[52px] text-[13px] text-[var(--color-muted)]">
           {etiquetaRango(f.desde, f.hasta)}
         </p>
       </div>
@@ -59,26 +63,28 @@ export default async function ReportesPage({
       />
 
       {/* Resumen del periodo. Sin permiso de finanzas, solo el conteo. */}
-      <div className={montos ? 'grid grid-cols-2 gap-3' : ''}>
-        <Tile
-          label={f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos'}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
+        <KpiTile
+          etiqueta={f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos'}
           valor={String(totales.trabajos)}
         />
         {montos ? (
           <>
-            <Tile label="Monto final" valor={formatMoney(totales.facturado)} />
-            <Tile
-              label={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
-              valor={formatMoney(totales.pagado)}
+            <KpiTile
+              etiqueta="Monto final"
+              valor={formatMoney(totales.facturado)}
+              className="col-span-full sm:col-span-1"
             />
-            <Tile
-              label="Por cobrar"
+            <KpiTile
+              etiqueta={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
+              valor={formatMoney(totales.pagado)}
+              className="col-span-full sm:col-span-1"
+            />
+            <KpiTile
+              etiqueta="Por cobrar"
               valor={formatMoney(totales.saldo)}
-              className={
-                totales.saldo > 0.001
-                  ? 'text-[var(--color-danger)]'
-                  : 'text-[var(--color-success)]'
-              }
+              tono={totales.saldo > 0.001 ? 'peligro' : 'exito'}
+              className="col-span-full sm:col-span-1"
             />
           </>
         ) : null}
@@ -87,34 +93,38 @@ export default async function ReportesPage({
       <div className="flex gap-2">
         <a
           href={`/reportes/pdf?${query}`}
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-3 text-sm font-medium text-[var(--color-accent-contrast)]"
+          className="inline-flex h-11 flex-1 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-3 text-sm font-semibold text-[var(--color-accent-contrast)]"
         >
           PDF A4
         </a>
         <a
           href={`/reportes/ticket?${query}`}
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+          className="inline-flex h-11 flex-1 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold"
         >
-          Ticket 80mm
+          Ticket 80 mm
         </a>
       </div>
 
       {grupos.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          {f.soloPendientes
-            ? 'Nadie tiene deuda pendiente en este rango.'
-            : 'No hay trabajos en este rango. Prueba con otras fechas.'}
-        </p>
+        <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
+          <p className="text-[15px] font-semibold">Sin resultados</p>
+          <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
+            {f.soloPendientes
+              ? 'Nadie tiene deuda pendiente en este rango.'
+              : 'Prueba con otras fechas o quita los filtros.'}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           {grupos.map((g) => (
-            <div
+            <Card
               key={g.consultorio_id}
-              style={{ borderLeftColor: colorConsultorio(g.consultorio) }}
-              className="space-y-3 rounded-[var(--radius-md)] border border-l-4 border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+              tono="lista"
+              colorLateral={colorConsultorio(g.consultorio)}
+              className="space-y-3 p-3.5"
             >
               <div className="flex items-baseline justify-between gap-2">
-                <h2 className="min-w-0 truncate font-medium">{g.consultorio}</h2>
+                <h2 className="min-w-0 truncate text-base font-bold">{g.consultorio}</h2>
                 <span
                   className={`num shrink-0 font-semibold ${
                     g.saldo > 0.001
@@ -143,7 +153,7 @@ export default async function ReportesPage({
                         : `${d.filas.length} trab.`}
                     </span>
                   </div>
-                  <ul className="space-y-1 border-l border-[var(--color-border)] pl-3">
+                  <ul className="space-y-1 border-l-2 border-[var(--color-border)] pl-3">
                     {d.filas.map((t) => {
                       const saldo = Math.round((t.total - t.pagado) * 100) / 100
                       return (
@@ -174,27 +184,10 @@ export default async function ReportesPage({
                   </ul>
                 </div>
               ))}
-            </div>
+            </Card>
           ))}
         </div>
       )}
     </section>
-  )
-}
-
-function Tile({
-  label,
-  valor,
-  className = '',
-}: {
-  label: string
-  valor: string
-  className?: string
-}) {
-  return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-      <p className="text-sm text-[var(--color-muted)]">{label}</p>
-      <p className={`num text-xl font-semibold ${className}`}>{valor}</p>
-    </div>
   )
 }

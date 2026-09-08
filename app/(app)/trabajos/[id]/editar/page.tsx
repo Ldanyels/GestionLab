@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BackRow } from '@/components/ui/BackRow'
 import { getTrabajo } from '@/lib/trabajos/data'
 import { listDoctoresConConsultorio } from '@/lib/consultorios/data'
 import { listCatalogo } from '@/lib/catalogo/data'
@@ -21,12 +21,7 @@ export default async function EditarTrabajoPage({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link href={`/trabajos/${id}`} className="text-[var(--color-muted)]">
-          ‹
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Editar trabajo</h1>
-      </div>
+      <BackRow href={`/trabajos/${id}`} titulo="Editar trabajo" />
       <TrabajoForm
         action={editarTrabajoAction}
         doctores={doctores}

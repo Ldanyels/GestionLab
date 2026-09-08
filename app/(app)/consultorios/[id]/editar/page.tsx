@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BackRow } from '@/components/ui/BackRow'
 import { getConsultorio } from '@/lib/consultorios/data'
 import { ConsultorioForm } from '@/components/consultorios/ConsultorioForm'
 import { editarConsultorioAction } from '../../actions'
@@ -14,13 +14,8 @@ export default async function EditarConsultorioPage({
   if (!consultorio) notFound()
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link href={`/consultorios/${id}`} className="text-[var(--color-muted)]">
-          ‹
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Editar consultorio</h1>
-      </div>
+    <section className="mx-auto max-w-[560px] space-y-4">
+      <BackRow href={`/consultorios/${id}`} titulo="Editar consultorio" />
       <ConsultorioForm
         action={editarConsultorioAction}
         consultorio={consultorio}

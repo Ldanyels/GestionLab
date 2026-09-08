@@ -17,9 +17,24 @@ export async function proxy(req: NextRequest) {
     },
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Vía rápida: verificar la firma del token aquí mismo. `getUser()` pregunta
+  // a Supabase por red y añade cientos de milisegundos a CADA navegación.
+  // Si no hay token válido (o está vencido), se cae a `getUser()`, que además
+  // renueva la sesión y escribe las cookies nuevas.
+  let hayUsuario = false
+  try {
+    const { data, error } = await supabase.auth.getClaims()
+    hayUsuario = !error && typeof data?.claims?.sub === 'string'
+  } catch {
+    hayUsuario = false
+  }
+  if (!hayUsuario) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    hayUsuario = Boolean(user)
+  }
+  const user = hayUsuario
 
   const { pathname } = req.nextUrl
   const isAuthRoute = pathname.startsWith('/login') // login y logout

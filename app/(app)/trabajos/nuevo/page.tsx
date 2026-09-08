@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BackRow } from '@/components/ui/BackRow'
 import { listDoctoresConConsultorio } from '@/lib/consultorios/data'
 import { listCatalogo } from '@/lib/catalogo/data'
 import { TrabajoForm } from '@/components/trabajos/TrabajoForm'
@@ -19,12 +20,7 @@ export default async function NuevoTrabajoPage({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link href="/trabajos" className="text-[var(--color-muted)]">
-          ‹
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Nuevo trabajo</h1>
-      </div>
+      <BackRow href="/trabajos" titulo="Nuevo trabajo" />
 
       {faltaBase ? (
         <div className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 text-sm">

@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/auth'
 import { getCatalogoItem } from '@/lib/catalogo/data'
 import { formatMoney } from '@/lib/format'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Card } from '@/components/ui/Card'
+import { Chip } from '@/components/ui/Chip'
 import { EtapasEditor } from '@/components/catalogo/EtapasEditor'
 import { RecetaEditor } from '@/components/catalogo/RecetaEditor'
 import { listReceta } from '@/lib/recetas/data'
@@ -22,39 +24,41 @@ export default async function CatalogoDetallePage({
   const [receta, productos] = await Promise.all([listReceta(id), listProductos()])
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <Link
-            href="/configuracion/catalogo"
-            className="text-sm text-[var(--color-muted)]"
-          >
-            ‹ Catálogo
-          </Link>
-          <h1 className="truncate text-xl font-semibold tracking-tight">
-            {item.nombre}
-          </h1>
-          <p className="text-sm text-[var(--color-muted)]">{item.categoria}</p>
-          <p className="mt-1 text-sm tabular-nums">
-            {formatMoney(item.precio_base)}
-            {item.variable_etiqueta ? (
-              <span className="text-[var(--color-muted)]">
-                {' '}
-                + {formatMoney(item.variable_precio_unitario ?? 0)} ×{' '}
-                {item.variable_etiqueta}
-              </span>
-            ) : null}
-          </p>
-          {!item.activo ? (
-            <span className="mt-1 inline-block rounded-full bg-[var(--color-muted)]/15 px-2 py-0.5 text-xs text-[var(--color-muted)]">
-              Archivado
-            </span>
-          ) : null}
+    <section className="mx-auto max-w-[620px] space-y-4">
+      <Link
+        href="/configuracion/catalogo"
+        className="inline-block text-[13.5px] text-[var(--color-muted)]"
+      >
+        ‹ Catálogo
+      </Link>
+
+      <Card tono="destacada" className="space-y-3.5 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)]">
+              {item.categoria}
+            </p>
+            <h1 className="titulo-balance text-2xl font-bold leading-tight">
+              {item.nombre}
+            </h1>
+            <p className="num mt-1 text-[19px] font-bold">
+              {formatMoney(item.precio_base)}
+              {item.variable_etiqueta ? (
+                <span className="text-[13px] font-normal text-[var(--color-muted)]">
+                  {' '}
+                  + {formatMoney(item.variable_precio_unitario ?? 0)} /{' '}
+                  {item.variable_etiqueta}
+                </span>
+              ) : null}
+            </p>
+          </div>
+          {!item.activo ? <Chip tono="neutro">Archivado</Chip> : null}
         </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-2">
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--color-border)] pt-3">
           <Link
             href={`/configuracion/catalogo/${item.id}/editar`}
-            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+            className="text-[13.5px] font-semibold text-[var(--color-accent)]"
           >
             Editar
           </Link>
@@ -63,22 +67,24 @@ export default async function CatalogoDetallePage({
             <input type="hidden" name="activo" value={item.activo ? 'false' : 'true'} />
             <button
               type="submit"
-              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm"
+              className="text-[13.5px] font-semibold text-[var(--color-accent)]"
             >
               {item.activo ? 'Archivar' : 'Reactivar'}
             </button>
           </form>
-          <ConfirmDialog
-            action={eliminarCatalogoAction}
-            fields={{ id: item.id }}
-            triggerLabel="Eliminar definitivo"
-            triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
-            title="Eliminar definitivo"
-            message={`Esto borra "${item.nombre}", sus etapas, receta y TODOS los trabajos de este tipo. No se puede deshacer. ¿Prefieres archivar? Si estás seguro, confirma.`}
-            confirmLabel="Sí, eliminar todo"
-          />
+          <span className="ml-auto">
+            <ConfirmDialog
+              action={eliminarCatalogoAction}
+              fields={{ id: item.id }}
+              triggerLabel="Eliminar definitivo"
+              triggerClassName="text-[13.5px] font-semibold text-[var(--color-danger)]"
+              title="Eliminar definitivo"
+              message={`Se borra «${item.nombre}», sus etapas, su receta y TODOS los trabajos de este tipo. No se puede deshacer. ¿Prefieres archivar?`}
+              confirmLabel="Sí, eliminar todo"
+            />
+          </span>
         </div>
-      </div>
+      </Card>
 
       <EtapasEditor catalogoId={item.id} etapas={item.etapas} />
 

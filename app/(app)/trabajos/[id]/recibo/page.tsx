@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BackRow } from '@/components/ui/BackRow'
 import { getTrabajo } from '@/lib/trabajos/data'
 import { listAbonos } from '@/lib/abonos/data'
 import { nombreLaboratorioActual } from '@/lib/tenant'
@@ -43,12 +43,7 @@ export default async function ReciboPage({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link href={`/trabajos/${t.id}`} className="text-[var(--color-muted)]">
-          ‹
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Recibo de venta</h1>
-      </div>
+      <BackRow href={`/trabajos/${t.id}`} migaDePan="Trabajo" titulo="Recibo de venta" />
       <ReciboTicket lineas={lineas} pdfHref={`/trabajos/${t.id}/recibo/pdf`} />
     </section>
   )

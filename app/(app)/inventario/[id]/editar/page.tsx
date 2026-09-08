@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BackRow } from '@/components/ui/BackRow'
 import { requireAdmin } from '@/lib/auth'
 import { getProducto } from '@/lib/inventario/data'
 import { ProductoForm } from '@/components/inventario/ProductoForm'
@@ -16,13 +16,8 @@ export default async function EditarProductoPage({
   if (!p) notFound()
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link href={`/inventario/${id}`} className="text-[var(--color-muted)]">
-          ‹
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Editar insumo</h1>
-      </div>
+    <section className="mx-auto max-w-[560px] space-y-4">
+      <BackRow href={`/inventario/${id}`} titulo="Editar insumo" />
       <ProductoForm
         action={editarProductoAction}
         producto={p}
