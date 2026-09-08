@@ -10,7 +10,8 @@ import type { Perfil } from '@/lib/supabase/types'
 /** Barra lateral de 236 px: solo en escritorio (≥980 px). */
 export function Sidebar({ perfil }: { perfil: Perfil }) {
   const pathname = usePathname()
-  const activo = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const activo = (href: string) =>
+    pathname === href || (pathname?.startsWith(`${href}/`) ?? false)
 
   return (
     <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4 min-[980px]:flex">

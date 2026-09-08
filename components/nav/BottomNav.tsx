@@ -19,7 +19,7 @@ export function BottomNav({ perfil }: { perfil: Perfil }) {
       {navItemsFor(perfil).map((item) => {
         const Icono = ICONOS[item.href as keyof typeof ICONOS]
         const activo =
-          pathname === item.href || pathname.startsWith(`${item.href}/`)
+          pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false)
         return (
           <Link
             key={item.href}

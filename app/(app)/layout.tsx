@@ -1,9 +1,6 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSessionContext } from '@/lib/auth'
-import { BottomNav } from '@/components/nav/BottomNav'
-import { LogoDiente } from '@/components/nav/icons'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { AppShell } from '@/components/nav/AppShell'
 
 export default async function AppLayout({
   children,
@@ -46,30 +43,5 @@ export default async function AppLayout({
     )
   }
 
-  return (
-    <div className="min-h-dvh pb-16">
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 backdrop-blur">
-        <span className="flex items-center gap-2 font-semibold tracking-tight">
-          <LogoDiente className="text-[var(--color-accent)]" width={20} height={20} />
-          GestionLab
-        </span>
-        <nav className="flex items-center gap-3 text-sm">
-          <ThemeToggle />
-          {perfil.rol === 'admin' ? (
-            <Link href="/configuracion" className="text-[var(--color-muted)]">
-              Configuración
-            </Link>
-          ) : null}
-          <a
-            href="/login/logout"
-            className="text-[var(--color-muted)] transition-colors active:text-[var(--color-danger)]"
-          >
-            Salir
-          </a>
-        </nav>
-      </header>
-      <main className="mx-auto max-w-2xl p-4">{children}</main>
-      <BottomNav perfil={perfil} />
-    </div>
-  )
+  return <AppShell perfil={perfil}>{children}</AppShell>
 }

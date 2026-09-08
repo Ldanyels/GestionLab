@@ -1,0 +1,59 @@
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { AppShell } from './AppShell'
+import type { Perfil } from '@/lib/supabase/types'
+
+const admin: Perfil = {
+  id: '1',
+  laboratorio_id: 'l',
+  nombre: 'Ana',
+  rol: 'admin',
+  permisos: [],
+}
+
+describe('AppShell', () => {
+  it('renderiza el contenido dentro de un main', () => {
+    render(
+      <AppShell perfil={admin}>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.getByRole('main')).toHaveTextContent('contenido')
+  })
+
+  it('el contenido no supera 880 px', () => {
+    render(
+      <AppShell perfil={admin}>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.getByRole('main').className).toContain('max-w-[880px]')
+  })
+
+  it('el header móvil ofrece Configuración al administrador', () => {
+    render(
+      <AppShell perfil={admin}>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.getAllByRole('link', { name: /configuración/i }).length).toBeGreaterThan(0)
+  })
+
+  it('el técnico no ve Configuración', () => {
+    render(
+      <AppShell perfil={{ ...admin, rol: 'tecnico' }}>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.queryByRole('link', { name: /configuración/i })).toBeNull()
+  })
+
+  it('monta las dos navegaciones: lateral y barra inferior', () => {
+    render(
+      <AppShell perfil={admin}>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.getAllByRole('navigation', { name: 'Navegación principal' })).toHaveLength(2)
+  })
+})
