@@ -24,7 +24,7 @@ export default async function HoyPage() {
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Hoy</h1>
         <p className="text-sm text-[var(--color-muted)]">
-          <span className="capitalize">{fechaLarga(hoy)}</span> ·{' '}
+          {fechaLarga(hoy)} ·{' '}
           {deHoy.length === 0
             ? 'sin entregas programadas'
             : `${deHoy.length} entrega${deHoy.length === 1 ? '' : 's'}`}

@@ -36,9 +36,13 @@ describe('hoyLima', () => {
 })
 
 describe('fechaLarga', () => {
-  it('escribe el día y el mes en español', () => {
-    const texto = fechaLarga('2026-09-08')
-    expect(texto).toContain('8')
-    expect(texto.toLowerCase()).toContain('setiembre')
+  it('escribe el día y el mes en español, sin coma y con una sola mayúscula', () => {
+    expect(fechaLarga('2026-09-08')).toBe('Martes 8 de setiembre')
+  })
+
+  it('no deja el mes ni las preposiciones en mayúscula', () => {
+    const texto = fechaLarga('2026-01-01')
+    expect(texto).not.toContain('De ')
+    expect(texto).toMatch(/^[A-ZÁÉÍÓÚ][a-záéíóú]+ \d{1,2} de [a-z]+$/)
   })
 })

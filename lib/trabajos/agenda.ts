@@ -3,14 +3,17 @@ export function hoyLima(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date())
 }
 
-/** "martes 8 de setiembre" — encabezado de la pantalla Hoy. */
+/** "Martes 8 de setiembre" — encabezado de la pantalla Hoy. */
 export function fechaLarga(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)
-  return new Intl.DateTimeFormat('es-PE', {
+  const texto = new Intl.DateTimeFormat('es-PE', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-  }).format(new Date(y, (m ?? 1) - 1, d))
+  })
+    .format(new Date(y, (m ?? 1) - 1, d))
+    .replace(',', '')
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
 
 /**
