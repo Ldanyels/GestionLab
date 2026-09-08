@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const css = readFileSync(resolve(process.cwd(), 'app/globals.css'), 'utf8')
+// Se normalizan los saltos de línea: en Windows el archivo se materializa con
+// CRLF y las búsquedas de selectores multilínea fallarían.
+const css = readFileSync(resolve(process.cwd(), 'app/globals.css'), 'utf8').replace(
+  /\r\n/g,
+  '\n',
+)
 
 /** Bloque de declaraciones que sigue a un selector, para aislar cada tema. */
 function bloque(selector: string): string {
