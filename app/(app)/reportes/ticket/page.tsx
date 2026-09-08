@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { requirePermiso } from '@/lib/auth'
-import { veMontos } from '@/lib/permisos'
+import { veMontosReportes } from '@/lib/permisos'
 import { nombreLaboratorioActual } from '@/lib/tenant'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
@@ -20,7 +20,7 @@ export default async function ReporteTicketPage({
   }>
 }) {
   const perfil = await requirePermiso('reportes')
-  const montos = veMontos(perfil)
+  const montos = veMontosReportes(perfil)
   const sp = await searchParams
   const f = resolverFiltros(sp)
   const [todas, laboratorio] = await Promise.all([

@@ -27,9 +27,8 @@ export default async function UsuariosPage() {
         <h1 className="text-xl font-semibold tracking-tight">Usuarios</h1>
         <p className="text-sm text-[var(--color-muted)]">
           Crea accesos para tu equipo. El técnico parte sin reportes ni inventario;
-          abajo le habilitas lo que necesite. En reportes e inventario verá el detalle
-          sin importes en soles: los montos de esas pantallas son solo para
-          administradores.
+          abajo le habilitas lo que necesite. Los costos de insumos y el panel de
+          Finanzas quedan siempre solo para administradores.
         </p>
       </div>
 

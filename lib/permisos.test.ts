@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { puede, veMontos, normalizarPermisos } from './permisos'
+import { puede, veMontos, veMontosReportes, normalizarPermisos } from './permisos'
 import type { Perfil } from '@/lib/supabase/types'
 
 function perfil(p: Partial<Perfil>): Perfil {
@@ -59,9 +59,39 @@ describe('normalizarPermisos', () => {
 })
 
 describe('veMontos', () => {
-  it('solo el admin ve importes', () => {
+  it('solo el admin ve importes internos (costos, márgenes)', () => {
     expect(veMontos(perfil({ rol: 'admin' }))).toBe(true)
     expect(veMontos(perfil({ permisos: ['reportes'] }))).toBe(false)
+    expect(veMontos(perfil({ permisos: ['reportes_montos'] }))).toBe(false)
     expect(veMontos(null)).toBe(false)
+  })
+})
+
+describe('veMontosReportes', () => {
+  it('el admin siempre emite reportes con importes', () => {
+    expect(veMontosReportes(perfil({ rol: 'admin' }))).toBe(true)
+  })
+
+  it('el técnico solo con el permiso de importes', () => {
+    expect(veMontosReportes(perfil({ permisos: ['reportes'] }))).toBe(false)
+    expect(veMontosReportes(perfil({ permisos: ['reportes_montos'] }))).toBe(true)
+  })
+
+  it('sin sesión no ve importes', () => {
+    expect(veMontosReportes(null)).toBe(false)
+  })
+})
+
+describe('reportes_montos implica reportes', () => {
+  it('quien puede emitir con importes también entra a reportes', () => {
+    const t = perfil({ permisos: ['reportes_montos'] })
+    expect(puede(t, 'reportes')).toBe(true)
+  })
+
+  it('normalizar agrega el permiso implicado', () => {
+    expect(normalizarPermisos(['reportes_montos'])).toEqual([
+      'reportes',
+      'reportes_montos',
+    ])
   })
 })

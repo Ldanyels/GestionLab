@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { requirePermiso } from '@/lib/auth'
-import { veMontos } from '@/lib/permisos'
+import { veMontosReportes } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
 import { resolverFiltros, etiquetaRango, queryFiltros } from '@/lib/reportes/filtros'
@@ -22,7 +22,7 @@ export default async function ReportesPage({
   }>
 }) {
   const perfil = await requirePermiso('reportes')
-  const montos = veMontos(perfil)
+  const montos = veMontosReportes(perfil)
   const sp = await searchParams
   const f = resolverFiltros(sp)
   const [todas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
