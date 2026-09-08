@@ -1,26 +1,22 @@
 'use client'
 
 import { useActionState, useMemo, useState } from 'react'
-import { Button } from '@/components/ui/Button'
 import { formatMoney } from '@/lib/format'
 import { precioTotalTrabajo } from '@/lib/catalogo/precio'
-import { TipoCombobox } from './TipoCombobox'
+import { Card } from '@/components/ui/Card'
+import { TipoSheet } from './TipoSheet'
 import type { FormState } from '@/app/(app)/trabajos/actions'
 import type { DoctorOpcion } from '@/lib/consultorios/data'
 import type { CatalogoTrabajo } from '@/lib/catalogo/types'
 import type { TrabajoDetalle } from '@/lib/trabajos/types'
 
 const initial: FormState = { error: '' }
-// Base sin ancho ni padding: evita que las utilidades de Tailwind choquen entre sí
-// (un `w-full`/`px-3` en la base gana por orden del CSS, no por orden en la cadena).
 const campoBase =
-  'h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-accent)]'
-const inputClass = `w-full px-3 ${campoBase}`
-const labelText = 'text-sm text-[var(--color-muted)]'
-const stepperBtnClass =
-  'h-11 w-11 shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] text-xl leading-none active:border-[var(--color-accent)]'
-// Contador: ancho fijo estrecho y sin flechas nativas (roban espacio en móvil).
-const contadorClass = `${campoBase} w-14 shrink-0 px-1 text-center tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`
+  'h-12 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] outline-none focus:border-[var(--color-accent)]'
+const campo = `w-full px-3 ${campoBase}`
+const etiqueta = 'text-[13px] font-semibold text-[var(--color-muted)]'
+const stepperBtn =
+  'h-11 w-[46px] shrink-0 text-xl leading-none text-[var(--color-text)] transition-colors active:text-[var(--color-accent)]'
 
 interface Linea {
   key: number
@@ -61,6 +57,8 @@ export function TrabajoForm({
   )
   const [lineasError, setLineasError] = useState('')
   const [manual, setManual] = useState(false)
+  /** Índice de la línea que abrió la hoja de tipos; null = cerrada. */
+  const [eligiendo, setEligiendo] = useState<number | null>(null)
 
   const porId = useMemo(() => new Map(tipos.map((t) => [t.id, t])), [tipos])
 
@@ -91,12 +89,14 @@ export function TrabajoForm({
   function agregarLinea() {
     setLineas((prev) => [
       ...prev,
-      { key: Math.max(...prev.map((l) => l.key)) + 1, tipoId: '', cantidad: 1, varCantidad: 1, pieza: '' },
+      {
+        key: Math.max(...prev.map((l) => l.key)) + 1,
+        tipoId: '',
+        cantidad: 1,
+        varCantidad: 1,
+        pieza: '',
+      },
     ])
-  }
-
-  function quitarLinea(key: number) {
-    setLineas((prev) => (prev.length > 1 ? prev.filter((l) => l.key !== key) : prev))
   }
 
   return (
@@ -105,7 +105,7 @@ export function TrabajoForm({
       onSubmit={(e) => {
         if (lineas.some((l) => !l.tipoId)) {
           e.preventDefault()
-          setLineasError('Selecciona el tipo de trabajo en todas las líneas')
+          setLineasError('Elige el tipo de trabajo en todas las líneas')
         }
       }}
       className="space-y-4"
@@ -113,62 +113,94 @@ export function TrabajoForm({
       {trabajo ? <input type="hidden" name="id" value={trabajo.id} /> : null}
       <input type="hidden" name="items" value={itemsJson} />
 
-      <label className="block space-y-1">
-        <span className={labelText}>Doctor</span>
-        <select
-          name="doctor_id"
-          required
-          defaultValue={trabajo?.doctor_id ?? doctorInicial ?? ''}
-          className={inputClass}
-        >
-          <option value="" disabled>
-            Selecciona un doctor…
-          </option>
-          {doctores.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.nombre} — {d.consultorio_nombre}
+      <Card className="space-y-1 p-3.5">
+        <label className="block space-y-1">
+          <span className={etiqueta}>Consultorio y doctor</span>
+          <select
+            name="doctor_id"
+            required
+            defaultValue={trabajo?.doctor_id ?? doctorInicial ?? ''}
+            className={campo}
+          >
+            <option value="" disabled>
+              Elige un doctor…
             </option>
-          ))}
-        </select>
-      </label>
+            {doctores.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.consultorio_nombre} — {d.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+      </Card>
 
-      <div className="space-y-2">
-        <span className={labelText}>Trabajos de la cuenta</span>
+      <div className="space-y-2.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-base font-bold">Trabajos de la cuenta</h2>
+          <span className="num shrink-0 text-[13px] text-[var(--color-muted)]">
+            {lineas.length} línea{lineas.length === 1 ? '' : 's'}
+          </span>
+        </div>
+
         {lineas.map((l, idx) => {
           const tipo = porId.get(l.tipoId)
           return (
-            <div
-              key={l.key}
-              className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
-            >
+            <Card key={l.key} className="space-y-3 p-3.5">
               <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <TipoCombobox
-                    tipos={tipos}
-                    value={l.tipoId}
-                    onChange={(id) => actualizar(l.key, { tipoId: id })}
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setEligiendo(l.key)}
+                  className={`flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 px-3 text-left ${campoBase} hover:border-[var(--color-accent)]`}
+                >
+                  <span className={`min-w-0 truncate ${tipo ? '' : 'text-[var(--color-muted)]'}`}>
+                    {tipo ? tipo.nombre : 'Elegir tipo de trabajo…'}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {tipo ? (
+                      <span className="num text-[13.5px] text-[var(--color-muted)]">
+                        {formatMoney(tipo.precio_base)}
+                      </span>
+                    ) : null}
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="text-[var(--color-muted)]"
+                      aria-hidden
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </span>
+                </button>
+
                 {lineas.length > 1 ? (
                   <button
                     type="button"
                     aria-label={`Quitar línea ${idx + 1}`}
-                    onClick={() => quitarLinea(l.key)}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-danger)]"
+                    onClick={() =>
+                      setLineas((prev) =>
+                        prev.length > 1 ? prev.filter((x) => x.key !== l.key) : prev,
+                      )
+                    }
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-lg text-[var(--color-danger)]"
                   >
-                    ✕
+                    ×
                   </button>
                 ) : null}
               </div>
 
-              <div className="flex items-center justify-between gap-2">
-                <span className={labelText}>Cantidad</span>
-                <div className="flex shrink-0 items-center gap-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={etiqueta}>Cantidad</span>
+                <div className="flex shrink-0 items-center overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)]">
                   <button
                     type="button"
                     aria-label="Quitar una pieza"
                     onClick={() => actualizar(l.key, { cantidad: Math.max(1, l.cantidad - 1) })}
-                    className={stepperBtnClass}
+                    className={stepperBtn}
                   >
                     −
                   </button>
@@ -182,30 +214,29 @@ export function TrabajoForm({
                     onChange={(e) =>
                       actualizar(l.key, { cantidad: Math.max(1, Number(e.target.value) || 1) })
                     }
-                    className={contadorClass}
+                    className="num h-11 w-[52px] border-x border-[var(--color-border)] bg-transparent text-center text-base font-semibold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
                     aria-label="Agregar una pieza"
                     onClick={() => actualizar(l.key, { cantidad: l.cantidad + 1 })}
-                    className={stepperBtnClass}
+                    className={stepperBtn}
                   >
                     +
                   </button>
                 </div>
+                <input
+                  aria-label="Pieza o diente"
+                  value={l.pieza}
+                  onChange={(e) => actualizar(l.key, { pieza: e.target.value })}
+                  placeholder="Pieza / diente (11, 21)"
+                  className={`${campoBase} min-w-0 flex-[1_1_150px] px-3`}
+                />
               </div>
-
-              <input
-                aria-label="Pieza o diente"
-                value={l.pieza}
-                onChange={(e) => actualizar(l.key, { pieza: e.target.value })}
-                placeholder="Pieza / diente (ej. 11, 21)"
-                className={inputClass}
-              />
 
               {tipo?.variable_etiqueta ? (
                 <label className="block space-y-1">
-                  <span className={labelText}>
+                  <span className={etiqueta}>
                     {tipo.variable_etiqueta} por pieza (×{' '}
                     {formatMoney(tipo.variable_precio_unitario ?? 0)})
                   </span>
@@ -215,23 +246,25 @@ export function TrabajoForm({
                     step="1"
                     value={l.varCantidad}
                     onChange={(e) => actualizar(l.key, { varCantidad: Number(e.target.value) })}
-                    className={inputClass}
+                    className={campo}
                   />
                 </label>
               ) : null}
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2.5 text-[13px]">
                 <span className="text-[var(--color-muted)]">Subtotal</span>
-                <span className="num font-medium">{formatMoney(subtotales[idx] ?? 0)}</span>
+                <span className="num text-base font-bold">
+                  {formatMoney(subtotales[idx] ?? 0)}
+                </span>
               </div>
-            </div>
+            </Card>
           )
         })}
 
         <button
           type="button"
           onClick={agregarLinea}
-          className="h-11 w-full rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] text-sm font-medium text-[var(--color-accent)]"
+          className="h-12 w-full rounded-[var(--radius-md)] border-[1.5px] border-dashed border-[var(--color-border)] text-sm font-semibold text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent-soft)]"
         >
           + Agregar otro trabajo
         </button>
@@ -244,46 +277,69 @@ export function TrabajoForm({
 
         {trabajo ? (
           <p className="text-xs text-[var(--color-muted)]">
-            Al cambiar los trabajos de la cuenta, las etapas ya creadas no se recalculan.
+            Al cambiar las líneas, las etapas ya creadas no se recalculan.
           </p>
         ) : null}
       </div>
 
-      <label className="block space-y-1">
-        <span className={labelText}>Paciente (opcional)</span>
-        <input
-          name="paciente_nombre"
-          defaultValue={trabajo?.paciente_nombre ?? ''}
-          placeholder="Nombre del paciente"
-          className={inputClass}
-        />
-      </label>
-
-      <label className="block space-y-1">
-        <span className={labelText}>Fecha de entrega (opcional)</span>
-        <input
-          name="fecha_entrega"
-          type="date"
-          defaultValue={trabajo?.fecha_entrega ?? ''}
-          className={inputClass}
-        />
-      </label>
-
-      <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
-        <div className="flex items-center justify-between">
-          <span className={labelText}>
-            Total de la cuenta
-            {lineas.length > 1 ? ` (${lineas.length} trabajos)` : ''}
+      <Card className="space-y-3 p-3.5">
+        <label className="block space-y-1">
+          <span className={etiqueta}>
+            Paciente <span className="font-normal">(opcional)</span>
           </span>
-          <span className="text-lg font-semibold tabular-nums">
-            {manual ? 'Manual' : formatMoney(total)}
+          <input
+            name="paciente_nombre"
+            defaultValue={trabajo?.paciente_nombre ?? ''}
+            placeholder="Nombre del paciente"
+            className={campo}
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className={etiqueta}>
+            Fecha de entrega <span className="font-normal">(opcional)</span>
+          </span>
+          <input
+            name="fecha_entrega"
+            type="date"
+            defaultValue={trabajo?.fecha_entrega ?? ''}
+            className={campo}
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className={etiqueta}>
+            Notas <span className="font-normal">(opcional)</span>
+          </span>
+          <textarea
+            name="notas"
+            rows={3}
+            defaultValue={trabajo?.notas ?? ''}
+            className={`${campo} h-auto py-2`}
+          />
+        </label>
+      </Card>
+
+      {state.error ? (
+        <p role="alert" className="text-sm text-[var(--color-danger)]">
+          {state.error}
+        </p>
+      ) : null}
+
+      {/* Barra de total: siempre visible sobre la navegación. */}
+      <div className="sticky bottom-[76px] z-10 space-y-3 rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 shadow-[var(--shadow-pop)] min-[980px]:bottom-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-[var(--color-muted)]">
+            Total de la cuenta
+          </span>
+          <span className="num text-[26px] font-bold leading-none">
+            {manual ? '—' : formatMoney(total)}
           </span>
         </div>
-        <label className="mt-2 flex items-center gap-2 text-sm">
+        <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             checked={manual}
             onChange={(e) => setManual(e.target.checked)}
+            className="mt-0.5 size-5 shrink-0"
           />
           Ingresar un monto manual (ej. cobrar solo hasta donde se hizo)
         </label>
@@ -295,30 +351,26 @@ export function TrabajoForm({
             step="0.01"
             defaultValue={trabajo?.precio_acordado ?? ''}
             placeholder="Monto manual (S/)"
-            className={`${inputClass} mt-2`}
+            className={campo}
           />
         ) : null}
+        <button
+          type="submit"
+          disabled={pending}
+          className="h-[52px] w-full rounded-[var(--radius-md)] bg-[var(--color-accent)] text-base font-semibold text-[var(--color-accent-contrast)] transition-transform active:scale-[0.99] disabled:opacity-50"
+        >
+          {pending ? 'Guardando…' : submitLabel}
+        </button>
       </div>
 
-      <label className="block space-y-1">
-        <span className={labelText}>Notas (opcional)</span>
-        <textarea
-          name="notas"
-          rows={2}
-          defaultValue={trabajo?.notas ?? ''}
-          className={`${inputClass} h-auto py-2`}
-        />
-      </label>
-
-      {state.error ? (
-        <p role="alert" className="text-sm text-[var(--color-danger)]">
-          {state.error}
-        </p>
-      ) : null}
-
-      <Button type="submit" size="lg" className="w-full" disabled={pending}>
-        {pending ? 'Guardando…' : submitLabel}
-      </Button>
+      <TipoSheet
+        tipos={tipos}
+        abierta={eligiendo !== null}
+        onCerrar={() => setEligiendo(null)}
+        onElegir={(id) => {
+          if (eligiendo !== null) actualizar(eligiendo, { tipoId: id })
+        }}
+      />
     </form>
   )
 }
