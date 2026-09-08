@@ -23,18 +23,33 @@ export interface UsuarioItem {
 export async function listUsuarios(): Promise<UsuarioItem[]> {
   const labId = await laboratorioIdActual()
   const admin = createAdminSupabase()
-  const { data: perfiles, error } = await admin
+  type Fila = { id: string; nombre: string; rol: Rol; permisos?: string[] | null }
+
+  const principal = await admin
     .from('perfil')
     .select('id, nombre, rol, permisos')
     .eq('laboratorio_id', labId)
     .order('nombre', { ascending: true })
+
+  let perfiles = principal.data as Fila[] | null
+  let error = principal.error
+
+  // Migración de permisos pendiente (42703): lista sin ellos.
+  if (error?.code === '42703') {
+    const respaldo = await admin
+      .from('perfil')
+      .select('id, nombre, rol')
+      .eq('laboratorio_id', labId)
+      .order('nombre', { ascending: true })
+    perfiles = respaldo.data as Fila[] | null
+    error = respaldo.error
+  }
   if (error) throw new Error(error.message)
 
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 200 })
   const emailPorId = new Map((list?.users ?? []).map((u) => [u.id, u.email ?? '']))
 
-  type Fila = { id: string; nombre: string; rol: Rol; permisos: string[] | null }
-  return (perfiles as Fila[]).map((p) => ({
+  return (perfiles ?? []).map((p) => ({
     ...p,
     permisos: p.permisos ?? [],
     email: emailPorId.get(p.id) ?? '',

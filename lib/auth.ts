@@ -21,17 +21,35 @@ export async function getSessionContext(): Promise<SessionContext> {
   } = await supabase.auth.getUser()
   if (!user) return { userId: null, perfil: null, error: null }
 
-  const { data, error } = await supabase
+  type Fila = Omit<Perfil, 'permisos'> & { permisos?: string[] | null }
+
+  const principal = await supabase
     .from('perfil')
     .select('id, laboratorio_id, nombre, rol, permisos')
     .eq('id', user.id)
     .maybeSingle()
 
+  let fila = principal.data as Fila | null
+  let error = principal.error
+
+  // Si la migración de permisos aún no se ejecutó (columna inexistente, 42703),
+  // se lee el perfil sin ella: una migración pendiente no debe dejar a nadie
+  // fuera del sistema. Los permisos quedan vacíos hasta aplicarla.
+  if (error?.code === '42703') {
+    console.warn('[getSessionContext] falta perfil.permisos (migración 0016 pendiente)')
+    const respaldo = await supabase
+      .from('perfil')
+      .select('id, laboratorio_id, nombre, rol')
+      .eq('id', user.id)
+      .maybeSingle()
+    fila = respaldo.data as Fila | null
+    error = respaldo.error
+  }
+
   if (error) {
     console.error('[getSessionContext] error leyendo perfil:', error)
     return { userId: user.id, perfil: null, error: error.message }
   }
-  const fila = data as (Omit<Perfil, 'permisos'> & { permisos: string[] | null }) | null
   return {
     userId: user.id,
     perfil: fila ? { ...fila, permisos: fila.permisos ?? [] } : null,
