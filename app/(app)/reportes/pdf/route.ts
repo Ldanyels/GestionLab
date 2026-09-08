@@ -2,7 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 import { requireAdmin } from '@/lib/auth'
 import { nombreLaboratorioActual } from '@/lib/tenant'
 import { filasReporte } from '@/lib/reportes/data'
-import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
+import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
 import { resolverFiltros, etiquetaRango } from '@/lib/reportes/filtros'
 import { textoSeguro } from '@/lib/recibos/lineas'
 import { truncar } from '@/lib/pdf/util'
@@ -27,6 +27,7 @@ export async function GET(req: Request): Promise<Response> {
       hasta: url.searchParams.get('hasta') ?? undefined,
       consultorio: url.searchParams.get('consultorio') ?? undefined,
       doctor: url.searchParams.get('doctor') ?? undefined,
+      mostrar: url.searchParams.get('mostrar') ?? undefined,
     })
     const [filasCrudas, laboratorioCrudo] = await Promise.all([
       filasReporte(f),
@@ -35,13 +36,14 @@ export async function GET(req: Request): Promise<Response> {
     // Las fuentes estándar de PDF solo soportan WinAnsi: sanear el texto libre
     // ANTES de medirlo o truncarlo (widthOfTextAtSize falla con lo no soportado).
     const laboratorio = textoSeguro(laboratorioCrudo)
-    const filas = filasCrudas.map((r) => ({
+    const saneadas = filasCrudas.map((r) => ({
       ...r,
       consultorio: textoSeguro(r.consultorio),
       doctor: textoSeguro(r.doctor),
       resumen: textoSeguro(r.resumen),
       paciente: r.paciente ? textoSeguro(r.paciente) : null,
     }))
+    const filas = f.soloPendientes ? soloConSaldo(saneadas) : saneadas
     const { grupos, totales } = agruparPorConsultorio(filas)
 
     const doc = await PDFDocument.create()
@@ -74,7 +76,10 @@ export async function GET(req: Request): Promise<Response> {
     y -= 6
     texto(laboratorio, { size: 16, font: bold })
     y -= 18
-    texto('Reporte de cuentas por cobrar', { size: 11, font: bold })
+    texto(
+      f.soloPendientes ? 'Pendiente por cobrar' : 'Reporte de trabajos',
+      { size: 11, font: bold },
+    )
     y -= 14
     texto(etiquetaRango(f.desde, f.hasta), { size: 9, color: GRIS })
     texto(
@@ -96,9 +101,9 @@ export async function GET(req: Request): Promise<Response> {
 
     // Resumen
     const cajas: [string, string][] = [
-      ['Trabajos', String(totales.trabajos)],
+      [f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos', String(totales.trabajos)],
       ['Facturado', formatMoney(totales.facturado)],
-      ['Pagado', formatMoney(totales.pagado)],
+      [f.soloPendientes ? 'Abonado a cuenta' : 'Pagado', formatMoney(totales.pagado)],
       ['Por cobrar', formatMoney(totales.saldo)],
     ]
     const anchoCaja = UTIL / cajas.length
@@ -117,7 +122,12 @@ export async function GET(req: Request): Promise<Response> {
 
     if (grupos.length === 0) {
       y -= 10
-      texto('No hay trabajos en el rango seleccionado.', { size: 10, color: GRIS })
+      texto(
+        f.soloPendientes
+          ? 'No hay deuda pendiente en el rango seleccionado.'
+          : 'No hay trabajos en el rango seleccionado.',
+        { size: 10, color: GRIS },
+      )
     }
 
     for (const g of grupos) {
@@ -167,7 +177,7 @@ export async function GET(req: Request): Promise<Response> {
     return new Response(Buffer.from(bytes), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="reporte-${f.desde}-a-${f.hasta}.pdf"`,
+        'Content-Disposition': `attachment; filename="${f.soloPendientes ? 'cobranza' : 'trabajos'}-${f.desde}-a-${f.hasta}.pdf"`,
       },
     })
   } catch {

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { agruparPorConsultorio, type FilaReporte } from './agrupar'
+import {
+  agruparPorConsultorio,
+  soloConSaldo,
+  saldoFila,
+  type FilaReporte,
+} from './agrupar'
 
 function fila(p: Partial<FilaReporte>): FilaReporte {
   return {
@@ -18,21 +23,21 @@ function fila(p: Partial<FilaReporte>): FilaReporte {
   }
 }
 
-describe('agruparPorConsultorio', () => {
-  const filas = [
-    fila({ id: 't1', total: 300, pagado: 100 }), // c1 / d1 -> debe 200
-    fila({ id: 't2', total: 150, pagado: 150 }), // c1 / d1 -> debe 0
-    fila({
-      id: 't3',
-      total: 500,
-      pagado: 0,
-      doctor_id: 'd2',
-      doctor: 'Dr. B',
-      consultorio_id: 'c2',
-      consultorio: 'Clínica 2',
-    }), // c2 / d2 -> debe 500
-  ]
+const filas = [
+  fila({ id: 't1', total: 300, pagado: 100 }), // c1 / d1 -> debe 200
+  fila({ id: 't2', total: 150, pagado: 150 }), // c1 / d1 -> debe 0
+  fila({
+    id: 't3',
+    total: 500,
+    pagado: 0,
+    doctor_id: 'd2',
+    doctor: 'Dr. B',
+    consultorio_id: 'c2',
+    consultorio: 'Clínica 2',
+  }), // c2 / d2 -> debe 500
+]
 
+describe('agruparPorConsultorio', () => {
   it('calcula totales generales', () => {
     const { totales } = agruparPorConsultorio(filas)
     expect(totales).toEqual({ trabajos: 3, facturado: 950, pagado: 250, saldo: 700 })
@@ -57,5 +62,29 @@ describe('agruparPorConsultorio', () => {
     const { grupos, totales } = agruparPorConsultorio([])
     expect(grupos).toHaveLength(0)
     expect(totales.saldo).toBe(0)
+  })
+})
+
+describe('soloConSaldo', () => {
+  it('deja fuera los trabajos totalmente pagados', () => {
+    const r = soloConSaldo(filas)
+    expect(r.map((f) => f.id)).toEqual(['t1', 't3'])
+  })
+
+  it('el reporte de cobranza solo suma lo pendiente', () => {
+    const { totales } = agruparPorConsultorio(soloConSaldo(filas))
+    expect(totales.trabajos).toBe(2)
+    expect(totales.saldo).toBe(700)
+    expect(totales.facturado).toBe(800) // 300 + 500, sin el trabajo pagado
+  })
+
+  it('sin deudas devuelve lista vacía', () => {
+    expect(soloConSaldo([fila({ total: 100, pagado: 100 })])).toHaveLength(0)
+  })
+})
+
+describe('saldoFila', () => {
+  it('redondea a dos decimales', () => {
+    expect(saldoFila({ total: 100.005, pagado: 0 })).toBe(100.01)
   })
 })

@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { filasReporte } from '@/lib/reportes/data'
-import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
-import { resolverFiltros, etiquetaRango } from '@/lib/reportes/filtros'
+import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
+import { resolverFiltros, etiquetaRango, queryFiltros } from '@/lib/reportes/filtros'
 import { opcionesFiltro } from '@/lib/reportes/opciones'
 import { FiltrosReporte } from '@/components/reportes/FiltrosReporte'
 import { colorConsultorio } from '@/lib/consultorios/color'
@@ -16,20 +16,16 @@ export default async function ReportesPage({
     hasta?: string
     consultorio?: string
     doctor?: string
+    mostrar?: string
   }>
 }) {
   await requireAdmin()
   const sp = await searchParams
   const f = resolverFiltros(sp)
-  const [filas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
+  const [todas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
+  const filas = f.soloPendientes ? soloConSaldo(todas) : todas
   const { grupos, totales } = agruparPorConsultorio(filas)
-
-  const qs = new URLSearchParams()
-  qs.set('desde', f.desde)
-  qs.set('hasta', f.hasta)
-  if (f.consultorioId) qs.set('consultorio', f.consultorioId)
-  if (f.doctorId) qs.set('doctor', f.doctorId)
-  const query = qs.toString()
+  const query = queryFiltros(f)
 
   return (
     <section className="space-y-4">
@@ -37,7 +33,9 @@ export default async function ReportesPage({
         <Link href="/finanzas" className="text-sm text-[var(--color-muted)]">
           ‹ Finanzas
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Reportes</h1>
+        <h1 className="text-xl font-semibold tracking-tight">
+          {f.soloPendientes ? 'Pendiente por cobrar' : 'Reporte de trabajos'}
+        </h1>
         <p className="text-sm text-[var(--color-muted)]">
           {etiquetaRango(f.desde, f.hasta)}
         </p>
@@ -48,15 +46,22 @@ export default async function ReportesPage({
         hasta={f.hasta}
         consultorioId={f.consultorioId}
         doctorId={f.doctorId}
+        soloPendientes={f.soloPendientes}
         consultorios={opciones.consultorios}
         doctores={opciones.doctores}
       />
 
       {/* Resumen del periodo */}
       <div className="grid grid-cols-2 gap-3">
-        <Tile label="Trabajos" valor={String(totales.trabajos)} />
+        <Tile
+          label={f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos'}
+          valor={String(totales.trabajos)}
+        />
         <Tile label="Facturado" valor={formatMoney(totales.facturado)} />
-        <Tile label="Pagado" valor={formatMoney(totales.pagado)} />
+        <Tile
+          label={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
+          valor={formatMoney(totales.pagado)}
+        />
         <Tile
           label="Por cobrar"
           valor={formatMoney(totales.saldo)}
@@ -85,7 +90,9 @@ export default async function ReportesPage({
 
       {grupos.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          No hay trabajos en este rango. Prueba con otras fechas.
+          {f.soloPendientes
+            ? 'Nadie tiene deuda pendiente en este rango.'
+            : 'No hay trabajos en este rango. Prueba con otras fechas.'}
         </p>
       ) : (
         <div className="space-y-4">

@@ -11,11 +11,16 @@ import type { CatalogoTrabajo } from '@/lib/catalogo/types'
 import type { TrabajoDetalle } from '@/lib/trabajos/types'
 
 const initial: FormState = { error: '' }
-const inputClass =
-  'w-full h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 outline-none focus:border-[var(--color-accent)]'
+// Base sin ancho ni padding: evita que las utilidades de Tailwind choquen entre sí
+// (un `w-full`/`px-3` en la base gana por orden del CSS, no por orden en la cadena).
+const campoBase =
+  'h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-accent)]'
+const inputClass = `w-full px-3 ${campoBase}`
 const labelText = 'text-sm text-[var(--color-muted)]'
 const stepperBtnClass =
   'h-11 w-11 shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] text-xl leading-none active:border-[var(--color-accent)]'
+// Contador: ancho fijo estrecho y sin flechas nativas (roban espacio en móvil).
+const contadorClass = `${campoBase} w-14 shrink-0 px-1 text-center tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`
 
 interface Linea {
   key: number
@@ -156,42 +161,47 @@ export function TrabajoForm({
                 ) : null}
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Quitar una pieza"
-                  onClick={() => actualizar(l.key, { cantidad: Math.max(1, l.cantidad - 1) })}
-                  className={stepperBtnClass}
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  aria-label="Cantidad"
-                  value={l.cantidad}
-                  onChange={(e) =>
-                    actualizar(l.key, { cantidad: Math.max(1, Number(e.target.value) || 1) })
-                  }
-                  className={`${inputClass} w-20 shrink-0 text-center`}
-                />
-                <button
-                  type="button"
-                  aria-label="Agregar una pieza"
-                  onClick={() => actualizar(l.key, { cantidad: l.cantidad + 1 })}
-                  className={stepperBtnClass}
-                >
-                  +
-                </button>
-                <input
-                  aria-label="Pieza o diente"
-                  value={l.pieza}
-                  onChange={(e) => actualizar(l.key, { pieza: e.target.value })}
-                  placeholder="Pieza (ej. 11, 21)"
-                  className={inputClass}
-                />
+              <div className="flex items-center justify-between gap-2">
+                <span className={labelText}>Cantidad</span>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label="Quitar una pieza"
+                    onClick={() => actualizar(l.key, { cantidad: Math.max(1, l.cantidad - 1) })}
+                    className={stepperBtnClass}
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="1"
+                    step="1"
+                    aria-label="Cantidad de piezas"
+                    value={l.cantidad}
+                    onChange={(e) =>
+                      actualizar(l.key, { cantidad: Math.max(1, Number(e.target.value) || 1) })
+                    }
+                    className={contadorClass}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Agregar una pieza"
+                    onClick={() => actualizar(l.key, { cantidad: l.cantidad + 1 })}
+                    className={stepperBtnClass}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
+
+              <input
+                aria-label="Pieza o diente"
+                value={l.pieza}
+                onChange={(e) => actualizar(l.key, { pieza: e.target.value })}
+                placeholder="Pieza / diente (ej. 11, 21)"
+                className={inputClass}
+              />
 
               {tipo?.variable_etiqueta ? (
                 <label className="block space-y-1">

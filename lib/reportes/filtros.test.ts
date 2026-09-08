@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolverFiltros, etiquetaRango } from './filtros'
+import { resolverFiltros, etiquetaRango, queryFiltros } from './filtros'
 
 describe('resolverFiltros', () => {
   it('usa el mes actual cuando no hay fechas', () => {
@@ -24,6 +24,41 @@ describe('resolverFiltros', () => {
     const f = resolverFiltros({ consultorio: '', doctor: 'd1' })
     expect(f.consultorioId).toBeUndefined()
     expect(f.doctorId).toBe('d1')
+  })
+})
+
+describe('resolverFiltros · modo', () => {
+  it('por defecto muestra solo lo pendiente por cobrar', () => {
+    expect(resolverFiltros({}).soloPendientes).toBe(true)
+  })
+
+  it('mostrar=todos incluye los trabajos ya pagados', () => {
+    expect(resolverFiltros({ mostrar: 'todos' }).soloPendientes).toBe(false)
+  })
+})
+
+describe('queryFiltros', () => {
+  it('conserva rango y filtros, y omite mostrar en modo pendientes', () => {
+    const q = queryFiltros({
+      desde: '2026-09-01',
+      hasta: '2026-09-30',
+      consultorioId: 'c1',
+      doctorId: undefined,
+      soloPendientes: true,
+    })
+    expect(q).toContain('desde=2026-09-01')
+    expect(q).toContain('consultorio=c1')
+    expect(q).not.toContain('doctor=')
+    expect(q).not.toContain('mostrar=')
+  })
+
+  it('incluye mostrar=todos cuando no es solo pendientes', () => {
+    const q = queryFiltros({
+      desde: '2026-09-01',
+      hasta: '2026-09-30',
+      soloPendientes: false,
+    })
+    expect(q).toContain('mostrar=todos')
   })
 })
 

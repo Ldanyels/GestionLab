@@ -41,6 +41,16 @@ function r2(n: number): number {
   return Math.round(n * 100) / 100
 }
 
+/** Saldo pendiente de una fila (lo facturado menos lo abonado). */
+export function saldoFila(f: Pick<FilaReporte, 'total' | 'pagado'>): number {
+  return r2(f.total - f.pagado)
+}
+
+/** Solo los trabajos con saldo pendiente (para reportes de cobranza). */
+export function soloConSaldo(filas: readonly FilaReporte[]): FilaReporte[] {
+  return filas.filter((f) => saldoFila(f) > 0.001)
+}
+
 /**
  * Agrupa trabajos por consultorio → doctor con subtotales de facturado,
  * pagado y saldo. Grupos ordenados por saldo descendente (quién debe más).

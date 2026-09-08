@@ -10,19 +10,28 @@ export function lineasReporteTicket(args: {
   fecha: string
   rango: string
   filtro?: string
+  soloPendientes?: boolean
   grupos: GrupoConsultorio[]
   totales: TotalesReporte
 }): LineaRecibo[] {
   const lineas: LineaRecibo[] = [
     { izq: args.laboratorio, centrada: true, bold: true },
-    { izq: 'Reporte de cuentas', centrada: true },
+    {
+      izq: args.soloPendientes ? 'Pendiente por cobrar' : 'Reporte de trabajos',
+      centrada: true,
+    },
     { izq: args.rango, centrada: true },
   ]
   if (args.filtro) lineas.push({ izq: args.filtro, centrada: true })
   lineas.push({ izq: args.fecha, centrada: true }, SEP)
 
   if (args.grupos.length === 0) {
-    lineas.push({ izq: 'Sin trabajos en el rango elegido', centrada: true })
+    lineas.push({
+      izq: args.soloPendientes
+        ? 'Sin deuda pendiente en el rango'
+        : 'Sin trabajos en el rango elegido',
+      centrada: true,
+    })
   }
   for (const g of args.grupos) {
     lineas.push({ izq: g.consultorio, der: formatMoney(g.saldo), bold: true })
