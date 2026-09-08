@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Sheet } from './Sheet'
 
 interface Props {
   /** Server Action a ejecutar al confirmar. */
@@ -23,53 +24,42 @@ export function ConfirmDialog({
   message,
   confirmLabel = 'Eliminar',
 }: Props) {
-  const [open, setOpen] = useState(false)
+  const [abierta, setAbierta] = useState(false)
 
   return (
     <>
-      <button type="button" className={triggerClassName} onClick={() => setOpen(true)}>
+      <button type="button" className={triggerClassName} onClick={() => setAbierta(true)}>
         {triggerLabel}
       </button>
 
-      {open ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={title}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="w-full max-w-sm space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
-            onClick={(e) => e.stopPropagation()}
+      <Sheet
+        abierta={abierta}
+        onCerrar={() => setAbierta(false)}
+        titulo={title}
+        anchoMax={420}
+      >
+        <p className="text-sm leading-relaxed text-[var(--color-muted)]">{message}</p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setAbierta(false)}
+            className="h-11 flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm font-medium"
           >
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold">{title}</h2>
-              <p className="text-sm text-[var(--color-muted)]">{message}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="h-11 flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm font-medium"
-              >
-                Cancelar
-              </button>
-              <form action={action} className="flex-1">
-                {Object.entries(fields).map(([name, value]) => (
-                  <input key={name} type="hidden" name={name} value={value} />
-                ))}
-                <button
-                  type="submit"
-                  className="h-11 w-full rounded-[var(--radius-md)] bg-[var(--color-danger)] text-sm font-medium text-white"
-                >
-                  {confirmLabel}
-                </button>
-              </form>
-            </div>
-          </div>
+            Cancelar
+          </button>
+          <form action={action} className="flex-1">
+            {Object.entries(fields).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+            <button
+              type="submit"
+              className="h-11 w-full rounded-[var(--radius-md)] bg-[var(--color-danger)] text-sm font-medium text-white"
+            >
+              {confirmLabel}
+            </button>
+          </form>
         </div>
-      ) : null}
+      </Sheet>
     </>
   )
 }

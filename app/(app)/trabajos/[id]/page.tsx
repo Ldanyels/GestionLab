@@ -78,7 +78,8 @@ export default async function TrabajoDetallePage({
             triggerLabel="Eliminar"
             triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
             title="Eliminar trabajo"
-            message="¿Eliminar este trabajo y sus etapas? Esta acción no se puede deshacer."
+            message="Se borra el trabajo, sus etapas y sus abonos. No se puede deshacer."
+            confirmLabel="Sí, eliminar"
           />
         </div>
       </div>

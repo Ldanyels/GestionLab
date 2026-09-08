@@ -70,7 +70,7 @@ export default async function ProductoDetallePage({
             triggerLabel="Eliminar definitivo"
             triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
             title="Eliminar definitivo"
-            message={`Esto borra "${p.nombre}" y todo su historial de movimientos. No se puede deshacer. ¿Prefieres archivar? Si estás seguro, confirma.`}
+            message={`Esto borra «${p.nombre}» y todo su historial de movimientos. No se puede deshacer.`}
             confirmLabel="Sí, eliminar"
           />
             </>

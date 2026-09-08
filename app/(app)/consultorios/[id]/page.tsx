@@ -60,8 +60,8 @@ export default async function ConsultorioDetallePage({
             triggerLabel="Eliminar definitivo"
             triggerClassName="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-danger)]"
             title="Eliminar definitivo"
-            message={`Esto borra "${consultorio.nombre}" y TODO su historial: doctores, trabajos, etapas y pagos. No se puede deshacer. ¿Prefieres archivar en su lugar? Si estás seguro, confirma.`}
-            confirmLabel="Sí, eliminar todo"
+            message={`Se borra ${consultorio.nombre}, sus doctores y su historial. ¿Prefieres archivar?`}
+            confirmLabel="Sí, eliminar"
           />
         </div>
       </div>
