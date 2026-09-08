@@ -58,6 +58,15 @@ export function IconoFinanzas(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+export function IconoReportes(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 3v5h5M9 13h6M9 17h4" />
+    </svg>
+  )
+}
+
 /** Marca dental (diente) — identidad del laboratorio. */
 export function LogoDiente(props: SVGProps<SVGSVGElement>) {
   return (
@@ -73,4 +82,5 @@ export const ICONOS = {
   '/trabajos': IconoTrabajos,
   '/inventario': IconoInventario,
   '/finanzas': IconoFinanzas,
+  '/reportes': IconoReportes,
 } as const
