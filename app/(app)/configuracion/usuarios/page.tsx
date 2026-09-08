@@ -3,6 +3,7 @@ import { requireAdmin, getSessionContext } from '@/lib/auth'
 import { listUsuarios } from '@/lib/usuarios/data'
 import { UsuarioForm } from '@/components/usuarios/UsuarioForm'
 import { PermisosEditor } from '@/components/usuarios/PermisosEditor'
+import { BackRow } from '@/components/ui/BackRow'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { cambiarRolAction, eliminarUsuarioAction } from './actions'
 
@@ -19,18 +20,17 @@ export default async function UsuariosPage() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <Link href="/configuracion" className="text-sm text-[var(--color-muted)]">
-          ‹ Configuración
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Usuarios</h1>
-        <p className="text-sm text-[var(--color-muted)]">
-          Crea accesos para tu equipo. El técnico parte sin reportes ni inventario;
-          abajo le habilitas lo que necesite. Los costos de insumos y el panel de
-          Finanzas quedan siempre solo para administradores.
-        </p>
-      </div>
+    <section className="mx-auto max-w-[620px] space-y-5">
+      <BackRow
+        href="/configuracion"
+        titulo="Usuarios y permisos"
+        migaDePan="Configuración"
+      />
+      <p className="text-[13.5px] leading-relaxed text-[var(--color-muted)]">
+        Crea accesos para tu equipo. El técnico parte sin reportes ni inventario; abajo le
+        habilitas lo que necesite. Los costos de insumos y el panel de Finanzas quedan
+        siempre solo para administradores.
+      </p>
 
       {errorClave ? (
         <div className="rounded-[var(--radius-md)] border border-[var(--color-danger)] p-3 text-sm">

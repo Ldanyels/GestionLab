@@ -1,10 +1,7 @@
-import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
-import {
-  listAuditoria,
-  etiquetaTabla,
-  etiquetaAccion,
-} from '@/lib/auditoria/data'
+import { listAuditoria, etiquetaTabla, etiquetaAccion } from '@/lib/auditoria/data'
+import { BackRow } from '@/components/ui/BackRow'
+import { Card } from '@/components/ui/Card'
 
 const colorAccion: Record<string, string> = {
   INSERT: 'text-[var(--color-success)]',
@@ -17,44 +14,53 @@ export default async function AuditoriaPage() {
   const eventos = await listAuditoria(150)
 
   return (
-    <section className="space-y-4">
-      <div>
-        <Link href="/configuracion" className="text-sm text-[var(--color-muted)]">
-          ‹ Configuración
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Historial de actividad</h1>
-        <p className="text-sm text-[var(--color-muted)]">
-          Quién creó, actualizó o eliminó registros (últimos 150).
-        </p>
-      </div>
+    <section className="mx-auto max-w-[620px] space-y-4">
+      <BackRow
+        href="/configuracion"
+        titulo="Historial de actividad"
+        migaDePan="Configuración"
+      />
+      <p className="text-[13.5px] text-[var(--color-muted)]">
+        Quién creó, actualizó o eliminó registros (últimos 150).
+      </p>
 
       {eventos.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[var(--color-muted)]">
-          Aún no hay actividad registrada.
-        </p>
+        <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
+          <p className="text-[15px] font-semibold">Sin actividad</p>
+          <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
+            Aquí aparecerá lo que haga el equipo.
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-1.5">
-          {eventos.map((e) => (
-            <li
-              key={e.id}
-              className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
-            >
-              <span className="min-w-0 truncate">
-                <span className="font-medium">{e.usuario_nombre ?? 'Sistema'}</span>{' '}
-                <span className={colorAccion[e.accion]}>
-                  {etiquetaAccion(e.accion).toLowerCase()}
-                </span>{' '}
-                {etiquetaTabla(e.tabla)}
-              </span>
-              <span className="shrink-0 text-xs text-[var(--color-muted)]">
-                {new Date(e.creado_en).toLocaleString('es-PE', {
-                  dateStyle: 'short',
-                  timeStyle: 'short',
-                })}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <Card>
+          <ul>
+            {eventos.map((e, i) => (
+              <li key={e.id} className={i > 0 ? 'border-t border-[var(--color-border)]' : ''}>
+                <div className="flex items-baseline justify-between gap-3 px-3.5 py-2.5">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm">
+                      <span className="font-semibold">
+                        {e.usuario_nombre ?? 'Sistema'}
+                      </span>{' '}
+                      <span className={`font-normal ${colorAccion[e.accion] ?? ''}`}>
+                        {etiquetaAccion(e.accion).toLowerCase()}
+                      </span>
+                    </span>
+                    <span className="block truncate text-[12.5px] text-[var(--color-muted)]">
+                      {etiquetaTabla(e.tabla)}
+                    </span>
+                  </span>
+                  <span className="num shrink-0 text-[12.5px] text-[var(--color-muted)]">
+                    {new Date(e.creado_en).toLocaleString('es-PE', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </section>
   )
