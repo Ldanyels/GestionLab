@@ -1,6 +1,6 @@
 import { listTrabajos } from '@/lib/trabajos/data'
 import { deudaPorConsultorio } from '@/lib/consultorios/deuda'
-import { entregasDelDia, hoyLima } from '@/lib/trabajos/agenda'
+import { hoyLima, pendientesDelDia, realizadosDelDia } from '@/lib/trabajos/agenda'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
 import type { TrabajoListItem } from '@/lib/trabajos/types'
@@ -57,7 +57,10 @@ export function topDeuda(
 
 export interface DatosHoy {
   hoy: string
+  /** Entregas de hoy que siguen en curso: lo que queda por hacer. */
   entregas: TrabajoListItem[]
+  /** Entregas de hoy ya cerradas o entregadas: la producción de la jornada. */
+  realizados: TrabajoListItem[]
   resumen: ResumenHoy
   deuda: FilaDeuda[]
   montos: boolean
@@ -67,6 +70,11 @@ export interface DatosHoy {
  * Todo lo que pinta la pantalla Hoy. La deuda solo para quien ve importes.
  * Las dos consultas van en paralelo y la deuda la agrega la base: antes se
  * traía la tabla de trabajos dos veces.
+ *
+ * Las entregas del día se reparten en dos listas. Antes solo se mostraban las
+ * que estaban en curso, así que al marcar un trabajo como cerrado o entregado
+ * desaparecía de la pantalla y el técnico no podía ver lo que había hecho, pese
+ * a que el contador de "Entregas de hoy" seguía incluyéndolo.
  */
 export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
   const hoy = hoyLima()
@@ -75,13 +83,10 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
     listTrabajos(),
     montos ? deudaPorConsultorio() : Promise.resolve([]),
   ])
-  const entregas = entregasDelDia(
-    trabajos.filter((t) => t.estado === 'en_curso'),
-    hoy,
-  )
   return {
     hoy,
-    entregas,
+    entregas: pendientesDelDia(trabajos, hoy),
+    realizados: realizadosDelDia(trabajos, hoy),
     resumen: resumenHoy(trabajos, hoy),
     deuda: topDeuda(cuentas, 4),
     montos,

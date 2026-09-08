@@ -9,11 +9,16 @@ export interface NavItem {
   permiso?: Permiso
 }
 
-/** Los cinco destinos del rediseño. Configuración vive en el header/barra lateral. */
+/**
+ * Los cinco destinos del rediseño. Configuración vive en el header/barra lateral.
+ *
+ * Trabajos va inmediatamente después de Hoy: es la pantalla que más se usa en
+ * el día a día del taller, y en móvil eso la deja al alcance del pulgar.
+ */
 export const NAV_PRINCIPAL: NavItem[] = [
   { label: 'Hoy', href: '/hoy', roles: ['admin', 'tecnico'] },
-  { label: 'Consultorios', href: '/consultorios', roles: ['admin', 'tecnico'] },
   { label: 'Trabajos', href: '/trabajos', roles: ['admin', 'tecnico'] },
+  { label: 'Consultorios', href: '/consultorios', roles: ['admin', 'tecnico'] },
   {
     label: 'Inventario',
     href: '/inventario',

@@ -28,11 +28,16 @@ describe('navItemsFor', () => {
     const labels = navItemsFor(perfil({ rol: 'admin' })).map((i) => i.label)
     expect(labels).toEqual([
       'Hoy',
-      'Consultorios',
       'Trabajos',
+      'Consultorios',
       'Inventario',
       'Finanzas',
     ])
+  })
+
+  it('al técnico también le sale Trabajos justo después de Hoy', () => {
+    const labels = navItemsFor(perfil({})).map((i) => i.label)
+    expect(labels.slice(0, 2)).toEqual(['Hoy', 'Trabajos'])
   })
 
   it('el permiso de inventario agrega esa entrada al técnico', () => {
@@ -46,11 +51,16 @@ describe('NAV_PRINCIPAL', () => {
   it('tiene los cinco destinos del rediseño en orden', () => {
     expect(NAV_PRINCIPAL.map((i) => i.label)).toEqual([
       'Hoy',
-      'Consultorios',
       'Trabajos',
+      'Consultorios',
       'Inventario',
       'Finanzas',
     ])
+  })
+
+  it('Trabajos va inmediatamente después de Hoy', () => {
+    const labels = NAV_PRINCIPAL.map((i) => i.label)
+    expect(labels.indexOf('Trabajos')).toBe(labels.indexOf('Hoy') + 1)
   })
 
   it('Configuración no está en la navegación principal', () => {

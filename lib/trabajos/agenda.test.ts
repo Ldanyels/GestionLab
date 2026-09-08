@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { entregasDelDia, fechaLarga, hoyLima } from './agenda'
+import {
+  entregasDelDia,
+  fechaLarga,
+  hoyLima,
+  pendientesDelDia,
+  realizadosDelDia,
+} from './agenda'
 
 const trabajos = [
   { id: 'hoy1', fecha_entrega: '2026-09-08' },
@@ -26,6 +32,76 @@ describe('entregasDelDia', () => {
 
   it('sin coincidencias devuelve lista vacía', () => {
     expect(entregasDelDia(trabajos, '2026-01-01')).toEqual([])
+  })
+})
+
+// El día de trabajo real: unas entregas siguen en curso y otras ya se hicieron.
+const jornada = [
+  { id: 'pend1', fecha_entrega: '2026-09-08', estado: 'en_curso' as const },
+  { id: 'cerrado', fecha_entrega: '2026-09-08', estado: 'cerrado' as const },
+  { id: 'entregado', fecha_entrega: '2026-09-08', estado: 'entregado' as const },
+  { id: 'pend2', fecha_entrega: '2026-09-08', estado: 'en_curso' as const },
+  { id: 'ayer-hecho', fecha_entrega: '2026-09-07', estado: 'entregado' as const },
+  { id: 'manana', fecha_entrega: '2026-09-09', estado: 'en_curso' as const },
+  { id: 'sinfecha', fecha_entrega: null, estado: 'cerrado' as const },
+]
+
+describe('pendientesDelDia', () => {
+  it('deja solo las entregas de hoy que siguen en curso', () => {
+    expect(pendientesDelDia(jornada, '2026-09-08').map((t) => t.id)).toEqual(['pend1', 'pend2'])
+  })
+
+  it('excluye las que ya se hicieron', () => {
+    const ids = pendientesDelDia(jornada, '2026-09-08').map((t) => t.id)
+    expect(ids).not.toContain('cerrado')
+    expect(ids).not.toContain('entregado')
+  })
+
+  it('excluye otros días y las sin fecha', () => {
+    const ids = pendientesDelDia(jornada, '2026-09-08').map((t) => t.id)
+    expect(ids).not.toContain('manana')
+    expect(ids).not.toContain('sinfecha')
+  })
+})
+
+describe('realizadosDelDia', () => {
+  // Este es el arreglo: antes la pantalla Hoy alimentaba la agenda solo con los
+  // trabajos en curso, así que al marcar uno cerrado o entregado desaparecía de
+  // la vista y el técnico no podía ver lo que había hecho en el día.
+  it('devuelve las entregas de hoy que ya están cerradas o entregadas', () => {
+    expect(realizadosDelDia(jornada, '2026-09-08').map((t) => t.id)).toEqual([
+      'cerrado',
+      'entregado',
+    ])
+  })
+
+  it('no incluye las que siguen en curso', () => {
+    const ids = realizadosDelDia(jornada, '2026-09-08').map((t) => t.id)
+    expect(ids).not.toContain('pend1')
+    expect(ids).not.toContain('pend2')
+  })
+
+  // Limitación conocida y deliberada: `trabajo` no guarda cuándo se terminó,
+  // solo su fecha de entrega. "Realizado hoy" significa "entrega de hoy ya
+  // hecha", no "terminado hoy". Un trabajo con entrega de ayer que se cierra
+  // hoy no aparece.
+  it('no incluye lo terminado hoy con fecha de entrega de otro día', () => {
+    expect(realizadosDelDia(jornada, '2026-09-08').map((t) => t.id)).not.toContain('ayer-hecho')
+  })
+
+  it('excluye las sin fecha de entrega', () => {
+    expect(realizadosDelDia(jornada, '2026-09-08').map((t) => t.id)).not.toContain('sinfecha')
+  })
+
+  it('juntas cubren exactamente las entregas del día', () => {
+    const total =
+      pendientesDelDia(jornada, '2026-09-08').length +
+      realizadosDelDia(jornada, '2026-09-08').length
+    expect(total).toBe(entregasDelDia(jornada, '2026-09-08').length)
+  })
+
+  it('sin coincidencias devuelve lista vacía', () => {
+    expect(realizadosDelDia(jornada, '2026-01-01')).toEqual([])
   })
 })
 

@@ -8,6 +8,7 @@ import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { KpiTile } from '@/components/ui/KpiTile'
+import { TarjetaEntrega } from '@/components/hoy/TarjetaEntrega'
 
 export default async function HoyPage() {
   const perfil = await getSessionPerfil()
@@ -72,7 +73,7 @@ export default async function HoyPage() {
 
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[17px] font-bold">Agenda de entregas</h2>
+          <h2 className="text-[17px] font-bold">Entregas pendientes</h2>
           <Link
             href="/trabajos"
             className="shrink-0 text-[13.5px] font-semibold text-[var(--color-accent)]"
@@ -83,44 +84,48 @@ export default async function HoyPage() {
 
         {datos.entregas.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
-            <p className="text-[15px] font-semibold">Sin entregas para hoy</p>
+            <p className="text-[15px] font-semibold">
+              {datos.realizados.length > 0
+                ? 'Todo lo de hoy está hecho'
+                : 'Sin entregas para hoy'}
+            </p>
             <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
-              Los trabajos con otra fecha están en Trabajos.
+              {datos.realizados.length > 0
+                ? 'No queda nada pendiente con fecha de hoy.'
+                : 'Los trabajos con otra fecha están en Trabajos.'}
             </p>
           </div>
         ) : (
           <ul className="space-y-2.5">
             {datos.entregas.map((t) => (
               <li key={t.id}>
-                <Link href={`/trabajos/${t.id}`} className="block">
-                  <Card
-                    tono="lista"
-                    colorLateral={colorConsultorio(t.consultorio_nombre)}
-                    className="px-3.5 py-3 transition-transform hover:-translate-y-px"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="titulo-balance text-[15.5px] font-semibold">
-                          {t.tipo_nombre}
-                        </p>
-                        <p className="mt-0.5 truncate text-[13px] text-[var(--color-muted)]">
-                          {t.consultorio_nombre} · {t.doctor_nombre}
-                          {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
-                        </p>
-                      </div>
-                      {datos.montos ? (
-                        <span className="num shrink-0 text-sm font-semibold">
-                          {formatMoney(t.precio_acordado)}
-                        </span>
-                      ) : null}
-                    </div>
-                  </Card>
-                </Link>
+                <TarjetaEntrega trabajo={t} montos={datos.montos} />
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {/* La producción del día. Antes no existía: al marcar un trabajo como
+          cerrado o entregado desaparecía de esta pantalla, así que el técnico
+          no tenía dónde ver lo que había hecho. */}
+      {datos.realizados.length > 0 ? (
+        <div className="space-y-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-[17px] font-bold">Realizados hoy</h2>
+            <span className="num shrink-0 text-[13.5px] text-[var(--color-muted)]">
+              {datos.realizados.length} de {datos.resumen.entregasHoy}
+            </span>
+          </div>
+          <ul className="space-y-2.5">
+            {datos.realizados.map((t) => (
+              <li key={t.id}>
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {datos.montos && datos.deuda.length > 0 ? (
         <div className="space-y-2.5">

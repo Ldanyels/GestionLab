@@ -3,7 +3,7 @@ import { BackRow } from '@/components/ui/BackRow'
 import { Card } from '@/components/ui/Card'
 import { KpiTile } from '@/components/ui/KpiTile'
 import { requirePermiso } from '@/lib/auth'
-import { veMontosReportes } from '@/lib/permisos'
+import { veMontos, veMontosReportes } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
 import { resolverFiltros, etiquetaRango, queryFiltros } from '@/lib/reportes/filtros'
@@ -25,7 +25,10 @@ export default async function ReportesPage({
   }>
 }) {
   const perfil = await requirePermiso('reportes')
+  // `montos`: sus reportes salen con importes (admin o técnico autorizado).
+  // `soloAdmin`: ve además los totales del laboratorio en pantalla.
   const montos = veMontosReportes(perfil)
+  const soloAdmin = veMontos(perfil)
   const sp = await searchParams
   const f = resolverFiltros(sp)
   const [todas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
@@ -62,33 +65,42 @@ export default async function ReportesPage({
         doctores={opciones.doctores}
       />
 
-      {/* Resumen del periodo. Sin permiso de finanzas, solo el conteo. */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
-        <KpiTile
-          etiqueta={f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos'}
-          valor={String(totales.trabajos)}
-        />
-        {montos ? (
-          <>
-            <KpiTile
-              etiqueta="Monto final"
-              valor={formatMoney(totales.facturado)}
-              className="col-span-full sm:col-span-1"
-            />
-            <KpiTile
-              etiqueta={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
-              valor={formatMoney(totales.pagado)}
-              className="col-span-full sm:col-span-1"
-            />
-            <KpiTile
-              etiqueta="Por cobrar"
-              valor={formatMoney(totales.saldo)}
-              tono={totales.saldo > 0.001 ? 'peligro' : 'exito'}
-              className="col-span-full sm:col-span-1"
-            />
-          </>
-        ) : null}
-      </div>
+      {/*
+        Resumen del periodo: solo para el administrador.
+
+        Estos cuatro totales son la posición financiera agregada del
+        laboratorio, no la cuenta de un doctor. El técnico con permiso de
+        'reportes_montos' sigue emitiendo el PDF y el ticket con importes para
+        entregárselos al doctor —eso no cambia—, y sigue viendo el detalle por
+        consultorio y por doctor más abajo, que es el contenido del reporte que
+        va a entregar. Lo que no ve es cuánto tiene el laboratorio por cobrar en
+        total. Por eso el corte es `veMontos` (solo admin) y no
+        `veMontosReportes` (admin o técnico autorizado).
+      */}
+      {soloAdmin ? (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
+          <KpiTile
+            etiqueta={f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos'}
+            valor={String(totales.trabajos)}
+          />
+          <KpiTile
+            etiqueta="Monto final"
+            valor={formatMoney(totales.facturado)}
+            className="col-span-full sm:col-span-1"
+          />
+          <KpiTile
+            etiqueta={f.soloPendientes ? 'Abonado a cuenta' : 'Pagado'}
+            valor={formatMoney(totales.pagado)}
+            className="col-span-full sm:col-span-1"
+          />
+          <KpiTile
+            etiqueta="Por cobrar"
+            valor={formatMoney(totales.saldo)}
+            tono={totales.saldo > 0.001 ? 'peligro' : 'exito'}
+            className="col-span-full sm:col-span-1"
+          />
+        </div>
+      ) : null}
 
       <div className="flex gap-2">
         <a
