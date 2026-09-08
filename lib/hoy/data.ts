@@ -1,11 +1,24 @@
 import { listTrabajos } from '@/lib/trabajos/data'
 import { deudaPorConsultorio } from '@/lib/consultorios/deuda'
-import { hoyLima, pendientesDelDia, realizadosDelDia } from '@/lib/trabajos/agenda'
+import {
+  hoyLima,
+  ingresadosDelDia,
+  pendientesDelDia,
+  realizadosDelDia,
+  sinRepetir,
+} from '@/lib/trabajos/agenda'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
 import type { TrabajoListItem } from '@/lib/trabajos/types'
 
 export interface ResumenHoy {
+  /** Trabajos que ingresaron hoy. Es el contador que se muestra en pantalla. */
+  ingresadosHoy: number
+  /**
+   * Entregas con fecha de hoy. Se mantiene para el contador de la sección de
+   * entregas, pero no se muestra como KPI: `fecha_entrega` llega en NULL en
+   * todos los trabajos de MasterLab, así que el número era siempre 0.
+   */
   entregasHoy: number
   enCurso: number
   porCobrar: number
@@ -13,10 +26,16 @@ export interface ResumenHoy {
 
 /** KPIs de la pantalla Hoy. Puro. */
 export function resumenHoy(
-  trabajos: readonly { estado: string; fecha_entrega: string | null; saldo: number }[],
+  trabajos: readonly {
+    estado: string
+    fecha_ingreso: string
+    fecha_entrega: string | null
+    saldo: number
+  }[],
   hoy: string,
 ): ResumenHoy {
   return {
+    ingresadosHoy: trabajos.filter((t) => t.fecha_ingreso === hoy).length,
     entregasHoy: trabajos.filter((t) => t.fecha_entrega === hoy).length,
     enCurso: trabajos.filter((t) => t.estado === 'en_curso').length,
     porCobrar:
@@ -57,9 +76,11 @@ export function topDeuda(
 
 export interface DatosHoy {
   hoy: string
-  /** Entregas de hoy que siguen en curso: lo que queda por hacer. */
+  /** Trabajos que ingresaron hoy: la sección principal de la pantalla. */
+  ingresados: TrabajoListItem[]
+  /** Entregas con fecha de hoy que siguen en curso, sin repetir las de arriba. */
   entregas: TrabajoListItem[]
-  /** Entregas de hoy ya cerradas o entregadas: la producción de la jornada. */
+  /** Entregas con fecha de hoy ya cerradas o entregadas, sin repetir. */
   realizados: TrabajoListItem[]
   resumen: ResumenHoy
   deuda: FilaDeuda[]
@@ -71,10 +92,13 @@ export interface DatosHoy {
  * Las dos consultas van en paralelo y la deuda la agrega la base: antes se
  * traía la tabla de trabajos dos veces.
  *
- * Las entregas del día se reparten en dos listas. Antes solo se mostraban las
- * que estaban en curso, así que al marcar un trabajo como cerrado o entregado
- * desaparecía de la pantalla y el técnico no podía ver lo que había hecho, pese
- * a que el contador de "Entregas de hoy" seguía incluyéndolo.
+ * La sección principal son los trabajos que **ingresaron** hoy. Antes la
+ * pantalla se apoyaba solo en `fecha_entrega`, que llega en NULL en los 18
+ * trabajos de MasterLab porque nadie la llena: el resultado era un "Entregas de
+ * hoy: 0" permanente y un técnico sin forma de ver el trabajo del día. Las dos
+ * listas por fecha de entrega se conservan —el día que empiecen a usarla
+ * aparecen solas— y se les quitan los trabajos ya listados arriba para que
+ * ninguno salga dos veces.
  */
 export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
   const hoy = hoyLima()
@@ -83,10 +107,12 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
     listTrabajos(),
     montos ? deudaPorConsultorio() : Promise.resolve([]),
   ])
+  const ingresados = ingresadosDelDia(trabajos, hoy)
   return {
     hoy,
-    entregas: pendientesDelDia(trabajos, hoy),
-    realizados: realizadosDelDia(trabajos, hoy),
+    ingresados,
+    entregas: sinRepetir(pendientesDelDia(trabajos, hoy), ingresados),
+    realizados: sinRepetir(realizadosDelDia(trabajos, hoy), ingresados),
     resumen: resumenHoy(trabajos, hoy),
     deuda: topDeuda(cuentas, 4),
     montos,

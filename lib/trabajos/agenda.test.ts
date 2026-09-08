@@ -3,8 +3,10 @@ import {
   entregasDelDia,
   fechaLarga,
   hoyLima,
+  ingresadosDelDia,
   pendientesDelDia,
   realizadosDelDia,
+  sinRepetir,
 } from './agenda'
 
 const trabajos = [
@@ -102,6 +104,56 @@ describe('realizadosDelDia', () => {
 
   it('sin coincidencias devuelve lista vacía', () => {
     expect(realizadosDelDia(jornada, '2026-01-01')).toEqual([])
+  })
+})
+
+describe('ingresadosDelDia', () => {
+  // Esta es la lista que de verdad se puede pintar: `fecha_ingreso` la llena la
+  // base sola (default current_date), mientras que `fecha_entrega` viene en NULL
+  // en los 18 trabajos de MasterLab porque nadie la usa.
+  const ingresos = [
+    { id: 'hoy1', fecha_ingreso: '2026-09-08', estado: 'en_curso' as const },
+    { id: 'hoy2', fecha_ingreso: '2026-09-08', estado: 'entregado' as const },
+    { id: 'ayer', fecha_ingreso: '2026-09-07', estado: 'en_curso' as const },
+  ]
+
+  it('devuelve los trabajos que ingresaron ese día', () => {
+    expect(ingresadosDelDia(ingresos, '2026-09-08').map((t) => t.id)).toEqual(['hoy1', 'hoy2'])
+  })
+
+  it('no mira el estado: el trabajo del día incluye lo ya terminado', () => {
+    expect(ingresadosDelDia(ingresos, '2026-09-08').map((t) => t.id)).toContain('hoy2')
+  })
+
+  it('excluye otros días', () => {
+    expect(ingresadosDelDia(ingresos, '2026-09-08').map((t) => t.id)).not.toContain('ayer')
+  })
+
+  it('sin coincidencias devuelve lista vacía', () => {
+    expect(ingresadosDelDia(ingresos, '2026-01-01')).toEqual([])
+  })
+})
+
+describe('sinRepetir', () => {
+  const lista = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+
+  it('quita los que ya están listados en otra sección', () => {
+    expect(sinRepetir(lista, [{ id: 'b' }]).map((t) => t.id)).toEqual(['a', 'c'])
+  })
+
+  it('con nada que excluir devuelve la lista igual', () => {
+    expect(sinRepetir(lista, []).map((t) => t.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('un trabajo que ingresó hoy y se entrega hoy no se muestra dos veces', () => {
+    const jornadaCompleta = [
+      { id: 'mismo', fecha_ingreso: '2026-09-08', fecha_entrega: '2026-09-08', estado: 'en_curso' as const },
+      { id: 'viejo', fecha_ingreso: '2026-09-01', fecha_entrega: '2026-09-08', estado: 'en_curso' as const },
+    ]
+    const delDia = ingresadosDelDia(jornadaCompleta, '2026-09-08')
+    const entregas = sinRepetir(pendientesDelDia(jornadaCompleta, '2026-09-08'), delDia)
+    expect(delDia.map((t) => t.id)).toEqual(['mismo'])
+    expect(entregas.map((t) => t.id)).toEqual(['viejo'])
   })
 })
 

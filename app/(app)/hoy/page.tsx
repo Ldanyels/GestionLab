@@ -29,7 +29,10 @@ export default async function HoyPage() {
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
-        <KpiTile etiqueta="Entregas de hoy" valor={String(datos.resumen.entregasHoy)} />
+        {/* "Trabajos de hoy" y no "Entregas de hoy": la fecha de entrega llega
+            vacía en todos los trabajos, así que ese contador marcaba siempre 0.
+            Este cuenta lo que ingresó hoy y coincide con la lista de abajo. */}
+        <KpiTile etiqueta="Trabajos de hoy" valor={String(datos.resumen.ingresadosHoy)} />
         <KpiTile etiqueta="En curso" valor={String(datos.resumen.enCurso)} />
         {datos.montos ? (
           <KpiTile
@@ -71,9 +74,12 @@ export default async function HoyPage() {
         Nuevo trabajo
       </Link>
 
+      {/* Sección principal: el trabajo del día. Antes la pantalla se apoyaba
+          solo en la fecha de entrega, que nadie llena, y el técnico no tenía
+          dónde ver lo que había entrado ni lo que ya estaba hecho. */}
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[17px] font-bold">Entregas pendientes</h2>
+          <h2 className="text-[17px] font-bold">Trabajos de hoy</h2>
           <Link
             href="/trabajos"
             className="shrink-0 text-[13.5px] font-semibold text-[var(--color-accent)]"
@@ -82,20 +88,30 @@ export default async function HoyPage() {
           </Link>
         </div>
 
-        {datos.entregas.length === 0 ? (
+        {datos.ingresados.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
-            <p className="text-[15px] font-semibold">
-              {datos.realizados.length > 0
-                ? 'Todo lo de hoy está hecho'
-                : 'Sin entregas para hoy'}
-            </p>
+            <p className="text-[15px] font-semibold">Todavía no hay trabajos de hoy</p>
             <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
-              {datos.realizados.length > 0
-                ? 'No queda nada pendiente con fecha de hoy.'
-                : 'Los trabajos con otra fecha están en Trabajos.'}
+              Los que registres hoy aparecen aquí. El resto está en Trabajos.
             </p>
           </div>
         ) : (
+          <ul className="space-y-2.5">
+            {datos.ingresados.map((t) => (
+              <li key={t.id}>
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Las dos secciones por fecha de entrega solo aparecen si hay algo.
+          Hoy están vacías porque nadie llena esa fecha; el día que empiecen a
+          usarla, salen solas sin tocar código. */}
+      {datos.entregas.length > 0 ? (
+        <div className="space-y-2.5">
+          <h2 className="text-[17px] font-bold">Entregas pendientes de hoy</h2>
           <ul className="space-y-2.5">
             {datos.entregas.map((t) => (
               <li key={t.id}>
@@ -103,16 +119,13 @@ export default async function HoyPage() {
               </li>
             ))}
           </ul>
-        )}
-      </div>
+        </div>
+      ) : null}
 
-      {/* La producción del día. Antes no existía: al marcar un trabajo como
-          cerrado o entregado desaparecía de esta pantalla, así que el técnico
-          no tenía dónde ver lo que había hecho. */}
       {datos.realizados.length > 0 ? (
         <div className="space-y-2.5">
           <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-[17px] font-bold">Realizados hoy</h2>
+            <h2 className="text-[17px] font-bold">Entregas ya hechas</h2>
             <span className="num shrink-0 text-[13.5px] text-[var(--color-muted)]">
               {datos.realizados.length} de {datos.resumen.entregasHoy}
             </span>

@@ -2,13 +2,21 @@ import { describe, it, expect } from 'vitest'
 import { resumenHoy, topDeuda } from './data'
 
 const trabajos = [
-  { estado: 'en_curso', fecha_entrega: '2026-09-08', saldo: 100 },
-  { estado: 'en_curso', fecha_entrega: '2026-09-09', saldo: 50 },
-  { estado: 'cerrado', fecha_entrega: '2026-09-08', saldo: 0 },
-  { estado: 'entregado', fecha_entrega: null, saldo: 25 },
+  { estado: 'en_curso', fecha_ingreso: '2026-09-08', fecha_entrega: '2026-09-08', saldo: 100 },
+  { estado: 'en_curso', fecha_ingreso: '2026-09-08', fecha_entrega: '2026-09-09', saldo: 50 },
+  { estado: 'cerrado', fecha_ingreso: '2026-09-07', fecha_entrega: '2026-09-08', saldo: 0 },
+  { estado: 'entregado', fecha_ingreso: '2026-09-07', fecha_entrega: null, saldo: 25 },
 ]
 
 describe('resumenHoy', () => {
+  // El contador que de verdad se puede llenar: `fecha_ingreso` la pone la base
+  // sola, a diferencia de `fecha_entrega`, que en MasterLab está vacía en todos
+  // los trabajos.
+  it('cuenta los trabajos que ingresaron hoy, sin importar el estado', () => {
+    expect(resumenHoy(trabajos, '2026-09-08').ingresadosHoy).toBe(2)
+    expect(resumenHoy(trabajos, '2026-09-07').ingresadosHoy).toBe(2)
+  })
+
   it('cuenta las entregas del día sin importar el estado', () => {
     expect(resumenHoy(trabajos, '2026-09-08').entregasHoy).toBe(2)
   })
@@ -22,11 +30,17 @@ describe('resumenHoy', () => {
   })
 
   it('ignora saldos negativos (pagos de más)', () => {
-    expect(resumenHoy([{ estado: 'cerrado', fecha_entrega: null, saldo: -30 }], '2026-09-08').porCobrar).toBe(0)
+    expect(
+      resumenHoy(
+        [{ estado: 'cerrado', fecha_ingreso: '2026-09-08', fecha_entrega: null, saldo: -30 }],
+        '2026-09-08',
+      ).porCobrar,
+    ).toBe(0)
   })
 
   it('sin trabajos todo es cero', () => {
     expect(resumenHoy([], '2026-09-08')).toEqual({
+      ingresadosHoy: 0,
       entregasHoy: 0,
       enCurso: 0,
       porCobrar: 0,

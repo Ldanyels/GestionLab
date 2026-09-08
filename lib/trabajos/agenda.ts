@@ -28,6 +28,38 @@ export function entregasDelDia<T extends { fecha_entrega: string | null }>(
   return trabajos.filter((t) => t.fecha_entrega === dia)
 }
 
+/**
+ * Trabajos que ingresaron ese día: la carga de trabajo de la jornada.
+ *
+ * Es la lista que se puede pintar de verdad. `fecha_ingreso` la llena la base
+ * sola (`default current_date`), mientras que `fecha_entrega` llega en NULL:
+ * en MasterLab está vacía en los 18 trabajos porque nadie la usa, así que
+ * cualquier sección basada en la fecha de entrega sale permanentemente vacía.
+ *
+ * No filtra por estado a propósito: el trabajo del día incluye lo que ya se
+ * terminó, y la tarjeta lo distingue con su chip de estado.
+ */
+export function ingresadosDelDia<T extends { fecha_ingreso: string }>(
+  trabajos: readonly T[],
+  dia: string,
+): T[] {
+  return trabajos.filter((t) => t.fecha_ingreso === dia)
+}
+
+/**
+ * Quita de una lista los trabajos que ya aparecen en otra.
+ *
+ * Sin esto, un trabajo que ingresó hoy y además se entrega hoy saldría dos
+ * veces en la pantalla: una en "Trabajos de hoy" y otra en las entregas.
+ */
+export function sinRepetir<T extends { id: string }>(
+  lista: readonly T[],
+  yaListados: readonly { id: string }[],
+): T[] {
+  const vistos = new Set(yaListados.map((t) => t.id))
+  return lista.filter((t) => !vistos.has(t.id))
+}
+
 /** Lo que un trabajo necesita tener para poder repartir la jornada. */
 interface EntregaConEstado {
   fecha_entrega: string | null
