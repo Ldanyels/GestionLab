@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:aislamiento": "node --env-file=.env.local scripts/probar-aislamiento.mjs",
     "e2e": "playwright test"
   },
   "dependencies": {
