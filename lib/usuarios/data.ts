@@ -129,3 +129,25 @@ export async function eliminarUsuario(id: string): Promise<void> {
   const { error } = await admin.auth.admin.deleteUser(id)
   if (error) throw new Error(error.message)
 }
+
+/**
+ * Fija una contraseña nueva para un usuario del propio laboratorio.
+ *
+ * El administrador la escribe y se aplica de inmediato. Es coherente con
+ * `crearUsuario`, donde el administrador también fija la contraseña inicial, y
+ * con un laboratorio de pocas personas donde el técnico está presente.
+ *
+ * `perteneceALab` es la barrera real, no un adorno: sin ella un administrador
+ * podría cambiarle la contraseña a un usuario de OTRO laboratorio con solo
+ * pasar su identificador, porque la clave de servicio omite RLS por diseño.
+ * Si no pertenece, se sale en silencio: no se confirma ni se niega que ese
+ * identificador exista.
+ */
+export async function restablecerClave(id: string, password: string): Promise<void> {
+  const labId = await laboratorioIdActual()
+  if (!(await perteneceALab(id, labId))) return
+
+  const admin = createAdminSupabase()
+  const { error } = await admin.auth.admin.updateUserById(id, { password })
+  if (error) throw new Error(error.message)
+}

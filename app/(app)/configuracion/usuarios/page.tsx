@@ -2,6 +2,7 @@ import { requireAdmin, getSessionContext } from '@/lib/auth'
 import { listUsuarios } from '@/lib/usuarios/data'
 import { UsuarioForm } from '@/components/usuarios/UsuarioForm'
 import { PermisosEditor } from '@/components/usuarios/PermisosEditor'
+import { RestablecerClave } from '@/components/usuarios/RestablecerClave'
 import { BackRow } from '@/components/ui/BackRow'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { cambiarRolAction, eliminarUsuarioAction } from './actions'
@@ -94,6 +95,14 @@ export default async function UsuariosPage() {
                   )}
                 </span>
                 </div>
+
+                {/* A ancho completo y no dentro de la fila de acciones: al
+                    abrirse despliega dos campos y ahí quedaría apretado. */}
+                {u.id !== userId ? (
+                  <div className="border-t border-[var(--color-border)] pt-3">
+                    <RestablecerClave usuarioId={u.id} nombre={u.nombre} />
+                  </div>
+                ) : null}
 
                 {u.rol === 'tecnico' ? (
                   <div className="border-t border-[var(--color-border)] pt-3">
