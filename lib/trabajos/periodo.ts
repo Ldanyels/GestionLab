@@ -17,10 +17,6 @@ export const ETIQUETA_PERIODO: Record<Periodo, string> = {
   rango: 'Rango…',
 }
 
-/** Periodos con pastilla propia y conteo. `rango` se cuenta aparte. */
-export const PERIODOS_CON_CONTEO = ['todo', 'hoy', '7d', '30d'] as const
-export type PeriodoConConteo = (typeof PERIODOS_CON_CONTEO)[number]
-
 export interface Rango {
   desde: string
   hasta: string
@@ -86,16 +82,4 @@ export function filtrarPorFecha<T extends { fecha_ingreso: string }>(
 ): T[] {
   if (!rango) return [...lista]
   return lista.filter((t) => t.fecha_ingreso >= rango.desde && t.fecha_ingreso <= rango.hasta)
-}
-
-/** Cuántos trabajos caen en cada periodo, para el número de cada pastilla. */
-export function contarPorPeriodo(
-  lista: readonly { fecha_ingreso: string }[],
-  hoy: string,
-): Record<PeriodoConConteo, number> {
-  const conteo = {} as Record<PeriodoConConteo, number>
-  for (const p of PERIODOS_CON_CONTEO) {
-    conteo[p] = filtrarPorFecha(lista, rangoDePeriodo(p, hoy)).length
-  }
-  return conteo
 }

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import {
-  contarPorPeriodo,
   ETIQUETA_PERIODO,
   filtrarPorFecha,
   PERIODOS,
@@ -130,29 +129,6 @@ describe('filtrarPorFecha', () => {
     const copia = [...lista]
     filtrarPorFecha(lista, { desde: HOY, hasta: HOY })
     expect(lista).toEqual(copia)
-  })
-})
-
-describe('contarPorPeriodo', () => {
-  const lista = [
-    { fecha_ingreso: '2026-09-08' },
-    { fecha_ingreso: '2026-09-08' },
-    { fecha_ingreso: '2026-09-05' },
-    { fecha_ingreso: '2026-08-01' },
-  ]
-
-  it('cuenta cada periodo para las pastillas', () => {
-    const c = contarPorPeriodo(lista, HOY)
-    expect(c.todo).toBe(4)
-    expect(c.hoy).toBe(2)
-    expect(c['7d']).toBe(3)
-    expect(c['30d']).toBe(3)
-  })
-
-  it('sin trabajos todo es cero', () => {
-    const c = contarPorPeriodo([], HOY)
-    expect(c.todo).toBe(0)
-    expect(c.hoy).toBe(0)
   })
 })
 
