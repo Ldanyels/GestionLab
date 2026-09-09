@@ -3,73 +3,49 @@ import { getSessionPerfil } from '@/lib/auth'
 import { veMontos } from '@/lib/permisos'
 import { listTrabajos } from '@/lib/trabajos/data'
 import { filtrarTrabajos, contarPorEstado } from '@/lib/trabajos/filtro'
-import {
-  contarPorPeriodo,
-  enlaceTrabajos,
-  filtrarPorFecha,
-  rangoDePeriodo,
-  resolverPeriodo,
-} from '@/lib/trabajos/periodo'
+import { resolverFiltrosTrabajos, tituloTrabajos } from '@/lib/trabajos/consulta'
+import { contarPorPago, filtrarPorPago } from '@/lib/trabajos/pago'
+import { contarPorPeriodo, filtrarPorFecha, rangoDePeriodo } from '@/lib/trabajos/periodo'
 import { hoyLima } from '@/lib/trabajos/agenda'
-import { type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
-import { FiltroFecha } from '@/components/trabajos/FiltroFecha'
-import { PastillaFiltro } from '@/components/ui/PastillaFiltro'
+import { FiltrosLista } from '@/components/trabajos/FiltrosLista'
 import { SearchBox } from '@/components/ui/SearchBox'
-
-const FILTROS: { label: string; estado?: EstadoTrabajo }[] = [
-  { label: 'Todos' },
-  { label: 'En curso', estado: 'en_curso' },
-  { label: 'Cerrados', estado: 'cerrado' },
-  { label: 'Entregados', estado: 'entregado' },
-]
+import type { TrabajoListItem } from '@/lib/trabajos/types'
 
 export default async function TrabajosPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    estado?: string
-    q?: string
-    periodo?: string
-    desde?: string
-    hasta?: string
-  }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const sp = await searchParams
-  const { estado, q, desde, hasta } = sp
+  const filtros = resolverFiltrosTrabajos(await searchParams)
   const perfil = await getSessionPerfil()
   const montos = veMontos(perfil)
-  const filtroEstado = (['en_curso', 'cerrado', 'entregado'] as const).find(
-    (e) => e === estado,
-  )
-  const periodo = resolverPeriodo(sp.periodo)
   const hoy = hoyLima()
-  const rango = rangoDePeriodo(periodo, hoy, desde, hasta)
+  const rango = rangoDePeriodo(filtros.periodo, hoy, filtros.desde, filtros.hasta)
 
   // Se trae la lista completa: permite contar cada filtro y buscar en varios campos.
   const todos = await listTrabajos()
 
-  // Los conteos de cada fila se calculan sobre lo que la otra fila ya dejó
-  // pasar, para que los números no prometan resultados que el filtro combinado
-  // no va a devolver.
-  const conteo = contarPorEstado(filtrarPorFecha(todos, rango))
-  const conteoPeriodo = contarPorPeriodo(
-    filtroEstado ? todos.filter((t) => t.estado === filtroEstado) : todos,
-    hoy,
-  )
+  const porEstado = (l: readonly TrabajoListItem[]) =>
+    filtros.estado ? l.filter((t) => t.estado === filtros.estado) : [...l]
+  const porPago = (l: readonly TrabajoListItem[]) => filtrarPorPago(l, filtros.pago)
+  const porFecha = (l: readonly TrabajoListItem[]) => filtrarPorFecha(l, rango)
 
-  const trabajos = filtrarTrabajos(
-    filtrarPorFecha(
-      filtroEstado ? todos.filter((t) => t.estado === filtroEstado) : todos,
-      rango,
-    ),
-    q ?? '',
-  )
+  // El conteo de cada fila se calcula sobre lo que las otras dos ya dejaron
+  // pasar, para que ningún número prometa resultados que el filtro combinado
+  // no va a devolver.
+  const conteoEstado = contarPorEstado(porFecha(porPago(todos)))
+  const conteoPago = contarPorPago(porFecha(porEstado(todos)))
+  const conteoPeriodo = contarPorPeriodo(porPago(porEstado(todos)), hoy)
+
+  const trabajos = filtrarTrabajos(porFecha(porPago(porEstado(todos))), filtros.q ?? '')
 
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-[28px] font-bold tracking-[-0.03em]">Trabajos</h1>
+        <h1 className="titulo-balance min-w-0 text-[28px] font-bold tracking-[-0.03em]">
+          {tituloTrabajos(filtros.estado, filtros.pago)}
+        </h1>
         <Link
           href="/trabajos/nuevo"
           className="inline-flex h-11 shrink-0 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
@@ -80,35 +56,21 @@ export default async function TrabajosPage({
 
       <SearchBox
         placeholder="Buscar por paciente, doctor o tipo…"
-        defaultValue={q}
+        defaultValue={filtros.q}
         hidden={{
-          ...(filtroEstado ? { estado: filtroEstado } : {}),
-          ...(periodo !== 'todo' ? { periodo } : {}),
-          ...(periodo === 'rango' && desde ? { desde } : {}),
-          ...(periodo === 'rango' && hasta ? { hasta } : {}),
+          ...(filtros.estado ? { estado: filtros.estado } : {}),
+          ...(filtros.pago !== 'cualquiera' ? { pago: filtros.pago } : {}),
+          ...(filtros.periodo !== 'todo' ? { periodo: filtros.periodo } : {}),
+          ...(filtros.desde ? { desde: filtros.desde } : {}),
+          ...(filtros.hasta ? { hasta: filtros.hasta } : {}),
         }}
       />
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {FILTROS.map((f) => (
-          <PastillaFiltro
-            key={f.label}
-            href={enlaceTrabajos({ estado: f.estado, q, periodo, desde, hasta })}
-            activa={(f.estado ?? undefined) === filtroEstado}
-            conteo={f.estado ? conteo[f.estado] : conteo.todos}
-          >
-            {f.label}
-          </PastillaFiltro>
-        ))}
-      </div>
-
-      <FiltroFecha
-        periodo={periodo}
-        desde={desde}
-        hasta={hasta}
-        conteo={conteoPeriodo}
-        estado={filtroEstado}
-        q={q}
+      <FiltrosLista
+        filtros={filtros}
+        conteoEstado={conteoEstado}
+        conteoPago={conteoPago}
+        conteoPeriodo={conteoPeriodo}
       />
 
       {trabajos.length === 0 ? (
@@ -117,7 +79,7 @@ export default async function TrabajosPage({
           <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
             {todos.length === 0
               ? 'Aún no hay trabajos. Toca «+ Nuevo» para registrar el primero.'
-              : 'Cambia el estado, prueba otro periodo o limpia la búsqueda.'}
+              : 'Ningún trabajo cumple los tres filtros a la vez. Prueba con «Todos», «Cualquiera» o «Todo».'}
           </p>
         </div>
       ) : (

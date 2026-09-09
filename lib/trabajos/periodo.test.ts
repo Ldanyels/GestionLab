@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   contarPorPeriodo,
-  enlaceTrabajos,
   ETIQUETA_PERIODO,
   filtrarPorFecha,
   PERIODOS,
@@ -160,38 +159,5 @@ describe('contarPorPeriodo', () => {
 describe('ETIQUETA_PERIODO', () => {
   it('tiene etiqueta para cada periodo', () => {
     for (const p of PERIODOS) expect(ETIQUETA_PERIODO[p]).toBeTruthy()
-  })
-})
-
-describe('enlaceTrabajos', () => {
-  it('sin nada devuelve la ruta limpia', () => {
-    expect(enlaceTrabajos({})).toBe('/trabajos')
-  })
-
-  it('conserva el estado y la búsqueda al cambiar de periodo', () => {
-    expect(enlaceTrabajos({ estado: 'en_curso', q: 'corona', periodo: 'hoy' })).toBe(
-      '/trabajos?estado=en_curso&q=corona&periodo=hoy',
-    )
-  })
-
-  it('omite el periodo "todo", que es el valor por defecto', () => {
-    expect(enlaceTrabajos({ periodo: 'todo', q: 'x' })).toBe('/trabajos?q=x')
-  })
-
-  it('incluye las fechas solo con el periodo de rango', () => {
-    expect(
-      enlaceTrabajos({ periodo: 'rango', desde: '2026-09-01', hasta: '2026-09-05' }),
-    ).toBe('/trabajos?periodo=rango&desde=2026-09-01&hasta=2026-09-05')
-    expect(enlaceTrabajos({ periodo: 'hoy', desde: '2026-09-01' })).toBe(
-      '/trabajos?periodo=hoy',
-    )
-  })
-
-  it('escapa lo que el usuario escribió', () => {
-    expect(enlaceTrabajos({ q: 'a&b=c' })).toBe('/trabajos?q=a%26b%3Dc')
-  })
-
-  it('descarta valores vacíos', () => {
-    expect(enlaceTrabajos({ q: '', estado: undefined, periodo: 'todo' })).toBe('/trabajos')
   })
 })

@@ -6,8 +6,6 @@
  * filtro sobre ella devolvería siempre cero resultados. La de ingreso la pone
  * la base sola con `default current_date`.
  */
-import type { EstadoTrabajo } from './estado'
-
 export const PERIODOS = ['todo', 'hoy', '7d', '30d', 'rango'] as const
 export type Periodo = (typeof PERIODOS)[number]
 
@@ -100,32 +98,4 @@ export function contarPorPeriodo(
     conteo[p] = filtrarPorFecha(lista, rangoDePeriodo(p, hoy)).length
   }
   return conteo
-}
-
-export interface FiltrosTrabajos {
-  estado?: EstadoTrabajo
-  q?: string
-  periodo?: Periodo
-  desde?: string
-  hasta?: string
-}
-
-/**
- * Enlace a la lista con los filtros dados, conservando los demás.
- *
- * Omite lo vacío y lo que es el valor por defecto, para que la URL no se llene
- * de ruido: el periodo 'todo' no se escribe, y las fechas solo viajan con el
- * periodo 'rango', que es el único que las usa.
- */
-export function enlaceTrabajos(f: FiltrosTrabajos): string {
-  const params = new URLSearchParams()
-  if (f.estado) params.set('estado', f.estado)
-  if (f.q) params.set('q', f.q)
-  if (f.periodo && f.periodo !== 'todo') params.set('periodo', f.periodo)
-  if (f.periodo === 'rango') {
-    if (f.desde) params.set('desde', f.desde)
-    if (f.hasta) params.set('hasta', f.hasta)
-  }
-  const qs = params.toString()
-  return qs ? `/trabajos?${qs}` : '/trabajos'
 }
