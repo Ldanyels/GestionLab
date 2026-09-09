@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSessionContext } from '@/lib/auth'
 import { estaSuspendido } from '@/lib/laboratorio/estado'
+import { esSesionSuperAdmin } from '@/lib/plataforma/acceso'
 import { AppShell } from '@/components/nav/AppShell'
 import { PantallaSuspendida } from '@/components/laboratorio/PantallaSuspendida'
 
@@ -52,5 +53,13 @@ export default async function AppLayout({
     return <PantallaSuspendida rol={perfil.rol} />
   }
 
-  return <AppShell perfil={perfil}>{children}</AppShell>
+  // La bandera se calcula aquí y no en `AppShell` para que ese componente siga
+  // siendo sincrónico y montable en pruebas.
+  const superAdmin = await esSesionSuperAdmin()
+
+  return (
+    <AppShell perfil={perfil} esSuperAdmin={superAdmin}>
+      {children}
+    </AppShell>
+  )
 }

@@ -13,15 +13,22 @@ import type { Perfil } from '@/lib/supabase/types'
  */
 export function AppShell({
   perfil,
+  esSuperAdmin = false,
   children,
 }: {
   perfil: Perfil
+  /**
+   * Si la sesión administra la plataforma. Lo calcula el layout, que es
+   * asíncrono; este componente se mantiene sincrónico para poder montarse en
+   * las pruebas sin resolver una promesa.
+   */
+  esSuperAdmin?: boolean
   children: ReactNode
 }) {
   return (
     <ToastProvider>
       <div className="flex min-h-dvh">
-        <Sidebar perfil={perfil} />
+        <Sidebar perfil={perfil} esSuperAdmin={esSuperAdmin} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Header solo en móvil: en escritorio manda la barra lateral. */}

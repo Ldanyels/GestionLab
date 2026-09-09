@@ -48,6 +48,29 @@ describe('AppShell', () => {
     expect(screen.queryByRole('link', { name: /configuración/i })).toBeNull()
   })
 
+  // El enlace no depende del rol del perfil: un administrador de laboratorio
+  // no administra la plataforma. La bandera la calcula el servidor.
+  it('ofrece Plataforma cuando la sesión es de super-administrador', () => {
+    render(
+      <AppShell perfil={admin} esSuperAdmin>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.getByRole('link', { name: 'Plataforma' })).toHaveAttribute(
+      'href',
+      '/plataforma',
+    )
+  })
+
+  it('no ofrece Plataforma a un administrador de laboratorio cualquiera', () => {
+    render(
+      <AppShell perfil={admin}>
+        <p>contenido</p>
+      </AppShell>,
+    )
+    expect(screen.queryByRole('link', { name: 'Plataforma' })).toBeNull()
+  })
+
   it('monta las dos navegaciones: lateral y barra inferior', () => {
     render(
       <AppShell perfil={admin}>

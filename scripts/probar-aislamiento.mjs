@@ -400,6 +400,51 @@ async function comprobarHuerfano(labB) {
   return huerfano
 }
 
+/**
+ * Un laboratorio dado de alta como lo hace el panel queda igual de aislado.
+ *
+ * Reproduce los tres pasos de `crearLaboratorioConAdmin` en el mismo orden
+ * (laboratorio → usuario de autenticación → perfil de admin, todo con la clave
+ * de servicio), porque eso es justo lo que hay que vigilar: el panel obtiene su
+ * poder de la clave de servicio en el servidor, no de relajar una política. Si
+ * alguna vez se «arreglara» un problema del panel abriendo una política de RLS,
+ * esta comprobación es la que se pondría roja.
+ */
+async function comprobarAltaAislada(labB) {
+  console.log('\nAlta desde el panel: el laboratorio nuevo nace aislado')
+
+  const labC = await crearLaboratorio('C-alta')
+  laboratorios.push(labC)
+  const usuarioC = await crearUsuario('admin-c', labC)
+  usuarios.push(usuarioC)
+
+  const comoC = createClient(URL, ANON, { auth: { persistSession: false } })
+  const { error: errEntrada } = await comoC.auth.signInWithPassword({
+    email: usuarioC.email,
+    password: CLAVE,
+  })
+  comprobar('el administrador del laboratorio nuevo entra', !errEntrada, errEntrada?.message)
+  if (errEntrada) return
+
+  // Nace vacío: sin esto, un alta que copiara datos de otro inquilino pasaría
+  // desapercibida mientras las políticas siguieran bien escritas.
+  const { data: trabajos } = await comoC.from('trabajo').select('*')
+  comprobar('el laboratorio nuevo nace sin trabajos', (trabajos ?? []).length === 0,
+    `${(trabajos ?? []).length} trabajo(s)`)
+  comprobar('no se filtra ningún dato de B en sus trabajos', !hayFuga(trabajos))
+
+  const { data: labs } = await comoC.from('laboratorio').select('id')
+  comprobar(
+    'solo ve su propio laboratorio',
+    (labs ?? []).length === 1 && labs[0].id === labC,
+    `${(labs ?? []).length} laboratorio(s) visibles`,
+  )
+
+  const { data: ajenos } = await comoC.from('perfil').select('*').eq('laboratorio_id', labB)
+  comprobar('no ve los perfiles del laboratorio B', (ajenos ?? []).length === 0,
+    `${(ajenos ?? []).length} perfil(es) ajenos`)
+}
+
 // ── Limpieza ──────────────────────────────────────────────────
 async function limpiar(laboratorios, usuarios) {
   console.log('\nLimpieza')
@@ -479,6 +524,7 @@ try {
   ausentes.push(...(await comprobarLaboratorioYPerfil(comoA, labA, labB, usuarioB)))
   ausentes.push(...(await comprobarRpc(comoA)))
   usuarios.push(await comprobarHuerfano(labB))
+  await comprobarAltaAislada(labB)
 } catch (e) {
   fallas.push(`Error de preparación: ${e.message}`)
   console.error(`\n✗ ${e.message}`)

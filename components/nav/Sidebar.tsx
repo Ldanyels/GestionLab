@@ -7,8 +7,20 @@ import { ICONOS, LogoDiente } from './icons'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import type { Perfil } from '@/lib/supabase/types'
 
-/** Barra lateral de 236 px: solo en escritorio (≥980 px). */
-export function Sidebar({ perfil }: { perfil: Perfil }) {
+/**
+ * Barra lateral de 236 px: solo en escritorio (≥980 px).
+ *
+ * `esSuperAdmin` llega como prop porque esto es un componente de cliente y no
+ * puede comprobarlo: quién administra la plataforma se decide con una variable
+ * de entorno del servidor, que el navegador nunca ve.
+ */
+export function Sidebar({
+  perfil,
+  esSuperAdmin = false,
+}: {
+  perfil: Perfil
+  esSuperAdmin?: boolean
+}) {
   const pathname = usePathname()
   const activo = (href: string) =>
     pathname === href || (pathname?.startsWith(`${href}/`) ?? false)
@@ -42,6 +54,14 @@ export function Sidebar({ perfil }: { perfil: Perfil }) {
       </nav>
 
       <div className="mt-auto flex flex-col gap-1 border-t border-[var(--color-border)] pt-3">
+        {esSuperAdmin ? (
+          <Link
+            href="/plataforma"
+            className="flex h-11 items-center rounded-[var(--radius-md)] px-3 text-sm font-semibold text-[var(--color-accent)] transition-colors hover:bg-[var(--color-surface-2)]"
+          >
+            Plataforma
+          </Link>
+        ) : null}
         {perfil.rol === 'admin' ? (
           <Link
             href="/configuracion"
