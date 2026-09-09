@@ -18,6 +18,25 @@ interface Props {
   montos: boolean
 }
 
+/**
+ * La fecha de la tarjeta: la real si el trabajo ya salió, la prometida si no.
+ *
+ * Un trabajo entregado no muestra la prometida ni como respaldo. Lo que
+ * interesa de un entregado es cuándo salió, y ofrecer la promesa en su lugar
+ * invitaría a leerla como si fuera la entrega.
+ */
+function FechaDeEntrega({ trabajo: t }: { trabajo: TrabajoListItem }) {
+  const entregado = t.estado === 'entregado'
+  const fecha = entregado ? t.entregado_el : t.fecha_entrega
+  if (!fecha) return null
+
+  return (
+    <span className="shrink-0 text-xs text-[var(--color-muted)]">
+      {entregado ? 'Entregado' : 'Entrega'} {diaMes(fecha)}
+    </span>
+  )
+}
+
 /** Tarjeta de la lista de trabajos: resumen, cliente y estado de pago. */
 export function TrabajoCard({ trabajo: t, montos }: Props) {
   return (
@@ -40,11 +59,7 @@ export function TrabajoCard({ trabajo: t, montos }: Props) {
         <div className="flex items-center justify-between gap-3">
           <span className="flex min-w-0 items-center gap-2">
             {montos ? <PagoChip saldo={t.saldo} /> : null}
-            {t.fecha_entrega ? (
-              <span className="shrink-0 text-xs text-[var(--color-muted)]">
-                Entrega {diaMes(t.fecha_entrega)}
-              </span>
-            ) : null}
+            <FechaDeEntrega trabajo={t} />
           </span>
           {montos ? (
             <span className="num shrink-0 text-base font-bold">

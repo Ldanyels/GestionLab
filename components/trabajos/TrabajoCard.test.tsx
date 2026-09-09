@@ -13,6 +13,7 @@ function trabajo(p: Partial<TrabajoListItem> = {}): TrabajoListItem {
     pieza: null,
     fecha_ingreso: '2026-09-01',
     fecha_entrega: '2026-09-10',
+    entregado_el: null,
     estado: 'en_curso',
     precio_acordado: 360,
     cantidad: 2,
@@ -67,5 +68,29 @@ describe('TrabajoCard', () => {
   it('sin fecha de entrega no muestra esa línea', () => {
     render(<TrabajoCard trabajo={trabajo({ fecha_entrega: null })} montos />)
     expect(screen.queryByText(/Entrega/)).toBeNull()
+  })
+
+  // La fecha real manda sobre la prometida: es la que consta, y en el resto de
+  // la aplicación la prometida está casi siempre vacía.
+  it('entregado muestra la fecha real, no la prometida', () => {
+    render(
+      <TrabajoCard
+        trabajo={trabajo({ estado: 'entregado', entregado_el: '2026-09-12' })}
+        montos
+      />,
+    )
+    expect(screen.getByText(/Entregado 12\/09/)).toBeInTheDocument()
+    expect(screen.queryByText(/Entrega 10\/09/)).toBeNull()
+  })
+
+  // Los entregados de antes de la migración 0019. Prometer una fecha que no
+  // consta sería peor que no mostrar ninguna.
+  it('entregado sin fecha real no muestra ninguna fecha', () => {
+    render(
+      <TrabajoCard trabajo={trabajo({ estado: 'entregado', entregado_el: null })} montos />,
+    )
+    // Con el día incluido en el patrón: un `/Entrega/` suelto coincidiría con
+    // la insignia de estado, que en un entregado dice justamente «Entregado».
+    expect(screen.queryByText(/Entregad?o? \d\d\/\d\d/)).toBeNull()
   })
 })

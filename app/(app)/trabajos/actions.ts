@@ -10,8 +10,10 @@ import {
   editarTrabajo,
   eliminarTrabajo,
   cambiarEstadoTrabajo,
+  corregirFechaEntrega,
   marcarEtapa,
 } from '@/lib/trabajos/data'
+import { hoyLima } from '@/lib/trabajos/agenda'
 import type { EstadoEtapa, EstadoTrabajo } from '@/lib/trabajos/estado'
 import { abonoSchema } from '@/lib/abonos/schema'
 import { crearAbono, eliminarAbono } from '@/lib/abonos/data'
@@ -90,7 +92,9 @@ export async function cambiarEstadoTrabajoAction(formData: FormData): Promise<vo
     'cambiarEstadoTrabajoAction',
     'No se pudo cambiar el estado del trabajo',
     async () => {
-      await cambiarEstadoTrabajo(id, estado)
+      // La fecha se calcula aquí, en el servidor y en la zona de Lima: dejarla
+      // a la base sería `current_date` en UTC, que de noche adelanta un día.
+      await cambiarEstadoTrabajo(id, estado, hoyLima())
       // Al cerrar (o entregar), descontar insumos según receta (una sola vez).
       if (estado === 'cerrado' || estado === 'entregado') {
         await descontarInsumosPorTrabajo(id)
@@ -102,6 +106,30 @@ export async function cambiarEstadoTrabajoAction(formData: FormData): Promise<vo
   revalidatePath(`/trabajos/${id}`)
   revalidatePath('/trabajos')
   revalidatePath('/hoy')
+}
+
+/**
+ * Corrige la fecha real de entrega de un trabajo ya entregado.
+ *
+ * Solo administradores: es un dato de control, y quien lo corrige está
+ * reescribiendo el registro de algo que ya pasó.
+ */
+export async function corregirFechaEntregaAction(formData: FormData): Promise<void> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const fecha = String(formData.get('entregado_el') ?? '')
+  // Se exige el formato completo: un `input[type=date]` vacío manda '', y
+  // guardar eso borraría la fecha sin que nadie lo haya pedido.
+  if (!id || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return
+
+  await intentarSinEstado(
+    'corregirFechaEntregaAction',
+    'No se pudo corregir la fecha de entrega',
+    () => corregirFechaEntrega(id, fecha),
+  )
+
+  revalidatePath(`/trabajos/${id}`)
+  revalidatePath('/trabajos')
 }
 
 export async function marcarEtapaAction(formData: FormData): Promise<void> {

@@ -86,7 +86,7 @@ describe('BarraFiltros — cobro', () => {
 describe('BarraFiltros — fecha', () => {
   it('ofrece los periodos como tira de texto, sin conteos', () => {
     render(<BarraFiltros filtros={filtros()} {...props} />)
-    const tira = screen.getByRole('navigation', { name: 'Fecha de ingreso' })
+    const tira = screen.getByRole('navigation', { name: /fecha de ingreso/i })
     for (const etiqueta of ['Todo', 'Hoy', '7 días', '30 días', 'Rango…']) {
       expect(tira).toHaveTextContent(etiqueta)
     }
@@ -156,6 +156,22 @@ describe('BarraFiltros — sin rótulos', () => {
     render(<BarraFiltros filtros={filtros()} {...props} />)
     expect(screen.getByRole('group', { name: 'Estado del trabajo' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Situación de cobro' })).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Fecha de ingreso' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: /fecha de ingreso/i })).toBeInTheDocument()
+  })
+})
+
+describe('BarraFiltros — qué fecha se acota', () => {
+  it('por defecto rotula la tira como fecha de ingreso', () => {
+    render(<BarraFiltros filtros={filtros()} {...props} />)
+    expect(screen.getByRole('navigation', { name: /fecha de ingreso/i })).toBeInTheDocument()
+    expect(screen.getByText('Ingreso')).toBeInTheDocument()
+  })
+
+  // Es lo que hace que «Entregados · 7 días» responda «qué entregamos esta
+  // semana» y no «qué ingresó esta semana y además ya salió».
+  it('sobre entregados rotula la tira como fecha de entrega', () => {
+    render(<BarraFiltros filtros={filtros({ estado: 'entregado' })} {...props} />)
+    expect(screen.getByRole('navigation', { name: /fecha de entrega/i })).toBeInTheDocument()
+    expect(screen.getByText('Entrega')).toBeInTheDocument()
   })
 })

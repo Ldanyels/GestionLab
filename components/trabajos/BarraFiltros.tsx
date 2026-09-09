@@ -2,7 +2,13 @@ import Link from 'next/link'
 import { Segmentado } from '@/components/ui/Segmentado'
 import { enlaceTrabajos, type FiltrosResueltos } from '@/lib/trabajos/consulta'
 import { ETIQUETA_FILTRO_PAGO, type FiltroPago } from '@/lib/trabajos/pago'
-import { ETIQUETA_PERIODO, PERIODOS, type Periodo } from '@/lib/trabajos/periodo'
+import {
+  campoFechaDe,
+  ETIQUETA_CAMPO_FECHA,
+  ETIQUETA_PERIODO,
+  PERIODOS,
+  type Periodo,
+} from '@/lib/trabajos/periodo'
 import type { ConteoEstados } from '@/lib/trabajos/filtro'
 import type { EstadoTrabajo } from '@/lib/trabajos/estado'
 
@@ -94,13 +100,29 @@ export function BarraFiltros({ filtros, conteoEstado, conteoPago }: Props) {
   )
 }
 
-/** Los periodos como tira de texto: es la dimensión secundaria, sin cajas. */
+/**
+ * Los periodos como tira de texto: es la dimensión secundaria, sin cajas.
+ *
+ * Lleva la única palabra rotulada de toda la barra, «Ingreso» o «Entrega».
+ * Rompe la regla de no poner rótulos por un motivo: aquí la palabra no nombra
+ * el control —eso ya lo hacen «Hoy» y «7 días»—, sino que dice **sobre qué
+ * fecha** se está contando, que es un dato y no se puede deducir de nada más.
+ * Cambia con el estado: los entregados se acotan por su fecha de salida.
+ */
 function TiraDeFechas({ filtros }: { filtros: FiltrosResueltos }) {
+  const campo = campoFechaDe(filtros.estado)
+
   return (
     <nav
-      aria-label="Fecha de ingreso"
+      aria-label={`Periodo por fecha de ${ETIQUETA_CAMPO_FECHA[campo].toLowerCase()}`}
       className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
     >
+      <span
+        aria-hidden
+        className="shrink-0 pr-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)] opacity-70"
+      >
+        {ETIQUETA_CAMPO_FECHA[campo]}
+      </span>
       {PERIODOS.map((p: Periodo) => {
         const activo = filtros.periodo === p
         return (

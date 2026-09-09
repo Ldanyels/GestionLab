@@ -1,11 +1,19 @@
 /**
  * Filtro por fecha de la lista de Trabajos.
  *
- * Filtra por `fecha_ingreso` y no por `fecha_entrega`: la de entrega llega en
+ * Nunca filtra por `fecha_entrega`, que es la fecha **prometida**: llega en
  * NULL en todos los trabajos de MasterLab porque nadie la llena, así que un
- * filtro sobre ella devolvería siempre cero resultados. La de ingreso la pone
- * la base sola con `default current_date`.
+ * filtro sobre ella devolvería siempre cero resultados.
+ *
+ * Filtra por `fecha_ingreso` —que la pone la base sola con
+ * `default current_date`— salvo cuando se están viendo los entregados, donde
+ * pasa a `entregado_el`, la fecha real de salida. Ese acoplamiento al estado
+ * evita las combinaciones sin sentido: un trabajo en curso no tiene fecha de
+ * entrega, así que «en curso en los últimos 7 días por fecha de entrega» sería
+ * siempre una lista vacía.
  */
+import type { EstadoTrabajo } from './estado'
+
 export const PERIODOS = ['todo', 'hoy', '7d', '30d', 'rango'] as const
 export type Periodo = (typeof PERIODOS)[number]
 
@@ -75,11 +83,36 @@ export function rangoDePeriodo(
   }
 }
 
-/** Trabajos cuyo ingreso cae dentro del rango, extremos incluidos. */
-export function filtrarPorFecha<T extends { fecha_ingreso: string }>(
+/** Las dos fechas por las que se puede acotar la lista. */
+export type CampoFecha = 'fecha_ingreso' | 'entregado_el'
+
+export const ETIQUETA_CAMPO_FECHA: Record<CampoFecha, string> = {
+  fecha_ingreso: 'Ingreso',
+  entregado_el: 'Entrega',
+}
+
+/** Qué fecha tiene sentido acotar según el estado que se esté viendo. */
+export function campoFechaDe(estado: EstadoTrabajo | null | undefined): CampoFecha {
+  return estado === 'entregado' ? 'entregado_el' : 'fecha_ingreso'
+}
+
+type ConFechas = { fecha_ingreso: string; entregado_el?: string | null }
+
+/**
+ * Trabajos cuya fecha cae dentro del rango, extremos incluidos.
+ *
+ * Los que no tienen fecha en el campo pedido quedan fuera del rango, no
+ * dentro: son los entregados de antes de que se registrara la fecha real, y
+ * colarlos en cualquier periodo sería afirmar algo que no consta.
+ */
+export function filtrarPorFecha<T extends ConFechas>(
   lista: readonly T[],
   rango: Rango | null,
+  campo: CampoFecha = 'fecha_ingreso',
 ): T[] {
   if (!rango) return [...lista]
-  return lista.filter((t) => t.fecha_ingreso >= rango.desde && t.fecha_ingreso <= rango.hasta)
+  return lista.filter((t) => {
+    const fecha = t[campo]
+    return Boolean(fecha) && fecha! >= rango.desde && fecha! <= rango.hasta
+  })
 }

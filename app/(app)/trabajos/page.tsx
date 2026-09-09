@@ -2,10 +2,10 @@ import Link from 'next/link'
 import { getSessionPerfil } from '@/lib/auth'
 import { veMontos } from '@/lib/permisos'
 import { listTrabajos } from '@/lib/trabajos/data'
-import { filtrarTrabajos, contarPorEstado } from '@/lib/trabajos/filtro'
+import { filtrarTrabajos, contarPorEstadoEnPeriodo } from '@/lib/trabajos/filtro'
 import { resolverFiltrosTrabajos, tituloTrabajos } from '@/lib/trabajos/consulta'
 import { contarPorPago, filtrarPorPago } from '@/lib/trabajos/pago'
-import { filtrarPorFecha, rangoDePeriodo } from '@/lib/trabajos/periodo'
+import { campoFechaDe, filtrarPorFecha, rangoDePeriodo } from '@/lib/trabajos/periodo'
 import { resumenLista } from '@/lib/trabajos/resumen-lista'
 import { hoyLima } from '@/lib/trabajos/agenda'
 import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
@@ -30,12 +30,18 @@ export default async function TrabajosPage({
   const porEstado = (l: readonly TrabajoListItem[]) =>
     filtros.estado ? l.filter((t) => t.estado === filtros.estado) : [...l]
   const porPago = (l: readonly TrabajoListItem[]) => filtrarPorPago(l, filtros.pago)
-  const porFecha = (l: readonly TrabajoListItem[]) => filtrarPorFecha(l, rango)
+  // Viendo entregados, el periodo acota por la fecha real de salida; en el
+  // resto, por la de ingreso. Ver `campoFechaDe`.
+  const campoFecha = campoFechaDe(filtros.estado)
+  const porFecha = (l: readonly TrabajoListItem[]) => filtrarPorFecha(l, rango, campoFecha)
 
   // El conteo de cada control se calcula sobre lo que los otros ya dejaron
   // pasar, para que ningún número prometa resultados que el filtro combinado
   // no va a devolver.
-  const conteoEstado = contarPorEstado(porFecha(porPago(todos)))
+  // El de estado usa su propio conteo: cada estado se filtra por una fecha
+  // distinta, así que no puede calcularse sobre una lista ya filtrada por una
+  // sola de ellas.
+  const conteoEstado = contarPorEstadoEnPeriodo(porPago(todos), rango)
   const conteoPago = contarPorPago(porFecha(porEstado(todos)))
 
   const trabajos = filtrarTrabajos(porFecha(porPago(porEstado(todos))), filtros.q ?? '')

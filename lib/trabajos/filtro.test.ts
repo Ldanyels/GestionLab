@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filtrarTrabajos, contarPorEstado } from './filtro'
+import { filtrarTrabajos, contarPorEstado, contarPorEstadoEnPeriodo } from './filtro'
 
 const lista = [
   {
@@ -76,6 +76,39 @@ describe('contarPorEstado', () => {
       en_curso: 0,
       cerrado: 0,
       entregado: 0,
+    })
+  })
+})
+
+describe('contarPorEstadoEnPeriodo', () => {
+  // Un entregado que ingresó dentro del rango pero salió fuera, y otro al
+  // revés: si ambos se contaran por la misma fecha, uno de los dos mentiría.
+  const conFechas = [
+    { estado: 'en_curso' as const, fecha_ingreso: '2026-09-08', entregado_el: null },
+    { estado: 'cerrado' as const, fecha_ingreso: '2026-07-01', entregado_el: null },
+    { estado: 'entregado' as const, fecha_ingreso: '2026-09-08', entregado_el: '2026-07-05' },
+    { estado: 'entregado' as const, fecha_ingreso: '2026-07-01', entregado_el: '2026-09-09' },
+  ]
+  const rango = { desde: '2026-09-07', hasta: '2026-09-10' }
+
+  it('cuenta los entregados por su fecha de salida y el resto por la de ingreso', () => {
+    expect(contarPorEstadoEnPeriodo(conFechas, rango)).toEqual({
+      // «Todos» cuenta por ingreso, que es lo que devuelve al pulsarlo: los
+      // dos con fecha_ingreso 2026-09-08.
+      todos: 2,
+      en_curso: 1,
+      cerrado: 0,
+      // Solo el que salió dentro del rango, aunque ingresara antes.
+      entregado: 1,
+    })
+  })
+
+  it('sin rango se comporta como el conteo simple', () => {
+    expect(contarPorEstadoEnPeriodo(conFechas, null)).toEqual({
+      todos: 4,
+      en_curso: 1,
+      cerrado: 1,
+      entregado: 2,
     })
   })
 })

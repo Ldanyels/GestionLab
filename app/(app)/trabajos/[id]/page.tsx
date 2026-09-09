@@ -12,7 +12,11 @@ import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
 import { EtapaAcciones } from '@/components/trabajos/EtapaAcciones'
 import { PagosSection } from '@/components/trabajos/PagosSection'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { cambiarEstadoTrabajoAction, eliminarTrabajoAction } from '../actions'
+import {
+  cambiarEstadoTrabajoAction,
+  corregirFechaEntregaAction,
+  eliminarTrabajoAction,
+} from '../actions'
 
 const enlace = 'text-[13.5px] font-semibold text-[var(--color-accent)]'
 
@@ -72,7 +76,16 @@ export default async function TrabajoDetallePage({
             </>
           ) : null}
           <Dato etiqueta="Ingreso" valor={t.fecha_ingreso} />
-          <Dato etiqueta="Entrega" valor={t.fecha_entrega ?? 'Sin fecha'} />
+          {/*
+            En un entregado se muestra la fecha real y no la prometida: la
+            promesa ya no informa de nada cuando el trabajo salió, y tenerlas
+            las dos a la vez invita a leer una por la otra.
+          */}
+          {t.estado === 'entregado' ? (
+            <Dato etiqueta="Entregado" valor={t.entregado_el ?? 'Sin registrar'} />
+          ) : (
+            <Dato etiqueta="Entrega" valor={t.fecha_entrega ?? 'Sin fecha'} />
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -86,6 +99,10 @@ export default async function TrabajoDetallePage({
             <EstadoBtn id={t.id} estado="en_curso" label="Reabrir" ghost />
           ) : null}
         </div>
+
+        {t.estado === 'entregado' && perfil?.rol === 'admin' ? (
+          <CorregirEntrega id={t.id} fecha={t.entregado_el} />
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--color-border)] pt-3">
           <Link href={`/trabajos/${t.id}/recibo`} className={enlace}>
@@ -257,6 +274,43 @@ function EstadoBtn({
         }`}
       >
         {label}
+      </button>
+    </form>
+  )
+}
+
+/**
+ * Corrección de la fecha real de entrega. Solo administradores.
+ *
+ * Existe porque en el laboratorio se marcan varios trabajos de golpe, días
+ * después de que salieran: el sello automático guardaría el día en que alguien
+ * se acordó de marcarlo. La acción vuelve a comprobar el rol por su cuenta,
+ * porque una Server Action se puede invocar sin pasar por esta página.
+ */
+function CorregirEntrega({ id, fecha }: { id: string; fecha: string | null }) {
+  return (
+    <form
+      action={corregirFechaEntregaAction}
+      className="flex flex-wrap items-end gap-2 border-t border-[var(--color-border)] pt-3"
+    >
+      <input type="hidden" name="id" value={id} />
+      <label className="space-y-1">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)]">
+          Corregir fecha de entrega
+        </span>
+        <input
+          type="date"
+          name="entregado_el"
+          defaultValue={fecha ?? ''}
+          required
+          className="h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm outline-none focus:border-[var(--color-accent)]"
+        />
+      </label>
+      <button
+        type="submit"
+        className="h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 text-sm font-semibold"
+      >
+        Guardar
       </button>
     </form>
   )

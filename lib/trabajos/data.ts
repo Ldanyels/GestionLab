@@ -273,12 +273,59 @@ export async function eliminarTrabajo(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+/**
+ * Cambia el estado del trabajo y mantiene al día su fecha real de entrega.
+ *
+ * `hoy` se recibe en vez de leerlo del reloj para que la lógica sea probable y
+ * para que la fecha sea la de Lima y no la de la zona horaria del servidor.
+ *
+ * Van tres sentencias y no una porque las condiciones son distintas:
+ * - Al entregar se sella **solo si estaba vacía** (`is('entregado_el', null)`).
+ *   Volver a pulsar «Entregado» no debe pisar una fecha que un administrador
+ *   corrigió a mano.
+ * - Al salir de entregado se borra: dejar el sello registraría una entrega que
+ *   se deshizo.
+ */
 export async function cambiarEstadoTrabajo(
   id: string,
   estado: EstadoTrabajo,
+  hoy: string,
 ): Promise<void> {
   const supabase = await createServerSupabase()
   const { error } = await supabase.from('trabajo').update({ estado }).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  if (estado === 'entregado') {
+    const { error: errSello } = await supabase
+      .from('trabajo')
+      .update({ entregado_el: hoy })
+      .eq('id', id)
+      .is('entregado_el', null)
+    if (errSello) throw new Error(errSello.message)
+    return
+  }
+
+  const { error: errBorrado } = await supabase
+    .from('trabajo')
+    .update({ entregado_el: null })
+    .eq('id', id)
+    .not('entregado_el', 'is', null)
+  if (errBorrado) throw new Error(errBorrado.message)
+}
+
+/**
+ * Corrige la fecha real de entrega.
+ *
+ * Existe porque en el laboratorio se marcan varios trabajos de golpe, días
+ * después de que salieran: sin poder corregirla, el sello automático guardaría
+ * el día en que alguien se acordó de marcarlo, no el de la entrega.
+ */
+export async function corregirFechaEntrega(id: string, fecha: string): Promise<void> {
+  const supabase = await createServerSupabase()
+  const { error } = await supabase
+    .from('trabajo')
+    .update({ entregado_el: fecha })
+    .eq('id', id)
   if (error) throw new Error(error.message)
 }
 

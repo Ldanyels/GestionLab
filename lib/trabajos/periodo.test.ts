@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+  campoFechaDe,
+  ETIQUETA_CAMPO_FECHA,
   ETIQUETA_PERIODO,
   filtrarPorFecha,
   PERIODOS,
@@ -129,6 +131,59 @@ describe('filtrarPorFecha', () => {
     const copia = [...lista]
     filtrarPorFecha(lista, { desde: HOY, hasta: HOY })
     expect(lista).toEqual(copia)
+  })
+})
+
+describe('campoFechaDe', () => {
+  // Viendo entregados, «7 días» tiene que significar entregados esta semana.
+  it('sobre entregados filtra por la fecha real de entrega', () => {
+    expect(campoFechaDe('entregado')).toBe('entregado_el')
+  })
+
+  it('sobre cualquier otro estado filtra por la de ingreso', () => {
+    expect(campoFechaDe('en_curso')).toBe('fecha_ingreso')
+    expect(campoFechaDe('cerrado')).toBe('fecha_ingreso')
+    expect(campoFechaDe(null)).toBe('fecha_ingreso')
+  })
+})
+
+describe('ETIQUETA_CAMPO_FECHA', () => {
+  it('nombra los dos campos para poder rotularlos en la barra', () => {
+    expect(ETIQUETA_CAMPO_FECHA.fecha_ingreso).toBe('Ingreso')
+    expect(ETIQUETA_CAMPO_FECHA.entregado_el).toBe('Entrega')
+  })
+})
+
+describe('filtrarPorFecha sobre la fecha de entrega', () => {
+  const entregados = [
+    { id: 'a', fecha_ingreso: '2026-08-01', entregado_el: '2026-09-08' },
+    { id: 'b', fecha_ingreso: '2026-09-08', entregado_el: '2026-08-20' },
+    // Entregado sin fecha: son los trabajos anteriores a la migración.
+    { id: 'c', fecha_ingreso: '2026-09-08', entregado_el: null },
+  ]
+
+  it('usa el campo que se le pide, no el de ingreso', () => {
+    expect(
+      filtrarPorFecha(entregados, { desde: '2026-09-01', hasta: '2026-09-30' }, 'entregado_el')
+        .map((t) => t.id),
+    ).toEqual(['a'])
+  })
+
+  // Sin esto, los entregados antiguos aparecerían en cualquier periodo o en
+  // ninguno según cómo compare undefined, que es peor que dejarlos fuera.
+  it('deja fuera los que no tienen fecha en ese campo', () => {
+    expect(
+      filtrarPorFecha(entregados, { desde: '2020-01-01', hasta: '2030-12-31' }, 'entregado_el')
+        .map((t) => t.id),
+    ).toEqual(['a', 'b'])
+  })
+
+  it('sin rango los devuelve todos, incluidos los sin fecha', () => {
+    expect(filtrarPorFecha(entregados, null, 'entregado_el').map((t) => t.id)).toEqual([
+      'a',
+      'b',
+      'c',
+    ])
   })
 })
 

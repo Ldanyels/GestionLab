@@ -8,7 +8,14 @@ export interface Trabajo {
   paciente_nombre: string | null
   pieza: string | null
   fecha_ingreso: string
+  /** Fecha **prometida** de entrega. La escribe quien crea el trabajo. */
   fecha_entrega: string | null
+  /**
+   * Fecha **real** de entrega. La sella el paso a `entregado` y el
+   * administrador puede corregirla. NULL mientras no esté entregado, y también
+   * en los entregados antes de la migración 0019.
+   */
+  entregado_el: string | null
   estado: EstadoTrabajo
   precio_acordado: number
   cantidad: number
