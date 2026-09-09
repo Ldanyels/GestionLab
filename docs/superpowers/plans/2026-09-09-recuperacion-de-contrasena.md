@@ -20,6 +20,9 @@ otro laboratorio.
 
 **Spec:** `docs/superpowers/specs/2026-09-09-recuperacion-clave-y-alta-laboratorios-design.md`
 
+**Estado:** completado el 2026-09-09 en la rama `recuperacion-de-clave`, con una
+desviación en la Tarea 5 — ver la nota en esa tarea.
+
 ## Restricciones globales
 
 - Todo el texto de interfaz en **español**, tono conversacional, sentence case.
@@ -875,6 +878,17 @@ Está en este plan porque los laboratorios nuevos arrancan con catálogo vacío
 (decisión del cliente) y `trabajo` exige `catalogo_trabajo_id`: sin este aviso,
 el primer día de un laboratorio nuevo es un formulario que no se puede enviar y
 no explica por qué.
+
+> **Desviación al ejecutar (2026-09-09).** La premisa era falsa: la página ya
+> avisaba del catálogo vacío y enlazaba a configurarlo. Debí leerla antes de
+> planificar la tarea.
+>
+> Al leerla apareció un problema real y distinto: el aviso enlazaba a
+> `/configuracion/catalogo`, que exige rol admin, así que un técnico tocaba
+> "Configura el catálogo" y volvía a Hoy sin explicación. Se implementó eso en
+> su lugar — mensaje según el rol, sin enlace muerto para el técnico— más una
+> pasada de redacción para dejar de hablar como el sistema ("Falta información
+> base" → "Antes de crear un trabajo").
 
 - [ ] **Paso 1: Ver cómo está hoy**
 
