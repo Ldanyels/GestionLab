@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState } from 'react'
 import { login, type LoginState } from './actions'
 import { PasswordInput } from '@/components/ui/PasswordInput'
@@ -67,9 +68,9 @@ export default function LoginPage() {
         </form>
 
         <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3.5">
-          <p className="text-[13px] text-[var(--color-muted)]">
-            ¿Olvidaste tu contraseña? Pídele al administrador que la restablezca.
-          </p>
+          <Link href="/login/recuperar" className="text-[13px] text-[var(--color-accent)]">
+            ¿Olvidaste tu contraseña?
+          </Link>
           <ThemeToggle />
         </div>
       </div>
