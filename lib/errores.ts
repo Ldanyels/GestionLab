@@ -27,6 +27,23 @@ const SIN_CONEXION =
 const LENTO = 'La operación tardó demasiado. Vuelve a intentarlo.'
 const NO_ENCONTRADO = 'No se encontró el registro.'
 
+/**
+ * Error cuyo texto ya está redactado para la persona que lo va a leer.
+ *
+ * Existe porque la traducción de aquí es de una sola dirección: cualquier
+ * mensaje que no reconoce lo sustituye por el respaldo genérico, y eso también
+ * borraba los mensajes que la capa de datos escribe a propósito («ese correo ya
+ * tiene una cuenta»). El marcador es una clase y no un texto reconocible para
+ * que solo nuestro código pueda ponerlo: así ningún mensaje de Postgres llega
+ * crudo a la pantalla por parecerse a uno nuestro.
+ */
+export class ErrorParaElUsuario extends Error {
+  constructor(mensaje: string) {
+    super(mensaje)
+    this.name = 'ErrorParaElUsuario'
+  }
+}
+
 /** Códigos de PostgreSQL y de PostgREST que sabemos explicar. */
 const POR_CODIGO: Record<string, string> = {
   '23502': OBLIGATORIO, // not_null_violation
@@ -100,6 +117,7 @@ function textoDe(e: unknown): string {
  */
 export function interpretarError(e: unknown, respaldo: string): ErrorLegible {
   if (esControlDeFlujoDeNext(e)) throw e
+  if (e instanceof ErrorParaElUsuario) return { mensaje: e.message, codigo: codigoDe(e) }
 
   const codigo = codigoDe(e)
   const porCodigo = codigo ? POR_CODIGO[codigo] : undefined

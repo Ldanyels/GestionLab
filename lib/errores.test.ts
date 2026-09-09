@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  ErrorParaElUsuario,
   esControlDeFlujoDeNext,
   interpretarError,
   mensajeDeError,
@@ -118,6 +119,20 @@ describe('interpretarError — casos sin identificar', () => {
   it('el código gana sobre el texto cuando ambos están presentes', () => {
     const e = { code: '42501', message: 'duplicate key value violates unique constraint' }
     expect(interpretarError(e, RESPALDO).mensaje).toBe('No tienes permiso para hacer esto.')
+  })
+
+  it('respeta el texto de un ErrorParaElUsuario en vez de traducirlo', () => {
+    const e = new ErrorParaElUsuario('Ese correo ya tiene una cuenta en la plataforma')
+    expect(interpretarError(e, RESPALDO).mensaje).toBe(
+      'Ese correo ya tiene una cuenta en la plataforma',
+    )
+  })
+
+  // Si el marcador ganara siempre, un mensaje de Postgres marcado por error
+  // llegaría crudo a la pantalla. El marcador solo lo pone nuestro código.
+  it('un Error normal con el mismo texto sí cae al respaldo', () => {
+    const e = new Error('Ese correo ya tiene una cuenta en la plataforma')
+    expect(interpretarError(e, RESPALDO).mensaje).toBe(RESPALDO)
   })
 })
 

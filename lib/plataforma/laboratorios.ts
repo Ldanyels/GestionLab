@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { ErrorParaElUsuario } from '@/lib/errores'
 import type { Laboratorio } from '@/lib/supabase/types'
 
 export const laboratorioNuevoSchema = z.object({
@@ -93,12 +94,13 @@ export async function crearLaboratorioConAdmin(
     await admin.from('laboratorio').delete().eq('id', laboratorioId)
     // Los correos son únicos en todo el proyecto de Supabase, no por
     // laboratorio: hay que decir que ya tiene cuenta en otro sitio en vez de
-    // dar un mensaje genérico que deja al operador sin saber qué pasó.
-    throw new Error(
-      errUsuario.message.includes('already')
-        ? 'Ese correo ya tiene una cuenta en la plataforma'
-        : errUsuario.message,
-    )
+    // dar un mensaje genérico que deja al operador sin saber qué pasó. Va
+    // marcado para que el envoltorio de la acción no lo sustituya por el texto
+    // de respaldo; el mensaje crudo de Supabase, en cambio, sí se traduce.
+    if (errUsuario.message.includes('already')) {
+      throw new ErrorParaElUsuario('Ese correo ya tiene una cuenta en la plataforma')
+    }
+    throw new Error(errUsuario.message)
   }
   const usuarioId = creado.user!.id
 
