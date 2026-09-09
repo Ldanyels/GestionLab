@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTrabajo } from '@/lib/trabajos/data'
 import { getSessionPerfil } from '@/lib/auth'
-import { veMontos } from '@/lib/permisos'
+import { puedeBorrarAbonos, puedeRegistrarAbonos, veMontos } from '@/lib/permisos'
 import { costoInsumosPorTrabajo } from '@/lib/inventario/data'
 import { progresoTrabajo } from '@/lib/trabajos/estado'
 import { colorConsultorio } from '@/lib/consultorios/color'
@@ -27,6 +27,8 @@ export default async function TrabajoDetallePage({
 
   const progreso = progresoTrabajo(t.etapas)
   const montos = veMontos(perfil)
+  const registraAbonos = puedeRegistrarAbonos(perfil)
+  const borraAbonos = puedeBorrarAbonos(perfil)
   const costoInsumos = montos ? await costoInsumosPorTrabajo(t.id) : 0
   const margen = Math.round((t.precio_acordado - costoInsumos) * 100) / 100
   const saldo = t.saldo
@@ -190,8 +192,15 @@ export default async function TrabajoDetallePage({
         )}
       </div>
 
-      {montos ? (
-        <PagosSection trabajoId={t.id} precio={t.precio_acordado} />
+      {/* La sección de pagos se abre al técnico con permiso de abonos: para
+          cobrar necesita ver el precio y el saldo de este trabajo. El costeo
+          interno (insumos y margen) sigue arriba detrás de `montos`. */}
+      {registraAbonos ? (
+        <PagosSection
+          trabajoId={t.id}
+          precio={t.precio_acordado}
+          puedeBorrar={borraAbonos}
+        />
       ) : (
         <Card className="p-3.5 text-sm text-[var(--color-muted)]">
           Los pagos de este trabajo los gestiona un administrador.

@@ -9,9 +9,17 @@ import { eliminarAbonoAction } from '@/app/(app)/trabajos/actions'
 export async function PagosSection({
   trabajoId,
   precio,
+  puedeBorrar,
 }: {
   trabajoId: string
   precio: number
+  /**
+   * Si es falso, no aparece el botón de eliminar de cada abono. Un técnico con
+   * permiso para registrar abonos no puede darlos de baja: si se equivocó en el
+   * monto, lo corrige el administrador. La acción también lo comprueba en el
+   * servidor, esto es solo para no ofrecer un botón que va a rebotar.
+   */
+  puedeBorrar: boolean
 }) {
   const abonos = await listAbonos(trabajoId)
   const pagado = totalPagado(abonos)
@@ -49,15 +57,17 @@ export async function PagosSection({
                       {a.nota ? ` · ${a.nota}` : ''}
                     </span>
                   </span>
-                  <ConfirmDialog
-                    action={eliminarAbonoAction}
-                    fields={{ id: a.id, trabajo_id: trabajoId }}
-                    triggerLabel="Eliminar"
-                    triggerClassName="shrink-0 text-[13px] font-semibold text-[var(--color-danger)]"
-                    title="Eliminar abono"
-                    message={`Se borra el abono de ${formatMoney(a.monto)} y el saldo vuelve a subir.`}
-                    confirmLabel="Sí, eliminar"
-                  />
+                  {puedeBorrar ? (
+                    <ConfirmDialog
+                      action={eliminarAbonoAction}
+                      fields={{ id: a.id, trabajo_id: trabajoId }}
+                      triggerLabel="Eliminar"
+                      triggerClassName="shrink-0 text-[13px] font-semibold text-[var(--color-danger)]"
+                      title="Eliminar abono"
+                      message={`Se borra el abono de ${formatMoney(a.monto)} y el saldo vuelve a subir.`}
+                      confirmLabel="Sí, eliminar"
+                    />
+                  ) : null}
                 </div>
               </li>
             ))}

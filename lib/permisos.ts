@@ -5,6 +5,7 @@ export const PERMISOS = [
   'reportes_montos',
   'inventario_ver',
   'inventario_editar',
+  'abonos_registrar',
 ] as const
 
 export type Permiso = (typeof PERMISOS)[number]
@@ -37,6 +38,12 @@ export const CATALOGO_PERMISOS: PermisoInfo[] = [
     id: 'inventario_editar',
     etiqueta: 'Registrar movimientos',
     descripcion: 'Entradas, salidas y mermas de insumos. Incluye ver inventario.',
+  },
+  {
+    id: 'abonos_registrar',
+    etiqueta: 'Registrar abonos',
+    descripcion:
+      'Registrar pagos de los doctores en cada trabajo. Ve el precio y el saldo de ese trabajo. Eliminar abonos sigue siendo solo del administrador.',
   },
 ]
 
@@ -79,4 +86,28 @@ export function veMontos(perfil: Perfil | null): boolean {
  */
 export function veMontosReportes(perfil: Perfil | null): boolean {
   return puede(perfil, 'reportes_montos')
+}
+
+/**
+ * ¿Puede registrar abonos en un trabajo? El admin siempre; el técnico con el
+ * permiso 'abonos_registrar'.
+ *
+ * Registrar implica ver el precio y el saldo de ese trabajo: no se puede cobrar
+ * a ciegas. Lo que no se abre es el costeo interno (costo de insumos y margen),
+ * que sigue detrás de `veMontos`.
+ */
+export function puedeRegistrarAbonos(perfil: Perfil | null): boolean {
+  return puede(perfil, 'abonos_registrar')
+}
+
+/**
+ * ¿Puede eliminar un abono ya registrado? Solo el administrador.
+ *
+ * Registrar es delegable; borrar no. Si un técnico se equivoca en el monto, el
+ * administrador lo corrige. Si además pudiera borrar, podría hacer desaparecer
+ * un pago que sí se cobró, y eso es justo lo que un control de caja tiene que
+ * impedir. La auditoría deja registro de quién insertó cada abono.
+ */
+export function puedeBorrarAbonos(perfil: Perfil | null): boolean {
+  return perfil?.rol === 'admin'
 }

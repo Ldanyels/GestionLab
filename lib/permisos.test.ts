@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { puede, veMontos, veMontosReportes, normalizarPermisos } from './permisos'
+import {
+  CATALOGO_PERMISOS,
+  PERMISOS,
+  puede,
+  puedeBorrarAbonos,
+  puedeRegistrarAbonos,
+  veMontos,
+  veMontosReportes,
+  normalizarPermisos,
+} from './permisos'
 import type { Perfil } from '@/lib/supabase/types'
 
 function perfil(p: Partial<Perfil>): Perfil {
@@ -79,6 +88,61 @@ describe('veMontosReportes', () => {
 
   it('sin sesión no ve importes', () => {
     expect(veMontosReportes(null)).toBe(false)
+  })
+})
+
+describe('puedeRegistrarAbonos', () => {
+  it('el admin siempre puede', () => {
+    expect(puedeRegistrarAbonos(perfil({ rol: 'admin' }))).toBe(true)
+  })
+
+  it('el técnico solo con el permiso de abonos', () => {
+    expect(puedeRegistrarAbonos(perfil({ permisos: ['abonos_registrar'] }))).toBe(true)
+    expect(puedeRegistrarAbonos(perfil({ permisos: [] }))).toBe(false)
+  })
+
+  it('otros permisos no habilitan abonos', () => {
+    expect(puedeRegistrarAbonos(perfil({ permisos: ['reportes_montos'] }))).toBe(false)
+    expect(puedeRegistrarAbonos(perfil({ permisos: ['inventario_editar'] }))).toBe(false)
+  })
+
+  it('sin sesión no puede', () => {
+    expect(puedeRegistrarAbonos(null)).toBe(false)
+  })
+})
+
+describe('puedeBorrarAbonos', () => {
+  // Decisión de control de caja: registrar es delegable, borrar no. Si un
+  // técnico se equivoca en el monto, el administrador lo corrige; si además
+  // pudiera borrar, podría hacer desaparecer un pago cobrado.
+  it('solo el administrador borra abonos', () => {
+    expect(puedeBorrarAbonos(perfil({ rol: 'admin' }))).toBe(true)
+    expect(puedeBorrarAbonos(perfil({ permisos: ['abonos_registrar'] }))).toBe(false)
+  })
+
+  it('sin sesión no puede', () => {
+    expect(puedeBorrarAbonos(null)).toBe(false)
+  })
+})
+
+describe('abonos_registrar en el catálogo', () => {
+  it('está en la lista de permisos asignables', () => {
+    expect(PERMISOS).toContain('abonos_registrar')
+    expect(CATALOGO_PERMISOS.map((p) => p.id)).toContain('abonos_registrar')
+  })
+
+  it('tiene etiqueta y descripción para la pantalla de permisos', () => {
+    const info = CATALOGO_PERMISOS.find((p) => p.id === 'abonos_registrar')
+    expect(info?.etiqueta).toBeTruthy()
+    expect(info?.descripcion).toBeTruthy()
+  })
+
+  it('no implica ningún otro permiso', () => {
+    expect(normalizarPermisos(['abonos_registrar'])).toEqual(['abonos_registrar'])
+  })
+
+  it('el catálogo cubre todos los permisos existentes', () => {
+    expect(CATALOGO_PERMISOS.map((p) => p.id).sort()).toEqual([...PERMISOS].sort())
   })
 })
 

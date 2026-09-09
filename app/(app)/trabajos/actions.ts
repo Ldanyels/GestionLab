@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { intentar, intentarSinEstado } from '@/lib/acciones'
+import { requireAdmin, requirePermiso } from '@/lib/auth'
 import { trabajoSchema } from '@/lib/trabajos/schema'
 import {
   crearTrabajo,
@@ -123,6 +124,11 @@ export async function crearAbonoAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  // Antes esta acción no comprobaba nada: la sección de pagos estaba oculta
+  // para el técnico en la interfaz, pero cualquiera podía invocar la acción
+  // directamente y registrar un abono. La comprobación va aquí, en el servidor.
+  await requirePermiso('abonos_registrar')
+
   const trabajoId = String(formData.get('trabajo_id') ?? '')
   if (!trabajoId) return { error: 'Falta el trabajo' }
   const parsed = abonoSchema.safeParse({
@@ -143,6 +149,11 @@ export async function crearAbonoAction(
 }
 
 export async function eliminarAbonoAction(formData: FormData): Promise<void> {
+  // Borrar un abono es solo del administrador, aunque el técnico tenga el
+  // permiso para registrarlos: un pago cobrado no debe poder desaparecer sin
+  // que lo decida quien lleva la caja.
+  await requireAdmin()
+
   const id = String(formData.get('id') ?? '')
   const trabajoId = String(formData.get('trabajo_id') ?? '')
   if (!id) return
