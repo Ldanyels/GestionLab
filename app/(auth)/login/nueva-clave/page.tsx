@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { createServerSupabase } from '@/lib/supabase/server'
 import { LogoDiente } from '@/components/nav/icons'
 import { FormularioClaveNueva } from '@/components/usuarios/FormularioClaveNueva'
 import { guardarClaveAction } from './actions'
@@ -7,15 +6,23 @@ import { guardarClaveAction } from './actions'
 /**
  * Destino del enlace del correo de recuperación.
  *
- * Valida el token con `verifyOtp` y **no** con el flujo PKCE. Es la decisión
+ * El token se canjea con `verifyOtp` y **no** con el flujo PKCE. Es la decisión
  * central de esta pantalla: `@supabase/ssr` usa PKCE por defecto, y ahí el
  * verificador queda guardado en el navegador que pidió el correo, así que
  * pedir el enlace en la computadora y abrirlo en el teléfono fallaría.
  * `verifyOtp` con `token_hash` no necesita verificador y funciona entre
  * dispositivos, que es el caso normal cuando alguien revisa su correo.
  *
- * Validar el token deja sesión establecida; de ahí que `guardarClaveAction`
- * pueda usar `updateUser` sin recibir el token.
+ * **Esta página no canjea el token: lo pasa al formulario.** Canjearlo aquí lo
+ * gastaba —es de un solo uso— y la sesión resultante no llegaba al navegador,
+ * porque Next no permite escribir cookies durante el render de un Server
+ * Component y `lib/supabase/server.ts` descarta esa escritura. El resultado era
+ * que el formulario aparecía y el guardado fallaba siempre. Por eso el canje
+ * vive en `guardarClaveAction`, junto al guardado y en la misma petición.
+ *
+ * Aquí solo se comprueba que el enlace traiga lo que debe traer. Si el token
+ * está vencido o ya se usó, lo dice la acción al enviar; no se puede saber
+ * antes sin gastarlo.
  *
  * No hace falta abrir un hueco en `proxy.ts`: esta ruta empieza con `/login`,
  * que ya pasa sin sesión, y el reenvío de usuarios autenticados solo aplica a
@@ -27,13 +34,7 @@ export default async function NuevaClavePage({
   searchParams: Promise<{ token_hash?: string; type?: string }>
 }) {
   const { token_hash, type } = await searchParams
-
-  let valido = false
-  if (token_hash && type === 'recovery') {
-    const supabase = await createServerSupabase()
-    const { error } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash })
-    valido = !error
-  }
+  const valido = Boolean(token_hash) && type === 'recovery'
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-6">
@@ -53,16 +54,20 @@ export default async function NuevaClavePage({
                 Con esta entrarás de ahora en adelante.
               </p>
             </div>
-            <FormularioClaveNueva action={guardarClaveAction} />
+            <FormularioClaveNueva
+              action={guardarClaveAction}
+              tokenHash={token_hash ?? ''}
+            />
           </>
         ) : (
           <>
             <h1 className="text-[24px] font-bold leading-tight tracking-[-0.02em]">
-              Este enlace ya no sirve
+              Este enlace está incompleto
             </h1>
             <p className="text-[14.5px] leading-relaxed text-[var(--color-muted)]">
-              Los enlaces vencen en una hora y solo se pueden usar una vez. Pide uno
-              nuevo y vuelve a intentarlo.
+              Le falta el código de seguridad. Suele pasar cuando se copia el enlace a
+              mano o el correo lo corta. Pide uno nuevo y ábrelo directamente desde el
+              mensaje.
             </p>
             <Link
               href="/login/recuperar"

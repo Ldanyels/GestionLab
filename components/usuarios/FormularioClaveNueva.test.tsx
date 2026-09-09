@@ -7,23 +7,23 @@ const nada = vi.fn(async () => ({ error: '' }))
 
 describe('FormularioClaveNueva', () => {
   it('pide la contraseña y su confirmación', () => {
-    render(<FormularioClaveNueva action={nada} />)
+    render(<FormularioClaveNueva action={nada} tokenHash="t-abc" />)
     expect(screen.getByLabelText('Contraseña nueva')).toBeInTheDocument()
     expect(screen.getByLabelText('Repite la contraseña')).toBeInTheDocument()
   })
 
   it('avisa del mínimo de caracteres antes de intentar guardar', () => {
-    render(<FormularioClaveNueva action={nada} />)
+    render(<FormularioClaveNueva action={nada} tokenHash="t-abc" />)
     expect(screen.getByText(/al menos 6 caracteres/i)).toBeInTheDocument()
   })
 
   it('muestra el error que devuelve el servidor', () => {
-    render(<FormularioClaveNueva action={nada} errorInicial="Las contraseñas no coinciden" />)
+    render(<FormularioClaveNueva action={nada} tokenHash="t-abc" errorInicial="Las contraseñas no coinciden" />)
     expect(screen.getByRole('alert')).toHaveTextContent('Las contraseñas no coinciden')
   })
 
   it('usa los nombres de campo que espera la acción', async () => {
-    render(<FormularioClaveNueva action={nada} />)
+    render(<FormularioClaveNueva action={nada} tokenHash="t-abc" />)
     await userEvent.type(screen.getByLabelText('Contraseña nueva'), 'abc123')
     expect(screen.getByLabelText('Contraseña nueva')).toHaveAttribute('name', 'password')
     expect(screen.getByLabelText('Repite la contraseña')).toHaveAttribute(
@@ -32,10 +32,22 @@ describe('FormularioClaveNueva', () => {
     )
   })
 
+  // El token viaja en el formulario porque la acción es la que lo canjea. Si
+  // se canjeara al pintar la página, se gastaría antes de que nadie escriba
+  // nada y el guardado fallaría siempre.
+  it('lleva el token del enlace en el envío', () => {
+    const { container } = render(
+      <FormularioClaveNueva action={nada} tokenHash="t-abc" />,
+    )
+    const oculto = container.querySelector('input[name="token_hash"]')
+    expect(oculto).toHaveAttribute('value', 't-abc')
+    expect(oculto).toHaveAttribute('type', 'hidden')
+  })
+
   // El navegador corta el envío antes de llegar al servidor, pero la validación
   // real sigue estando en el esquema: esto solo ahorra un viaje.
   it('exige el mínimo también en el navegador', () => {
-    render(<FormularioClaveNueva action={nada} />)
+    render(<FormularioClaveNueva action={nada} tokenHash="t-abc" />)
     expect(screen.getByLabelText('Contraseña nueva')).toHaveAttribute('minLength', '6')
     expect(screen.getByLabelText('Contraseña nueva')).toBeRequired()
   })

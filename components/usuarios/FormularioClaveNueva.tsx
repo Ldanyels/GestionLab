@@ -4,6 +4,8 @@ import { useActionState } from 'react'
 
 interface Props {
   action: (prev: { error: string }, formData: FormData) => Promise<{ error: string }>
+  /** Token del enlace del correo. Lo canjea la acción, no la página. */
+  tokenHash: string
   errorInicial?: string
 }
 
@@ -19,12 +21,14 @@ const etiqueta = 'text-[13px] font-semibold text-[var(--color-muted)]'
  * recordándola, y la confirmación ya cumple la función de detectar el error de
  * tecleo.
  */
-export function FormularioClaveNueva({ action, errorInicial = '' }: Props) {
+export function FormularioClaveNueva({ action, tokenHash, errorInicial = '' }: Props) {
   const [state, enviar, pending] = useActionState(action, { error: errorInicial })
   const error = state.error || errorInicial
 
   return (
     <form action={enviar} className="space-y-3.5">
+      <input type="hidden" name="token_hash" value={tokenHash} />
+
       <label className="block space-y-1">
         <span className={etiqueta}>Contraseña nueva</span>
         <input
