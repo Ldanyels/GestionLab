@@ -1,0 +1,69 @@
+<!--
+  Plantilla de "Reset Password" para Supabase.
+
+  Dónde va:  Authentication → Emails → plantilla "Reset Password"
+  Asunto:    Restablece tu contraseña de GestionLab
+
+  Por qué el enlace es así y no `{{ .ConfirmationURL }}`:
+
+  `@supabase/ssr` usa el flujo PKCE, y `ConfirmationURL` depende de un
+  verificador que queda guardado en el navegador que PIDIÓ el correo. Si el
+  usuario pide el enlace en la computadora y abre el correo en el teléfono, el
+  verificador no está y el enlace falla. Con `{{ .TokenHash }}` el servidor
+  valida el token por su cuenta con `verifyOtp`, sin verificador, así que
+  funciona entre dispositivos.
+
+  `{{ .SiteURL }}` toma el valor configurado en Authentication → URL
+  Configuration. No se escribe el dominio a mano para que no queden dos sitios
+  donde cambiarlo.
+
+  Estilos en línea y sin CSS moderno a propósito: los clientes de correo
+  descartan hojas de estilo, flexbox y variables.
+-->
+<div style="margin:0;padding:24px 12px;background-color:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e5e8ee;border-radius:14px;padding:32px 28px;">
+
+    <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#626b7a;">
+      GestionLab
+    </p>
+
+    <h1 style="margin:0 0 14px;font-size:21px;line-height:1.3;color:#14181f;">
+      Restablece tu contraseña
+    </h1>
+
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#3d4552;">
+      Pediste cambiar la contraseña de tu cuenta en GestionLab. Toca el botón y
+      elige una nueva.
+    </p>
+
+    <p style="margin:0 0 24px;">
+      <a
+        href="{{ .SiteURL }}/login/nueva-clave?token_hash={{ .TokenHash }}&amp;type=recovery"
+        style="display:inline-block;background-color:#2f6fed;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 24px;border-radius:10px;"
+      >
+        Elegir contraseña nueva
+      </a>
+    </p>
+
+    <p style="margin:0 0 20px;font-size:13.5px;line-height:1.6;color:#626b7a;">
+      El enlace vence en una hora y solo se puede usar una vez. Si no fuiste tú
+      quien lo pidió, ignora este correo: tu contraseña no cambia hasta que
+      elijas una nueva.
+    </p>
+
+    <p style="margin:0 0 6px;font-size:12.5px;color:#626b7a;">
+      Si el botón no funciona, copia esta dirección en tu navegador:
+    </p>
+    <p style="margin:0;font-size:12px;line-height:1.5;color:#2f6fed;word-break:break-all;">
+      {{ .SiteURL }}/login/nueva-clave?token_hash={{ .TokenHash }}&amp;type=recovery
+    </p>
+
+    <hr style="border:0;border-top:1px solid #e5e8ee;margin:26px 0 16px;" />
+
+    <p style="margin:0;font-size:12px;line-height:1.5;color:#8a94a6;">
+      GestionLab — gestión para laboratorios dentales. Este es un correo
+      automático; no respondas a esta dirección.
+    </p>
+
+  </div>
+</div>
