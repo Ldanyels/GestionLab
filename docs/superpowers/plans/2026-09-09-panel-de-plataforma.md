@@ -1,5 +1,29 @@
 # Panel de plataforma y alta de laboratorios — Plan de implementación
 
+> **COMPLETADO** el 2026-09-09. Las cinco tareas están implementadas y
+> confirmadas en la rama `panel-de-plataforma`. Verificación final: 448 pruebas
+> en verde, `✓ Compiled successfully`, y **137 comprobaciones de aislamiento**
+> (132 antes) con `CONFIRMO=si pnpm test:aislamiento`, sin tocar ninguna
+> política RLS ni añadir migraciones — el criterio de aceptación de las
+> restricciones globales.
+>
+> **Desviaciones respecto al plan, ambas en la Tarea 5:**
+>
+> 1. La bandera `esSuperAdmin` se calcula en `app/(app)/layout.tsx`, no en
+>    `AppShell` como decía el Paso 1. `AppShell` tiene pruebas que lo montan de
+>    forma sincrónica con Testing Library; volverlo `async` las habría roto. El
+>    layout ya era asíncrono, así que el cálculo cabe ahí sin coste, y
+>    `AppShell` solo recibe la prop y la pasa a `Sidebar`.
+> 2. Se añadió `ErrorParaElUsuario` a `lib/errores.ts`, que el plan no
+>    contemplaba (Tarea 4). Hizo falta porque `interpretarError` sustituye por
+>    el texto de respaldo cualquier mensaje que no reconoce, y eso borraba el
+>    «Ese correo ya tiene una cuenta en la plataforma» que
+>    `crearLaboratorioConAdmin` redacta a propósito: justo el fallo que más
+>    veces verá quien da de alta. El marcador es una clase y no un texto
+>    reconocible, para que solo lo pueda poner nuestro código.
+>
+> El Paso 7 (prueba manual de punta a punta) queda pendiente del usuario.
+
 > **Para trabajadores automáticos:** SUB-SKILL REQUERIDA: usar
 > superpowers:subagent-driven-development (recomendado) o
 > superpowers:executing-plans para implementar tarea por tarea. Los pasos usan
