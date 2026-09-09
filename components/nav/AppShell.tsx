@@ -38,6 +38,19 @@ export function AppShell({
               GestionLab
             </span>
             <nav className="flex items-center gap-1 text-sm">
+              {/*
+                En móvil no hay barra lateral, así que este es el único acceso
+                al panel. Va como palabra y no como icono: es una ruta que se
+                visita de vez en cuando y no tiene un símbolo reconocible.
+              */}
+              {esSuperAdmin ? (
+                <Link
+                  href="/plataforma"
+                  className="flex h-10 items-center rounded-[var(--radius-md)] px-2 text-[13px] font-semibold text-[var(--color-accent)]"
+                >
+                  Plataforma
+                </Link>
+              ) : null}
               <ThemeToggle />
               {perfil.rol === 'admin' ? (
                 <Link

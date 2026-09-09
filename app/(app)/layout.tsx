@@ -4,6 +4,7 @@ import { estaSuspendido } from '@/lib/laboratorio/estado'
 import { esSesionSuperAdmin } from '@/lib/plataforma/acceso'
 import { AppShell } from '@/components/nav/AppShell'
 import { PantallaSuspendida } from '@/components/laboratorio/PantallaSuspendida'
+import { PantallaSinLaboratorio } from '@/components/laboratorio/PantallaSinLaboratorio'
 
 export default async function AppLayout({
   children,
@@ -15,35 +16,15 @@ export default async function AppLayout({
   // Sin sesión → al login.
   if (!userId) redirect('/login')
 
+  // Se calcula antes de la pantalla sin perfil porque también hace falta ahí:
+  // la cuenta que administra la plataforma no pertenece a ningún laboratorio.
+  const superAdmin = await esSesionSuperAdmin()
+
   // Sesión válida pero sin perfil utilizable. No redirigimos (evita el bucle
   // /hoy ↔ /login): mostramos qué pasó, distinguiendo el fallo de lectura
   // (ej. migración pendiente) de un usuario realmente sin laboratorio.
   if (!perfil) {
-    return (
-      <main className="min-h-dvh flex items-center justify-center p-6">
-        <div className="w-full max-w-sm space-y-4 text-center">
-          <h1 className="text-xl font-semibold">
-            {error ? 'No pudimos leer tu perfil' : 'Cuenta sin laboratorio'}
-          </h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            {error
-              ? 'La base de datos rechazó la consulta del perfil. Suele ser una migración pendiente en Supabase.'
-              : 'Tu usuario aún no está vinculado a un laboratorio. Pide al administrador que complete la configuración y vuelve a intentar.'}
-          </p>
-          {error ? (
-            <p className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-2 text-left text-xs text-[var(--color-muted)]">
-              Detalle: {error}
-            </p>
-          ) : null}
-          <a
-            href="/login/logout"
-            className="inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm"
-          >
-            Salir
-          </a>
-        </div>
-      </main>
-    )
+    return <PantallaSinLaboratorio error={error ?? null} esSuperAdmin={superAdmin} />
   }
 
   // Cuenta suspendida: se muestra el aviso en lugar de la aplicación. No se
@@ -52,10 +33,6 @@ export default async function AppLayout({
   if (estaSuspendido(laboratorio)) {
     return <PantallaSuspendida rol={perfil.rol} />
   }
-
-  // La bandera se calcula aquí y no en `AppShell` para que ese componente siga
-  // siendo sincrónico y montable en pruebas.
-  const superAdmin = await esSesionSuperAdmin()
 
   return (
     <AppShell perfil={perfil} esSuperAdmin={superAdmin}>

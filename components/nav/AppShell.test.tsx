@@ -50,16 +50,17 @@ describe('AppShell', () => {
 
   // El enlace no depende del rol del perfil: un administrador de laboratorio
   // no administra la plataforma. La bandera la calcula el servidor.
+  // Dos veces: en la barra lateral de escritorio y en el encabezado móvil. Sin
+  // el segundo, en el teléfono había que escribir la dirección a mano.
   it('ofrece Plataforma cuando la sesión es de super-administrador', () => {
     render(
       <AppShell perfil={admin} esSuperAdmin>
         <p>contenido</p>
       </AppShell>,
     )
-    expect(screen.getByRole('link', { name: 'Plataforma' })).toHaveAttribute(
-      'href',
-      '/plataforma',
-    )
+    const enlaces = screen.getAllByRole('link', { name: /Plataforma/ })
+    expect(enlaces).toHaveLength(2)
+    for (const e of enlaces) expect(e).toHaveAttribute('href', '/plataforma')
   })
 
   it('no ofrece Plataforma a un administrador de laboratorio cualquiera', () => {
