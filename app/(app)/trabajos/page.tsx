@@ -3,8 +3,18 @@ import { getSessionPerfil } from '@/lib/auth'
 import { veMontos } from '@/lib/permisos'
 import { listTrabajos } from '@/lib/trabajos/data'
 import { filtrarTrabajos, contarPorEstado } from '@/lib/trabajos/filtro'
+import {
+  contarPorPeriodo,
+  enlaceTrabajos,
+  filtrarPorFecha,
+  rangoDePeriodo,
+  resolverPeriodo,
+} from '@/lib/trabajos/periodo'
+import { hoyLima } from '@/lib/trabajos/agenda'
 import { type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
+import { FiltroFecha } from '@/components/trabajos/FiltroFecha'
+import { PastillaFiltro } from '@/components/ui/PastillaFiltro'
 import { SearchBox } from '@/components/ui/SearchBox'
 
 const FILTROS: { label: string; estado?: EstadoTrabajo }[] = [
@@ -17,20 +27,42 @@ const FILTROS: { label: string; estado?: EstadoTrabajo }[] = [
 export default async function TrabajosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string; q?: string }>
+  searchParams: Promise<{
+    estado?: string
+    q?: string
+    periodo?: string
+    desde?: string
+    hasta?: string
+  }>
 }) {
-  const { estado, q } = await searchParams
+  const sp = await searchParams
+  const { estado, q, desde, hasta } = sp
   const perfil = await getSessionPerfil()
   const montos = veMontos(perfil)
   const filtroEstado = (['en_curso', 'cerrado', 'entregado'] as const).find(
     (e) => e === estado,
   )
+  const periodo = resolverPeriodo(sp.periodo)
+  const hoy = hoyLima()
+  const rango = rangoDePeriodo(periodo, hoy, desde, hasta)
 
   // Se trae la lista completa: permite contar cada filtro y buscar en varios campos.
   const todos = await listTrabajos()
-  const conteo = contarPorEstado(todos)
-  const trabajos = filtrarTrabajos(
+
+  // Los conteos de cada fila se calculan sobre lo que la otra fila ya dejó
+  // pasar, para que los números no prometan resultados que el filtro combinado
+  // no va a devolver.
+  const conteo = contarPorEstado(filtrarPorFecha(todos, rango))
+  const conteoPeriodo = contarPorPeriodo(
     filtroEstado ? todos.filter((t) => t.estado === filtroEstado) : todos,
+    hoy,
+  )
+
+  const trabajos = filtrarTrabajos(
+    filtrarPorFecha(
+      filtroEstado ? todos.filter((t) => t.estado === filtroEstado) : todos,
+      rango,
+    ),
     q ?? '',
   )
 
@@ -49,41 +81,43 @@ export default async function TrabajosPage({
       <SearchBox
         placeholder="Buscar por paciente, doctor o tipo…"
         defaultValue={q}
-        hidden={filtroEstado ? { estado: filtroEstado } : undefined}
+        hidden={{
+          ...(filtroEstado ? { estado: filtroEstado } : {}),
+          ...(periodo !== 'todo' ? { periodo } : {}),
+          ...(periodo === 'rango' && desde ? { desde } : {}),
+          ...(periodo === 'rango' && hasta ? { hasta } : {}),
+        }}
       />
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {FILTROS.map((f) => {
-          const activo = (f.estado ?? undefined) === filtroEstado
-          const params = new URLSearchParams()
-          if (f.estado) params.set('estado', f.estado)
-          if (q) params.set('q', q)
-          const qs = params.toString()
-          const cuantos = f.estado ? conteo[f.estado] : conteo.todos
-          return (
-            <Link
-              key={f.label}
-              href={`/trabajos${qs ? `?${qs}` : ''}`}
-              className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm ${
-                activo
-                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)] font-semibold text-[var(--color-accent-contrast)]'
-                  : 'border-[var(--color-border)] text-[var(--color-muted)]'
-              }`}
-            >
-              {f.label}
-              <span className="num text-xs opacity-70">{cuantos}</span>
-            </Link>
-          )
-        })}
+        {FILTROS.map((f) => (
+          <PastillaFiltro
+            key={f.label}
+            href={enlaceTrabajos({ estado: f.estado, q, periodo, desde, hasta })}
+            activa={(f.estado ?? undefined) === filtroEstado}
+            conteo={f.estado ? conteo[f.estado] : conteo.todos}
+          >
+            {f.label}
+          </PastillaFiltro>
+        ))}
       </div>
+
+      <FiltroFecha
+        periodo={periodo}
+        desde={desde}
+        hasta={hasta}
+        conteo={conteoPeriodo}
+        estado={filtroEstado}
+        q={q}
+      />
 
       {trabajos.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
           <p className="text-[15px] font-semibold">Sin resultados</p>
           <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
-            {conteo.todos === 0
+            {todos.length === 0
               ? 'Aún no hay trabajos. Toca «+ Nuevo» para registrar el primero.'
-              : 'Cambia el filtro o limpia la búsqueda.'}
+              : 'Cambia el estado, prueba otro periodo o limpia la búsqueda.'}
           </p>
         </div>
       ) : (
