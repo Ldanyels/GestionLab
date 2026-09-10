@@ -7,6 +7,10 @@ import {
   crearUsuarioDesdeLaPlataforma,
   restablecerClaveDesdeLaPlataforma,
 } from '@/lib/plataforma/usuarios'
+import {
+  borrarAbonoDesdeLaPlataforma,
+  corregirTrabajoDesdeLaPlataforma,
+} from '@/lib/plataforma/correcciones'
 import { usuarioSchema } from '@/lib/usuarios/data'
 import { intentar, intentarSinEstado } from '@/lib/acciones'
 
@@ -38,6 +42,76 @@ export async function restablecerClaveDeLaboratorioAction(formData: FormData): P
   )
 
   revalidatePath(`/plataforma/${labId}`)
+}
+
+/**
+ * Corrige un trabajo de un laboratorio ajeno.
+ *
+ * Los campos llegan como texto y se convierten aquí. `entregado_el` vacío se
+ * manda como `null` y no se descarta: vaciar la fecha de entrega es una
+ * corrección legítima, distinta de no tocarla.
+ */
+export async function corregirTrabajoAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const correo = await correoSesion()
+  if (!correo) return
+
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  const trabajoId = String(formData.get('trabajo_id') ?? '')
+  if (!labId || !trabajoId) return
+
+  const precio = Number(formData.get('precio_acordado'))
+  const estado = String(formData.get('estado') ?? '')
+  const fechaIngreso = String(formData.get('fecha_ingreso') ?? '')
+  const entrega = String(formData.get('entregado_el') ?? '')
+
+  if (!Number.isFinite(precio) || precio < 0) return
+  if (estado !== 'en_curso' && estado !== 'cerrado' && estado !== 'entregado') return
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaIngreso)) return
+
+  await intentarSinEstado(
+    'corregirTrabajoAction',
+    'No se pudo corregir el trabajo',
+    async () => {
+      await corregirTrabajoDesdeLaPlataforma(
+        labId,
+        trabajoId,
+        {
+          precio_acordado: precio,
+          estado,
+          fecha_ingreso: fechaIngreso,
+          entregado_el: entrega === '' ? null : entrega,
+        },
+        correo,
+      )
+    },
+  )
+
+  revalidatePath(`/plataforma/${labId}`)
+  revalidatePath(`/plataforma/${labId}/trabajos/${trabajoId}`)
+}
+
+/** Borra un abono mal registrado de un laboratorio ajeno. */
+export async function borrarAbonoDeLaboratorioAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const correo = await correoSesion()
+  if (!correo) return
+
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  const abonoId = String(formData.get('abono_id') ?? '')
+  const trabajoId = String(formData.get('trabajo_id') ?? '')
+  if (!labId || !abonoId) return
+
+  await intentarSinEstado(
+    'borrarAbonoDeLaboratorioAction',
+    'No se pudo borrar el abono',
+    async () => {
+      await borrarAbonoDesdeLaPlataforma(labId, abonoId, correo)
+    },
+  )
+
+  revalidatePath(`/plataforma/${labId}`)
+  if (trabajoId) revalidatePath(`/plataforma/${labId}/trabajos/${trabajoId}`)
 }
 
 /** Crea un usuario en un laboratorio ajeno. */

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { formatMoney } from '@/lib/format'
@@ -67,18 +68,34 @@ export function FichaLaboratorio({
         <ul className="space-y-2.5">
           {trabajos.map((t) => (
             <li key={t.id}>
-              <Card tono="lista" className="space-y-1 p-3.5">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 text-[15.5px] font-semibold">{t.tipo_nombre}</p>
-                  <span className="num shrink-0 text-[15px] font-bold">
-                    {formatMoney(t.precio_acordado)}
-                  </span>
-                </div>
-                <p className="truncate text-[13px] text-[var(--color-muted)]">
-                  {t.consultorio_nombre} · {t.doctor_nombre} ·{' '}
-                  {t.entregado_el ? `entregado ${t.entregado_el}` : `ingresó ${t.fecha_ingreso}`}
-                </p>
-              </Card>
+              {/*
+                `prefetch={false}`: una lista de decenas de trabajos, con la
+                precarga al pasar el ratón, dispararía una consulta a la base
+                por cada uno que se roce.
+              */}
+              <Link
+                href={`/plataforma/${lab.id}/trabajos/${t.id}`}
+                prefetch={false}
+                className="block"
+              >
+                <Card
+                  tono="lista"
+                  className="space-y-1 p-3.5 transition-transform hover:-translate-y-px"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 text-[15.5px] font-semibold">{t.tipo_nombre}</p>
+                    <span className="num shrink-0 text-[15px] font-bold">
+                      {formatMoney(t.precio_acordado)}
+                    </span>
+                  </div>
+                  <p className="truncate text-[13px] text-[var(--color-muted)]">
+                    {t.consultorio_nombre} · {t.doctor_nombre} ·{' '}
+                    {t.entregado_el
+                      ? `entregado ${t.entregado_el}`
+                      : `ingresó ${t.fecha_ingreso}`}
+                  </p>
+                </Card>
+              </Link>
             </li>
           ))}
         </ul>

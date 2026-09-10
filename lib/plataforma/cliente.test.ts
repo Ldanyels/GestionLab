@@ -47,3 +47,28 @@ describe('clienteDeLaboratorio', () => {
     expect(clienteDeLaboratorio('lab-1').laboratorioId).toBe('lab-1')
   })
 })
+
+describe('clienteDeLaboratorio — escritura', () => {
+  it('acota el UPDATE al laboratorio', () => {
+    const c = clienteDeLaboratorio('lab-1')
+    const url = urlDe(c.escribir('trabajo', { precio_acordado: 400 }).eq('id', 't1'))
+    expect(url).toContain('laboratorio_id=eq.lab-1')
+    expect(url).toContain('id=eq.t1')
+  })
+
+  // Sin RLS, esto es lo único que impide que un identificador de otro
+  // laboratorio se cuele y se modifique la fila equivocada.
+  it('el acotado va aunque no se filtre por id', () => {
+    const c = clienteDeLaboratorio('lab-1')
+    expect(urlDe(c.escribir('trabajo', { estado: 'cerrado' }))).toContain(
+      'laboratorio_id=eq.lab-1',
+    )
+  })
+
+  it('acota el DELETE al laboratorio', () => {
+    const c = clienteDeLaboratorio('lab-1')
+    const url = urlDe(c.borrar('abono').eq('id', 'a1'))
+    expect(url).toContain('laboratorio_id=eq.lab-1')
+    expect(url).toContain('id=eq.a1')
+  })
+})

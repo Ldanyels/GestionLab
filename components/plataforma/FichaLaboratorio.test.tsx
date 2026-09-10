@@ -44,6 +44,14 @@ describe('FichaLaboratorio', () => {
     expect(screen.getByText(/Arte oral · Dr. Pérez/)).toBeInTheDocument()
   })
 
+  it('enlaza cada trabajo a su pantalla de corrección', () => {
+    render(<FichaLaboratorio resumen={resumen} trabajos={[trabajo()]} />)
+    expect(screen.getByRole('link', { name: /Corona porcelana/ })).toHaveAttribute(
+      'href',
+      '/plataforma/l1/trabajos/t1',
+    )
+  })
+
   it('avisa cuando el laboratorio está suspendido', () => {
     render(
       <FichaLaboratorio

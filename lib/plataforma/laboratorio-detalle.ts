@@ -75,6 +75,49 @@ export async function trabajosDeLaboratorio(id: string): Promise<TrabajoDePlataf
   return (data as unknown as FilaCrudaDeTrabajo[]).map(aTrabajoDePlataforma)
 }
 
+export interface AbonoDePlataforma {
+  id: string
+  monto: number
+  fecha: string | null
+  metodo: string
+}
+
+export interface TrabajoConAbonos {
+  trabajo: TrabajoDePlataforma
+  abonos: AbonoDePlataforma[]
+}
+
+/**
+ * Un trabajo concreto con sus abonos, para la pantalla de corrección.
+ *
+ * Devuelve `null` cuando ese trabajo no es de ese laboratorio: el cliente
+ * acotado no lo encuentra, y eso es la barrera, no una comprobación aparte.
+ */
+export async function trabajoParaCorregir(
+  labId: string,
+  trabajoId: string,
+): Promise<TrabajoConAbonos | null> {
+  const cliente = clienteDeLaboratorio(labId)
+
+  const { data, error } = await cliente
+    .leer('trabajo', COLUMNAS_TRABAJO)
+    .eq('id', trabajoId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) return null
+
+  const { data: abonos, error: errAbonos } = await cliente
+    .leer('abono', 'id, monto, fecha, metodo')
+    .eq('trabajo_id', trabajoId)
+    .order('fecha', { ascending: false })
+  if (errAbonos) throw new Error(errAbonos.message)
+
+  return {
+    trabajo: aTrabajoDePlataforma(data as unknown as FilaCrudaDeTrabajo),
+    abonos: (abonos ?? []) as unknown as AbonoDePlataforma[],
+  }
+}
+
 export interface ResumenDeLaboratorio {
   laboratorio: LaboratorioFila
   consultorios: number

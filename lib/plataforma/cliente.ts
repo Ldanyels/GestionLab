@@ -25,6 +25,21 @@ export function clienteDeLaboratorio(laboratorioId: string) {
       admin.from(tabla).select(columnas).eq('laboratorio_id', laboratorioId),
 
     /**
+     * UPDATE sobre una tabla del inquilino, ya filtrado.
+     *
+     * El acotado se aplica **antes** de devolver el constructor, así que sigue
+     * ahí aunque quien lo use olvide filtrar por `id`. En una escritura eso no
+     * es una comodidad: sin RLS protegiendo, un identificador de otro
+     * laboratorio modificaría la fila equivocada.
+     */
+    escribir: (tabla: string, cambios: Record<string, unknown>) =>
+      admin.from(tabla).update(cambios).eq('laboratorio_id', laboratorioId),
+
+    /** DELETE sobre una tabla del inquilino, ya filtrado. */
+    borrar: (tabla: string) =>
+      admin.from(tabla).delete().eq('laboratorio_id', laboratorioId),
+
+    /**
      * SELECT sobre la propia fila del laboratorio. Va aparte porque esa tabla
      * no tiene `laboratorio_id`: se identifica por `id`.
      */
