@@ -13,6 +13,23 @@ En Supabase → **SQL Editor** → **New query**, pegar y ejecutar el contenido 
 `supabase/migrations/0001_fundacion.sql`. Debe crear las tablas `laboratorio` y `perfil`
 sin errores (verificar en **Table Editor**).
 
+### Migraciones posteriores
+
+Las migraciones numeradas se ejecutan en orden en el mismo SQL Editor. Dos que
+conviene no saltarse:
+
+- `0019_fecha_entrega_real.sql` — sin ella, marcar un trabajo como entregado
+  falla.
+- `0020_auditoria_acceso_plataforma.sql` — sin ella, la ficha de laboratorio del
+  panel funciona igual, pero **no deja rastro de las visitas**. Como esa
+  constancia es justo lo que se le ofrece al laboratorio a cambio de que su
+  proveedor pueda ver sus datos, el sistema quedaría prometiendo algo que no
+  cumple, y sin ningún error visible que lo delate.
+
+`CONFIRMO=si pnpm test:aislamiento` avisa de las que falten: las reporta como
+«objetos que el código espera y no están en la base», por separado de los
+fallos de aislamiento.
+
 ## 3. Dar de alta laboratorios
 
 Desde `/plataforma` → **+ Nuevo**, con un correo que esté en

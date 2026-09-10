@@ -445,6 +445,61 @@ async function comprobarAltaAislada(labB) {
     `${(ajenos ?? []).length} perfil(es) ajenos`)
 }
 
+/**
+ * El registro de accesos de la plataforma respeta el aislamiento.
+ *
+ * Importa por dos razones: que la fila se pueda escribir (la migración 0020
+ * aplicada) y que cada laboratorio vea solo sus propios accesos. Lo segundo es
+ * lo que convierte «puedo entrar a tu laboratorio» en algo que el cliente puede
+ * comprobar, sin que de paso vea las visitas a otros.
+ */
+async function comprobarAccesosDePlataforma(comoA, labA, labB) {
+  console.log('\nAuditoría de accesos de la plataforma')
+
+  const fila = (lab) => ({
+    laboratorio_id: lab,
+    tabla: 'laboratorio',
+    registro_id: lab,
+    accion: 'ACCESO',
+    usuario_id: null,
+    usuario_nombre: null,
+    actor_plataforma: `${PREFIJO}@ejemplo.invalid`,
+  })
+
+  const { error } = await admin.from('auditoria').insert([fila(labA), fila(labB)])
+  if (error) {
+    // Sin la migración 0020 esto falla por la restricción o por la columna. No
+    // es una fuga: es una migración pendiente, y se informa como tal.
+    ausentes.push(
+      `auditoria.actor_plataforma / accion='ACCESO' (migración 0020): ${error.message}`,
+    )
+    return
+  }
+
+  const { data: vistos } = await comoA.from('auditoria').select('*').eq('accion', 'ACCESO')
+  const propios = (vistos ?? []).filter((f) => f.laboratorio_id === labA)
+  const ajenos = (vistos ?? []).filter((f) => f.laboratorio_id !== labA)
+
+  comprobar(
+    'el laboratorio ve los accesos de la plataforma a su propia cuenta',
+    propios.length === 1,
+    `${propios.length} fila(s)`,
+  )
+  comprobar(
+    'no ve los accesos a otros laboratorios',
+    ajenos.length === 0,
+    `${ajenos.length} fila(s) ajena(s)`,
+  )
+  comprobar(
+    'la fila de acceso guarda quién de la plataforma entró',
+    propios[0]?.actor_plataforma === `${PREFIJO}@ejemplo.invalid`,
+  )
+  comprobar(
+    'la fila de acceso no atribuye la visita a un usuario del laboratorio',
+    propios[0]?.usuario_id === null,
+  )
+}
+
 // ── Limpieza ──────────────────────────────────────────────────
 async function limpiar(laboratorios, usuarios) {
   console.log('\nLimpieza')
@@ -525,6 +580,7 @@ try {
   ausentes.push(...(await comprobarRpc(comoA)))
   usuarios.push(await comprobarHuerfano(labB))
   await comprobarAltaAislada(labB)
+  await comprobarAccesosDePlataforma(comoA, labA, labB)
 } catch (e) {
   fallas.push(`Error de preparación: ${e.message}`)
   console.error(`\n✗ ${e.message}`)
