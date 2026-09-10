@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   ATAJOS_DE_PLAZO,
+  plazoDelTrabajo,
   diasDePlazoSchema,
   estadoDeEntrega,
   fechaSugerida,
@@ -171,5 +172,40 @@ describe('ATAJOS_DE_PLAZO', () => {
 
   it('cada atajo dice en palabras lo que hace', () => {
     expect(ATAJOS_DE_PLAZO.map((a) => a.etiqueta)).toEqual(['Mañana', '3 días', '1 semana'])
+  })
+})
+
+describe('plazoDelTrabajo', () => {
+  /*
+    Gana el plazo más largo, no el del primer tipo ni el promedio.
+
+    Un trabajo con una corona de 3 días y una prótesis de 10 no está listo en 3:
+    no está listo hasta que lo esté la pieza más lenta. Tomar el más corto haría
+    que el sistema prometiera al consultorio una fecha que el laboratorio no
+    puede cumplir, que es peor que no prometer nada.
+  */
+  it('gana el plazo más largo', () => {
+    expect(plazoDelTrabajo([{ dias_entrega: 3 }, { dias_entrega: 10 }])).toBe(10)
+  })
+
+  it('ignora los tipos sin plazo, pero respeta el de los que sí tienen', () => {
+    expect(plazoDelTrabajo([{ dias_entrega: null }, { dias_entrega: 4 }])).toBe(4)
+  })
+
+  it('si ningún tipo tiene plazo, no hay plazo', () => {
+    expect(plazoDelTrabajo([{ dias_entrega: null }, { dias_entrega: null }])).toBeNull()
+    expect(plazoDelTrabajo([])).toBeNull()
+  })
+
+  /*
+    Cero es un plazo, no la ausencia de uno: un ajuste que se entrega el mismo
+    día. Si se confundiera con «sin plazo», ese tipo nunca sugeriría fecha.
+  */
+  it('cero días es un plazo válido', () => {
+    expect(plazoDelTrabajo([{ dias_entrega: 0 }])).toBe(0)
+  })
+
+  it('cero no pisa un plazo mayor de otra línea', () => {
+    expect(plazoDelTrabajo([{ dias_entrega: 0 }, { dias_entrega: 5 }])).toBe(5)
   })
 })

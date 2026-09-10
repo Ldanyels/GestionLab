@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { BackRow } from '@/components/ui/BackRow'
 import { getSessionPerfil } from '@/lib/auth'
 import { listDoctoresConConsultorio } from '@/lib/consultorios/data'
+import { hoyLima } from '@/lib/trabajos/agenda'
 import { listCatalogo } from '@/lib/catalogo/data'
 import { TrabajoForm } from '@/components/trabajos/TrabajoForm'
 import { crearTrabajoAction } from '../actions'
@@ -71,6 +72,9 @@ export default async function NuevoTrabajoPage({
           tipos={tipos}
           doctorInicial={doctor}
           submitLabel="Crear trabajo"
+          // El trabajo ingresa hoy: la base pone `fecha_ingreso` con
+          // `default current_date`, y el plazo se cuenta desde ahí.
+          fechaIngreso={hoyLima()}
         />
       )}
     </section>

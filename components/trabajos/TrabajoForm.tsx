@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useState } from 'react'
 import { formatMoney } from '@/lib/format'
 import { precioTotalTrabajo } from '@/lib/catalogo/precio'
+import { ATAJOS_DE_PLAZO, fechaSugerida, plazoDelTrabajo } from '@/lib/trabajos/plazo'
 import { Card } from '@/components/ui/Card'
 import { TipoSheet } from './TipoSheet'
 import type { FormState } from '@/app/(app)/trabajos/actions'
@@ -33,6 +34,12 @@ interface Props {
   trabajo?: TrabajoDetalle
   doctorInicial?: string
   submitLabel: string
+  /**
+   * Fecha desde la que se cuenta el plazo: hoy en un alta, la de ingreso al
+   * editar. Llega del servidor y no de `new Date()` porque el reloj del
+   * teléfono puede estar en otra zona y la fecha saldría corrida un día.
+   */
+  fechaIngreso: string
 }
 
 export function TrabajoForm({
@@ -42,6 +49,7 @@ export function TrabajoForm({
   trabajo,
   doctorInicial,
   submitLabel,
+  fechaIngreso,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, initial)
   const [lineas, setLineas] = useState<Linea[]>(() =>
@@ -56,6 +64,18 @@ export function TrabajoForm({
       : [{ key: 0, tipoId: '', cantidad: 1, varCantidad: 1, pieza: '' }],
   )
   const [lineasError, setLineasError] = useState('')
+  /*
+    La fecha de entrega se calcula sola desde el tipo de trabajo, hasta que
+    alguien la toca.
+
+    `fechaTocada` empieza en `true` al editar un trabajo que ya existe: si no,
+    abrir el formulario para cambiar cualquier otra cosa le asignaría una fecha
+    de entrega de paso, y guardaría una promesa al consultorio que nadie hizo.
+    Para poner la fecha a los trabajos que ya están en curso hay un control
+    aparte en la ficha del trabajo.
+  */
+  const [fechaTocada, setFechaTocada] = useState(Boolean(trabajo))
+  const [fecha, setFecha] = useState(trabajo?.fecha_entrega ?? '')
   const [manual, setManual] = useState(false)
   /** Índice de la línea que abrió la hoja de tipos; null = cerrada. */
   const [eligiendo, setEligiendo] = useState<number | null>(null)
@@ -68,6 +88,24 @@ export function TrabajoForm({
     return precioTotalTrabajo(tipo, l.cantidad, tipo.variable_etiqueta ? l.varCantidad : 0)
   })
   const total = Math.round(subtotales.reduce((s, x) => s + x, 0) * 100) / 100
+
+  /*
+    La fecha que se envía, resuelta en el render.
+
+    Se calcula aquí en vez de sincronizarla con un `useEffect`: un efecto que
+    escribe estado a partir de otro estado es como se acaba con una fecha que no
+    corresponde al tipo elegido después de dos cambios rápidos.
+  */
+  const plazo = plazoDelTrabajo(
+    lineas.map((l) => porId.get(l.tipoId) ?? { dias_entrega: null }),
+  )
+  const sugerida = fechaSugerida(fechaIngreso, plazo)
+  const fechaEfectiva = fechaTocada ? fecha : (sugerida ?? '')
+
+  function ponerFecha(valor: string) {
+    setFechaTocada(true)
+    setFecha(valor)
+  }
 
   const itemsJson = JSON.stringify(
     lineas.map((l) => {
@@ -294,17 +332,56 @@ export function TrabajoForm({
             className={campo}
           />
         </label>
-        <label className="block space-y-1">
-          <span className={etiqueta}>
-            Fecha de entrega <span className="font-normal">(opcional)</span>
-          </span>
-          <input
-            name="fecha_entrega"
-            type="date"
-            defaultValue={trabajo?.fecha_entrega ?? ''}
-            className={campo}
-          />
-        </label>
+        <div className="space-y-1.5">
+          <label className="block space-y-1">
+            <span className={etiqueta}>
+              Fecha de entrega{' '}
+              <span className="font-normal">
+                {plazo !== null && !fechaTocada
+                  ? `(del catálogo: ${plazo} ${plazo === 1 ? 'día' : 'días'})`
+                  : '(opcional)'}
+              </span>
+            </span>
+            <input
+              name="fecha_entrega"
+              type="date"
+              value={fechaEfectiva}
+              onChange={(e) => ponerFecha(e.target.value)}
+              className={campo}
+            />
+          </label>
+
+          {/*
+            Los atajos son el punto de todo esto: un laboratorio cotiza en días
+            —«acrílico, tres días»— no en fechas de calendario. Mientras hubo
+            que abrir el selector y buscar el día, 46 de 47 trabajos se
+            guardaron sin fecha.
+
+            Cuentan desde el ingreso, no desde hoy: al corregir un trabajo que
+            entró el lunes, «3 días» sigue siendo el jueves.
+          */}
+          <div className="flex flex-wrap gap-1.5">
+            {ATAJOS_DE_PLAZO.map((a) => (
+              <button
+                key={a.etiqueta}
+                type="button"
+                onClick={() => ponerFecha(fechaSugerida(fechaIngreso, a.dias) ?? '')}
+                className="h-9 rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
+              >
+                {a.etiqueta}
+              </button>
+            ))}
+            {fechaEfectiva ? (
+              <button
+                type="button"
+                onClick={() => ponerFecha('')}
+                className="h-9 rounded-full px-3 text-[13px] font-semibold text-[var(--color-muted)]"
+              >
+                Quitar fecha
+              </button>
+            ) : null}
+          </div>
+        </div>
         <label className="block space-y-1">
           <span className={etiqueta}>
             Notas <span className="font-normal">(opcional)</span>

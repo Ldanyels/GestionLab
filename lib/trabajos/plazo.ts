@@ -121,3 +121,22 @@ export function ordenarPorEntrega<T extends { fecha_entrega: string | null }>(
     return a.fecha_entrega.localeCompare(b.fecha_entrega)
   })
 }
+
+/**
+ * El plazo de un trabajo con varias líneas: el más largo de sus tipos.
+ *
+ * Un trabajo con una corona de 3 días y una prótesis de 10 no está listo en 3:
+ * no está listo hasta que lo esté la pieza más lenta. Tomar el más corto —o un
+ * promedio— haría que el sistema prometiera al consultorio una fecha que el
+ * laboratorio no puede cumplir, y eso es peor que no prometer nada.
+ *
+ * Los tipos sin plazo no cuentan, pero tampoco anulan a los que sí lo tienen.
+ */
+export function plazoDelTrabajo(
+  tipos: readonly { dias_entrega: number | null }[],
+): number | null {
+  const definidos = tipos
+    .map((t) => t.dias_entrega)
+    .filter((d): d is number => d !== null && d !== undefined)
+  return definidos.length === 0 ? null : Math.max(...definidos)
+}
