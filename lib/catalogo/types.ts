@@ -6,6 +6,8 @@ export interface CatalogoTrabajo {
   precio_base: number
   variable_etiqueta: string | null
   variable_precio_unitario: number | null
+  /** Días desde el ingreso hasta la entrega. `null` = sin plazo definido. */
+  dias_entrega: number | null
   orden: number
   activo: boolean
   creado_en: string

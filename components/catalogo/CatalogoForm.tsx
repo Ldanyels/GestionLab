@@ -65,6 +65,30 @@ export function CatalogoForm({ action, item, categorias, submitLabel }: Props) {
         />
       </label>
 
+      {/*
+        El plazo va junto al precio porque son las dos cosas que se prometen al
+        consultorio: cuánto cuesta y para cuándo está. Con el plazo aquí, la
+        fecha de entrega de cada trabajo se calcula sola en el alta.
+      */}
+      <label className={labelClass}>
+        <span className={ETIQUETA}>Días de entrega (opcional)</span>
+        <input
+          name="dias_entrega"
+          type="number"
+          inputMode="numeric"
+          step="1"
+          min="0"
+          max="365"
+          placeholder="Ej. 3"
+          defaultValue={item?.dias_entrega ?? ''}
+          className={CAMPO}
+        />
+        <span className="text-xs text-[var(--color-muted)]">
+          Cuántos días desde que entra hasta que se entrega. Si lo dejas vacío, los
+          trabajos de este tipo nacen sin fecha y se les puede poner a mano.
+        </span>
+      </label>
+
       <fieldset className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
         <legend className={`px-1 ${ETIQUETA}`}>
           Componente variable (opcional)

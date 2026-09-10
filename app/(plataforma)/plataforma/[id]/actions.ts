@@ -161,6 +161,7 @@ export async function crearItemDeCatalogoAction(
     categoria: String(formData.get('categoria') ?? ''),
     nombre: String(formData.get('nombre') ?? ''),
     precio_base: String(formData.get('precio_base') ?? '0'),
+    dias_entrega: String(formData.get('dias_entrega') ?? ''),
   })
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
@@ -176,6 +177,9 @@ export async function crearItemDeCatalogoAction(
           categoria: parsed.data.categoria,
           nombre: parsed.data.nombre,
           precio_base: parsed.data.precio_base,
+          // El alta del catálogo es el momento en que se capturan los plazos:
+          // es la única vez que alguien repasa el catálogo tipo por tipo.
+          dias_entrega: parsed.data.dias_entrega,
         },
         correo,
       ),

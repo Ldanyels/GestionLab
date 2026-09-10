@@ -218,7 +218,7 @@ export async function corregirPrecioBaseDesdeLaPlataforma(
  */
 export async function crearItemDeCatalogoDesdeLaPlataforma(
   labId: string,
-  input: { categoria: string; nombre: string; precio_base: number },
+  input: { categoria: string; nombre: string; precio_base: number; dias_entrega: number | null },
   correoOperador: string,
 ): Promise<void> {
   const admin = createAdminSupabase()
@@ -233,6 +233,8 @@ export async function crearItemDeCatalogoDesdeLaPlataforma(
     tabla: 'catalogo_trabajo',
     registroId: (data as { id: string }).id,
     accion: 'INSERT',
-    detalle: `añadió al catálogo ${input.nombre} (${input.categoria}) a ${formatMoney(input.precio_base)}`,
+    detalle:
+      `añadió al catálogo ${input.nombre} (${input.categoria}) a ${formatMoney(input.precio_base)}` +
+      (input.dias_entrega === null ? '' : `, entrega en ${input.dias_entrega} día(s)`),
   })
 }

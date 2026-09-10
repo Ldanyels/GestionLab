@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { diasDePlazoSchema } from '@/lib/trabajos/plazo'
 
 const opcionalTexto = z
   .string()
@@ -19,6 +20,9 @@ export const catalogoSchema = z
     precio_base: z.coerce.number().min(0, 'El precio no puede ser negativo'),
     variable_etiqueta: opcionalTexto,
     variable_precio_unitario: precioVariableOpcional,
+    // El plazo del tipo de trabajo: lo que hace que la fecha de entrega se
+    // llene sola en el alta en vez de quedar vacía.
+    dias_entrega: diasDePlazoSchema,
   })
   .refine(
     (d) =>

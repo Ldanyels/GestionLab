@@ -33,6 +33,7 @@ function leerCatalogo(formData: FormData) {
     precio_base: String(formData.get('precio_base') ?? ''),
     variable_etiqueta: String(formData.get('variable_etiqueta') ?? ''),
     variable_precio_unitario: String(formData.get('variable_precio_unitario') ?? ''),
+    dias_entrega: String(formData.get('dias_entrega') ?? ''),
   })
 }
 

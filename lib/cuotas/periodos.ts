@@ -11,6 +11,10 @@
  * local del servidor haría que el resultado cambiara según dónde se ejecute.
  */
 
+import { diasEntre, sumarDias, sumarMeses } from '@/lib/fechas'
+
+export { diasEntre, sumarDias, sumarMeses }
+
 export const PERIODICIDADES = ['mensual', 'anual'] as const
 export type Periodicidad = (typeof PERIODICIDADES)[number]
 
@@ -30,49 +34,6 @@ const DIAS_PARA_VENCER = 15
  * a mano.
  */
 const MAXIMO_POR_VEZ = 36
-
-function partes(iso: string): [number, number, number] {
-  const [y, m, d] = iso.split('-').map(Number)
-  return [y ?? 1970, m ?? 1, d ?? 1]
-}
-
-function aIso(y: number, m: number, d: number): string {
-  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-}
-
-function diasDelMes(y: number, m: number): number {
-  return new Date(Date.UTC(y, m, 0)).getUTCDate()
-}
-
-/**
- * Suma meses recortando al último día del mes cuando el día no existe.
- *
- * El 31 de enero más un mes es el 28 de febrero, no el 3 de marzo. Sin el
- * recorte, la aritmética se desborda al mes siguiente y los periodos de un
- * laboratorio que empezó un día 31 se irían corriendo solos.
- */
-export function sumarMeses(iso: string, meses: number): string {
-  const [y, m, d] = partes(iso)
-  const total = (y * 12 + (m - 1)) + meses
-  const anio = Math.floor(total / 12)
-  const mes = (total % 12) + 1
-  return aIso(anio, mes, Math.min(d, diasDelMes(anio, mes)))
-}
-
-/** Suma días. */
-export function sumarDias(iso: string, dias: number): string {
-  const [y, m, d] = partes(iso)
-  const t = Date.UTC(y, m - 1, d) + dias * 86_400_000
-  const f = new Date(t)
-  return aIso(f.getUTCFullYear(), f.getUTCMonth() + 1, f.getUTCDate())
-}
-
-/** Diferencia en días entre dos fechas (b - a). */
-export function diasEntre(a: string, b: string): number {
-  const [ay, am, ad] = partes(a)
-  const [by, bm, bd] = partes(b)
-  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000)
-}
 
 /** El último día que cubre un periodo que empieza en `inicio`. */
 export function finDePeriodo(inicio: string, periodicidad: Periodicidad): string {

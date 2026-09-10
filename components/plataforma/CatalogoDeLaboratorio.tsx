@@ -126,6 +126,23 @@ export function CatalogoDeLaboratorio({
             <span className={etiqueta}>Nombre</span>
             <input name="nombre" type="text" maxLength={150} required className={campo} />
           </label>
+          {/*
+            El plazo se captura aquí porque la carga del catálogo es el único
+            momento en que alguien repasa el catálogo tipo por tipo. Si no se
+            pregunta ahora, no se pregunta nunca.
+          */}
+          <label className="block space-y-1">
+            <span className={etiqueta}>Días de entrega (opcional)</span>
+            <input
+              name="dias_entrega"
+              type="number"
+              step="1"
+              min="0"
+              max="365"
+              placeholder="Ej. 3"
+              className={campo}
+            />
+          </label>
 
           {estado.error ? (
             <p role="alert" className="text-sm text-[var(--color-danger)]">

@@ -13,6 +13,7 @@ function tipo(p: Partial<CatalogoTrabajo>): CatalogoTrabajo {
     precio_base: 90,
     variable_etiqueta: null,
     variable_precio_unitario: null,
+    dias_entrega: null,
     orden: 1,
     activo: true,
     creado_en: '2026-01-01',
