@@ -41,8 +41,48 @@ plataforma pudo entrar a ver y corregir datos de un laboratorio ajeno.**
 | [contrato-de-encargo-de-tratamiento.md](contrato-de-encargo-de-tratamiento.md) | Tu obligación como encargado. Anexo de los términos | Cada laboratorio, **firmado** |
 | Este archivo | Lo que hay que hacer ante la ANPD | Uso interno |
 
-Todo lo que va entre `[CORCHETES]` son datos tuyos que yo no invento: razón
-social, RUC, domicilio fiscal, precios. Rellénalos antes de la revisión legal.
+Los 14 huecos que quedan entre corchetes son la identidad de la empresa —razón
+social, RUC, domicilio fiscal, correo de contacto y fechas—, más los datos del
+laboratorio en el contrato de encargo. Precios y plazos ya están puestos.
+
+## Planes y precios (decidido el 2026-09-10)
+
+| Plan | Mensual | Anual | Usuarios |
+|---|---|---|---|
+| Hasta 5 usuarios | S/ 250 | S/ 2,500 | 5 |
+| Usuarios ilimitados | S/ 350 | S/ 3,500 | sin límite |
+
+El anual equivale a diez meses. **Primer mes sin costo** y **carga inicial del
+catálogo incluida**: son las dos cosas que quitan las objeciones reales, y
+ninguna cuesta dinero.
+
+Por qué estos números, para cuando haya que revisarlos:
+
+- **Referencia de mercado:** Fabrikdent cobra 70–95 USD al mes (S/260–355), así
+  que S/250 queda justo por debajo del más barato.
+- **Referencia del cliente:** MasterLab facturó S/9,650 en septiembre de 2026 con
+  47 trabajos y un ticket medio de S/205. S/250 es el 2,6% de eso, o poco más
+  que un trabajo suyo al mes. Ese es el argumento de venta.
+- **Costo:** la infraestructura es un **costo fijo** de unos S/170 al mes
+  (Supabase Pro y Vercel Pro), sirva a uno o a veinte laboratorios. Culqi se
+  queda 3,44%. El costo marginal de cada laboratorio nuevo es de unos S/10, así
+  que la palanca del negocio es **sumar clientes, no subir el precio**.
+- **«Usuarios ilimitados» es seguro:** Supabase Pro incluye 100,000 usuarios
+  activos al mes. Lo que sí crece con el uso es el tráfico de datos —250 GB
+  incluidos— y lo dispara el **historial acumulado de cada laboratorio**, no la
+  cantidad de personas. Cuando un laboratorio pase de unos dos mil trabajos habrá
+  que paginar las consultas en vez de traer la lista completa y filtrar en
+  memoria, que es como está hecho hoy.
+
+### MasterLab: cliente fundador, sin costo
+
+MasterLab **no paga**, de forma indefinida, a cambio de poner el sistema a
+prueba y dar retroalimentación. Conviene tenerlo escrito para que no se
+convierta en un sobreentendido incómodo dentro de un año.
+
+**Que no pague no cambia nada de lo legal:** tratan datos de salud de pacientes
+reales, así que el contrato de encargo hay que firmarlo con ellos igual, y la
+política de privacidad les aplica desde el primer día.
 
 ## Qué hay que hacer ante la ANPD
 

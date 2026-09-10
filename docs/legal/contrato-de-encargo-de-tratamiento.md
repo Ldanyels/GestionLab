@@ -49,7 +49,7 @@ El Encargado se obliga a:
 4. **No subcontratar** el tratamiento sin autorización del Responsable, salvo
    los proveedores de infraestructura declarados en el Anexo B, que el
    Responsable acepta al firmar. Cualquier proveedor nuevo se avisará con
-   **[PLAZO, p. ej. 30] días** de antelación, y el Responsable podrá objetarlo y
+   **30 días** de antelación, y el Responsable podrá objetarlo y
    terminar el contrato sin penalidad si no lo acepta.
 5. **Asistir al Responsable** cuando un titular ejerza sus derechos de acceso,
    rectificación, cancelación u oposición, dentro de los plazos de la ley.
@@ -110,8 +110,8 @@ contractuales y compromisos de seguridad de dichos proveedores.
 
 ## 7. Verificación
 
-El Responsable puede solicitar, hasta **[N, p. ej. 1] vez al año** y con
-**[PLAZO, p. ej. 15] días** de aviso, información sobre el cumplimiento de este
+El Responsable puede solicitar, hasta **1 vez al año** y con
+**15 días** de aviso, información sobre el cumplimiento de este
 contrato. El Encargado responderá por escrito y pondrá a disposición el
 historial de accesos y cambios correspondiente a los datos del Responsable.
 
@@ -125,10 +125,10 @@ historial de accesos y cambios correspondiente a los datos del Responsable.
 
 Al terminar el contrato de servicio:
 
-1. El Responsable dispone de **[PLAZO, p. ej. 15] días** de acceso en solo
+1. El Responsable dispone de **15 días** de acceso en solo
    lectura para exportar su información.
 2. Vencido ese plazo, el Encargado elimina los datos personales del Responsable
-   de sus sistemas activos en un máximo de **[PLAZO, p. ej. 60] días**, y lo
+   de sus sistemas activos en un máximo de **60 días**, y lo
    confirma por escrito.
 3. El Responsable puede pedir la eliminación inmediata, renunciando al plazo de
    exportación.

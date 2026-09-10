@@ -95,7 +95,7 @@ dependen de nuestra buena voluntad:
 
 ## 6. Cuánto tiempo los guardamos
 
-Mientras el laboratorio sea cliente, y **[PLAZO, p. ej. 60] días** después de
+Mientras el laboratorio sea cliente, y **60 días** después de
 terminar el contrato, para darle tiempo de exportar su información. Pasado ese
 plazo se eliminan, salvo lo que debamos conservar por obligación contable o
 tributaria.

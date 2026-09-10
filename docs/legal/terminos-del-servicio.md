@@ -24,7 +24,7 @@ inventario de insumos y emisión de reportes.
 
 Se presta **tal como está disponible en cada momento**. El Proveedor puede
 añadir, cambiar o retirar funciones; si retira una función que el Laboratorio
-usa habitualmente, avisará con **[PLAZO, p. ej. 30] días** de antelación.
+usa habitualmente, avisará con **30 días** de antelación.
 
 ## 3. Las cuentas
 
@@ -41,17 +41,44 @@ comprometida.
 
 ## 4. Precio y pago
 
-- Cuota: **[MONTO] soles [por mes / por año]** por laboratorio.
-- Se factura **[PERIODICIDAD]**, por adelantado.
-- Vencimiento: **[N] días** desde la emisión del comprobante.
-- Los precios pueden variar avisando con **[PLAZO, p. ej. 60] días**. El
-  Laboratorio puede terminar el contrato antes de que el precio nuevo se
-  aplique, sin penalidad.
+### Planes
+
+Los precios son por laboratorio e incluyen el uso completo del sistema: no hay
+funciones reservadas a un plan superior. Lo único que distingue a los planes es
+cuántas personas del Laboratorio pueden tener cuenta.
+
+| Plan | Mensual | Anual | Usuarios |
+|---|---|---|---|
+| Hasta 5 usuarios | S/ 250 | S/ 2,500 | 5 |
+| Usuarios ilimitados | S/ 350 | S/ 3,500 | sin límite |
+
+El plan anual equivale a **diez meses**: dos meses sin costo por pagar
+adelantado. Los montos están en soles e **incluyen** los impuestos que
+correspondan.
+
+### Cómo se factura
+
+- **El primer mes es sin costo.** Un laboratorio necesita un ciclo completo
+  —registrar sus trabajos de un mes y entregarle un reporte a un doctor— para
+  saber si el sistema le sirve. La facturación empieza al mes siguiente.
+- **La carga inicial está incluida**: si el Laboratorio envía su lista de
+  precios, sus consultorios y sus doctores, el Proveedor los deja cargados antes
+  de la entrega. Sin costo y sin límite de registros.
+- Se factura por adelantado, al inicio de cada periodo.
+- Vencimiento: **15 días** desde la emisión del comprobante.
+- Cambiar de plan mensual a anual se puede en cualquier momento, descontando lo
+  ya pagado del periodo en curso.
+
+### Cambios de precio
+
+Los precios pueden variar avisando con **60 días** de antelación. El Laboratorio
+puede terminar el contrato antes de que el precio nuevo se aplique, sin
+penalidad. **Un cambio de precio nunca se aplica a un periodo anual ya pagado.**
 
 ## 5. Suspensión por impago
 
-Si una cuota queda impaga **[N] días** después de su vencimiento, el Proveedor
-puede suspender el acceso, tras avisar por correo con **[N] días** de
+Si una cuota queda impaga **15 días** después de su vencimiento, el Proveedor
+puede suspender el acceso, tras avisar por correo con **7 días** de
 anticipación.
 
 Durante la suspensión:
@@ -60,7 +87,7 @@ Durante la suspensión:
 - **Los datos no se borran ni se alteran.** Al regularizar el pago, el acceso se
   restablece con todo intacto.
 
-Si la suspensión pasa de **[PLAZO, p. ej. 90] días**, el contrato se considera
+Si la suspensión pasa de **90 días**, el contrato se considera
 terminado y se aplica la sección 8.
 
 ## 6. Disponibilidad
@@ -103,13 +130,13 @@ del Laboratorio. Ese acceso:
 ## 8. Terminación
 
 Cualquiera de las partes puede terminar el contrato avisando por escrito con
-**[PLAZO, p. ej. 30] días**. No hay devolución proporcional de la cuota del
+**30 días**. No hay devolución proporcional de la cuota del
 periodo en curso, salvo que la terminación se deba a un incumplimiento del
 Proveedor.
 
 Al terminar:
 
-1. El acceso se mantiene **[PLAZO, p. ej. 15] días** en modo de solo lectura,
+1. El acceso se mantiene **15 días** en modo de solo lectura,
    para que el Laboratorio exporte lo que necesite.
 2. Después, los datos se eliminan en el plazo de la política de privacidad.
 3. Si el Laboratorio pide la eliminación inmediata, se hace, y **pierde la
@@ -125,7 +152,7 @@ que esté facultado para tratar.
 ## 10. Responsabilidad
 
 El Proveedor responde por los daños directos que cause por su culpa, **hasta un
-máximo equivalente a las cuotas pagadas en los [N] meses anteriores** al hecho.
+máximo equivalente a las cuotas pagadas en los 3 meses anteriores** al hecho.
 
 No responde por lucro cesante ni por daños indirectos, ni por la exactitud de
 los datos que el propio Laboratorio registra.
@@ -137,11 +164,10 @@ datos personales.
 ## 11. Ley aplicable y controversias
 
 Estos términos se rigen por las leyes de la República del Perú. Las
-controversias se someten a los jueces y tribunales de **[DISTRITO JUDICIAL, p.
-ej. Lima]**.
+controversias se someten a los jueces y tribunales de **Lima**.
 
 ## 12. Cambios en estos términos
 
-El Proveedor puede modificarlos avisando con **[PLAZO, p. ej. 30] días** por
+El Proveedor puede modificarlos avisando con **30 días** por
 correo. Si el Laboratorio no está de acuerdo, puede terminar el contrato antes
 de que la versión nueva entre en vigor, sin penalidad.
