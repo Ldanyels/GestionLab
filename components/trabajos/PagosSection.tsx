@@ -82,7 +82,7 @@ export async function PagosSection({
         </p>
       )}
 
-      <AbonoForm trabajoId={trabajoId} />
+      <AbonoForm trabajoId={trabajoId} saldo={saldo} />
     </div>
   )
 }
