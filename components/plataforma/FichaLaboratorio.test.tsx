@@ -2,21 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { FichaLaboratorio } from './FichaLaboratorio'
 import type { TrabajoDePlataforma } from '@/lib/plataforma/laboratorio-detalle'
+import { laboratorioDePrueba } from '@/lib/plataforma/__fixtures__/laboratorio'
 
 const resumen = {
-  laboratorio: {
-    id: 'l1',
-    nombre: 'MasterLab',
-    plan: 'gratis' as const,
-    estado: 'activo' as const,
-    creado_en: '2026-07-15T00:00:00Z',
-    usuarios: 4,
-    trabajos: 29,
-    doc_tipo: 'RUC',
-    doc_numero: '20512345678',
-    razon_social: 'Laboratorio MasterLab E.I.R.L.',
-    direccion_fiscal: null,
-  },
+  laboratorio: laboratorioDePrueba(),
   consultorios: 3,
   doctores: 7,
 }
@@ -59,7 +48,7 @@ describe('FichaLaboratorio', () => {
   it('avisa cuando el laboratorio está suspendido', () => {
     render(
       <FichaLaboratorio
-        resumen={{ ...resumen, laboratorio: { ...resumen.laboratorio, estado: 'suspendido' } }}
+        resumen={{ ...resumen, laboratorio: laboratorioDePrueba({ estado: 'suspendido' }) }}
         trabajos={[]}
       />,
     )

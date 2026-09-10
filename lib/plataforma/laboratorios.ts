@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { ErrorParaElUsuario } from '@/lib/errores'
 import { datosFacturacionSchema, TIPOS_DOC } from '@/lib/facturacion/documento'
+import type { Periodicidad } from '@/lib/cuotas/periodos'
 import type { Laboratorio } from '@/lib/supabase/types'
 
 export const laboratorioNuevoSchema = z.object({
@@ -63,6 +64,9 @@ export interface LaboratorioFila extends Laboratorio {
   doc_numero: string | null
   razon_social: string | null
   direccion_fiscal: string | null
+  periodicidad: Periodicidad | null
+  precio_cuota: number | null
+  inicio_cobro: string | null
 }
 
 /**
@@ -78,7 +82,7 @@ export async function listarLaboratorios(): Promise<LaboratorioFila[]> {
   const admin = createAdminSupabase()
   const { data, error } = await admin
     .from('laboratorio')
-    .select('id, nombre, plan, estado, creado_en, doc_tipo, doc_numero, razon_social, direccion_fiscal, perfil(count), trabajo(count)')
+    .select('id, nombre, plan, estado, creado_en, doc_tipo, doc_numero, razon_social, direccion_fiscal, periodicidad, precio_cuota, inicio_cobro, perfil(count), trabajo(count)')
     .order('creado_en', { ascending: true })
   if (error) throw new Error(error.message)
 
@@ -99,6 +103,9 @@ export async function listarLaboratorios(): Promise<LaboratorioFila[]> {
     doc_numero: l.doc_numero,
     razon_social: l.razon_social,
     direccion_fiscal: l.direccion_fiscal,
+    periodicidad: l.periodicidad,
+    precio_cuota: l.precio_cuota,
+    inicio_cobro: l.inicio_cobro,
   }))
 }
 

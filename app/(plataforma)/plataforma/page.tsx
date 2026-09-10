@@ -1,10 +1,39 @@
 import Link from 'next/link'
 import { listarLaboratorios } from '@/lib/plataforma/laboratorios'
+import { generarCuotasFaltantes, todasLasCuotas } from '@/lib/cuotas/data'
+import { diasDeMora } from '@/lib/cuotas/periodos'
+import { resumenDeCobranza } from '@/lib/cuotas/resumen'
+import { hoyLima } from '@/lib/trabajos/agenda'
+import { formatMoney } from '@/lib/format'
 import { FilaLaboratorio } from '@/components/plataforma/FilaLaboratorio'
 
 export default async function PlataformaPage() {
   const laboratorios = await listarLaboratorios()
   const activos = laboratorios.filter((l) => l.estado === 'activo').length
+  const hoy = hoyLima()
+
+  /*
+    Se generan las cuotas que falten al abrir el panel, en vez de con una tarea
+    programada: el momento en que hace falta saber qué se debe es justo cuando
+    alguien va a mirarlo, y así no depende de que un cron se dispare.
+
+    Es idempotente —índice único por laboratorio y periodo— así que un segundo
+    renderizado no duplica nada.
+  */
+  for (const lab of laboratorios) await generarCuotasFaltantes(lab)
+
+  const cuotas = await todasLasCuotas()
+  const cobranza = resumenDeCobranza(cuotas, hoy)
+
+  /** Días de mora de la cuota más atrasada de cada laboratorio. */
+  const moraPorLab = new Map<string, number>()
+  for (const c of cuotas) {
+    if (c.estado !== 'pendiente') continue
+    const dias = diasDeMora(c.vence_el, hoy)
+    if (dias > 0) {
+      moraPorLab.set(c.laboratorio_id, Math.max(moraPorLab.get(c.laboratorio_id) ?? 0, dias))
+    }
+  }
 
   return (
     <section className="space-y-4">
@@ -28,6 +57,21 @@ export default async function PlataformaPage() {
         </Link>
       </header>
 
+      {/*
+        Las tres cifras de la cobranza. «Vencido» es el subconjunto de lo
+        pendiente que ya pasó su fecha: es a quién hay que llamar hoy, y por eso
+        va en rojo cuando existe.
+      */}
+      <div className="grid grid-cols-3 gap-2">
+        <Cifra etiqueta="Cobrado este mes" valor={formatMoney(cobranza.cobradoEnElMes)} />
+        <Cifra etiqueta="Pendiente" valor={formatMoney(cobranza.pendiente)} />
+        <Cifra
+          etiqueta="Vencido"
+          valor={formatMoney(cobranza.vencido)}
+          tono={cobranza.vencido > 0 ? 'peligro' : undefined}
+        />
+      </div>
+
       {laboratorios.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-8 text-center">
           <p className="text-[15px] font-semibold">Todavía no hay laboratorios</p>
@@ -39,7 +83,7 @@ export default async function PlataformaPage() {
         <ul className="space-y-2.5">
           {laboratorios.map((l) => (
             <li key={l.id}>
-              <FilaLaboratorio lab={l} />
+              <FilaLaboratorio lab={l} diasDeMora={moraPorLab.get(l.id) ?? 0} />
             </li>
           ))}
         </ul>
@@ -49,5 +93,30 @@ export default async function PlataformaPage() {
         ‹ Volver a mi laboratorio
       </Link>
     </section>
+  )
+}
+
+function Cifra({
+  etiqueta,
+  valor,
+  tono,
+}: {
+  etiqueta: string
+  valor: string
+  tono?: 'peligro'
+}) {
+  return (
+    <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-2.5">
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)]">
+        {etiqueta}
+      </p>
+      <p
+        className={`num mt-0.5 text-[16px] font-bold ${
+          tono === 'peligro' ? 'text-[var(--color-danger)]' : ''
+        }`}
+      >
+        {valor}
+      </p>
+    </div>
   )
 }

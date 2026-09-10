@@ -147,7 +147,7 @@ export async function resumenDeLaboratorio(id: string): Promise<ResumenDeLaborat
   // Conteos incrustados: PostgREST devuelve `[{count: N}]` por cada relación.
   const { data, error } = await cliente
     .laboratorio(
-      'id, nombre, plan, estado, creado_en, doc_tipo, doc_numero, razon_social, direccion_fiscal, perfil(count), trabajo(count), consultorio(count), doctor(count)',
+      'id, nombre, plan, estado, creado_en, doc_tipo, doc_numero, razon_social, direccion_fiscal, periodicidad, precio_cuota, inicio_cobro, perfil(count), trabajo(count), consultorio(count), doctor(count)',
     )
     .maybeSingle()
   if (error) throw new Error(error.message)
@@ -163,6 +163,9 @@ export async function resumenDeLaboratorio(id: string): Promise<ResumenDeLaborat
     doc_numero: string | null
     razon_social: string | null
     direccion_fiscal: string | null
+    periodicidad: LaboratorioFila['periodicidad']
+    precio_cuota: number | null
+    inicio_cobro: string | null
     perfil: { count: number }[] | null
     trabajo: { count: number }[] | null
     consultorio: { count: number }[] | null
@@ -182,6 +185,9 @@ export async function resumenDeLaboratorio(id: string): Promise<ResumenDeLaborat
       doc_numero: fila.doc_numero,
       razon_social: fila.razon_social,
       direccion_fiscal: fila.direccion_fiscal,
+      periodicidad: fila.periodicidad,
+      precio_cuota: fila.precio_cuota,
+      inicio_cobro: fila.inicio_cobro,
     },
     consultorios: fila.consultorio?.[0]?.count ?? 0,
     doctores: fila.doctor?.[0]?.count ?? 0,

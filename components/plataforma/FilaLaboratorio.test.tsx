@@ -1,32 +1,20 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { FilaLaboratorio } from './FilaLaboratorio'
+import { laboratorioDePrueba } from '@/lib/plataforma/__fixtures__/laboratorio'
 import type { LaboratorioFila } from '@/lib/plataforma/laboratorios'
 
 vi.mock('@/app/(plataforma)/plataforma/actions', () => ({
   cambiarEstadoAction: vi.fn(),
 }))
 
-function lab(p: Partial<LaboratorioFila> = {}): LaboratorioFila {
-  return {
-    id: 'l1',
-    nombre: 'MasterLab',
-    plan: 'gratis',
-    estado: 'activo',
-    creado_en: '2026-07-13T10:00:00Z',
-    usuarios: 4,
-    trabajos: 20,
-    doc_tipo: 'RUC',
-    doc_numero: '20512345678',
-    razon_social: 'Laboratorio MasterLab E.I.R.L.',
-    direccion_fiscal: null,
-    ...p,
-  }
-}
+const lab = laboratorioDePrueba
 
 describe('FilaLaboratorio', () => {
   it('muestra el nombre y el recuento de usuarios y trabajos', () => {
-    render(<FilaLaboratorio lab={lab()} />)
+    // Las cifras van explícitas: así la prueba no depende de los valores por
+    // omisión del constructor compartido.
+    render(<FilaLaboratorio lab={lab({ usuarios: 4, trabajos: 20 })} />)
     expect(screen.getByText('MasterLab')).toBeInTheDocument()
     expect(screen.getByText(/4 usuarios/)).toBeInTheDocument()
     expect(screen.getByText(/20 trabajos/)).toBeInTheDocument()

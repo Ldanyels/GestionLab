@@ -5,7 +5,14 @@ import { cambiarEstadoAction } from '@/app/(plataforma)/plataforma/actions'
 import type { LaboratorioFila } from '@/lib/plataforma/laboratorios'
 
 /** Un laboratorio en la lista de la plataforma, con su acción de estado. */
-export function FilaLaboratorio({ lab }: { lab: LaboratorioFila }) {
+export function FilaLaboratorio({
+  lab,
+  diasDeMora = 0,
+}: {
+  lab: LaboratorioFila
+  /** Días de la cuota más atrasada. Cero si está al día. */
+  diasDeMora?: number
+}) {
   const activo = lab.estado === 'activo'
   // El destino es el contrario del estado actual: si fuera fijo, el botón de
   // reactivar volvería a suspender.
@@ -37,6 +44,15 @@ export function FilaLaboratorio({ lab }: { lab: LaboratorioFila }) {
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {activo ? null : <Chip tono="peligro">Suspendido</Chip>}
+          {/*
+            La mora en la propia fila: es lo que permite mirar la lista y saber
+            a quién llamar sin abrir ninguna ficha.
+          */}
+          {diasDeMora > 0 ? (
+            <Chip tono="peligro">
+              {diasDeMora} {diasDeMora === 1 ? 'día' : 'días'} de mora
+            </Chip>
+          ) : null}
           <Chip tono={lab.plan === 'pagado' ? 'exito' : 'neutro'}>
             {lab.plan === 'pagado' ? 'Pagado' : 'Cortesía'}
           </Chip>

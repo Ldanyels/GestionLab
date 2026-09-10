@@ -16,6 +16,8 @@ import {
 import { catalogoSchema } from '@/lib/catalogo/schema'
 import { datosFacturacionSchema } from '@/lib/facturacion/documento'
 import { guardarFacturacion } from '@/lib/facturacion/data'
+import { anularCuota, guardarCondicionesDeCobro, marcarCuotaPagada } from '@/lib/cuotas/data'
+import { PERIODICIDADES, type Periodicidad } from '@/lib/cuotas/periodos'
 import { usuarioSchema } from '@/lib/usuarios/data'
 import { intentar, intentarSinEstado } from '@/lib/acciones'
 
@@ -210,6 +212,90 @@ export async function guardarFacturacionAction(formData: FormData): Promise<void
   )
 
   revalidatePath(`/plataforma/${labId}`)
+}
+
+/** Guarda las condiciones de cobro: plan, periodicidad, precio e inicio. */
+export async function guardarCondicionesDeCobroAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const correo = await correoSesion()
+  if (!correo) return
+
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  const plan = String(formData.get('plan') ?? '')
+  const periodicidad = String(formData.get('periodicidad') ?? '')
+  const precio = Number(formData.get('precio_cuota'))
+  const inicio = String(formData.get('inicio_cobro') ?? '')
+
+  if (!labId) return
+  if (plan !== 'gratis' && plan !== 'pagado') return
+  if (!(PERIODICIDADES as readonly string[]).includes(periodicidad)) return
+  if (!Number.isFinite(precio) || precio < 0) return
+
+  await intentarSinEstado(
+    'guardarCondicionesDeCobroAction',
+    'No se pudieron guardar las condiciones de cobro',
+    async () => {
+      await guardarCondicionesDeCobro(labId, {
+        plan,
+        periodicidad: periodicidad as Periodicidad,
+        precio_cuota: precio,
+        // Sin fecha no se genera nada: es la forma de dejar el cobro en pausa
+        // sin pasar el laboratorio a cortesía.
+        inicio_cobro: /^\d{4}-\d{2}-\d{2}$/.test(inicio) ? inicio : null,
+      })
+    },
+  )
+
+  revalidatePath('/plataforma')
+  revalidatePath(`/plataforma/${labId}`)
+}
+
+/**
+ * Marca una cuota como pagada.
+ *
+ * Pide fecha, medio y comprobante porque una cuota marcada como pagada sin
+ * decir cuándo ni con qué no sirve para cuadrar caja a fin de mes, que es para
+ * lo que existe este registro.
+ */
+export async function marcarCuotaPagadaAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  const cuotaId = String(formData.get('cuota_id') ?? '')
+  const pagadaEl = String(formData.get('pagada_el') ?? '')
+  const medio = String(formData.get('medio_pago') ?? '')
+  const comprobante = String(formData.get('comprobante') ?? '').trim()
+
+  if (!cuotaId || !/^\d{4}-\d{2}-\d{2}$/.test(pagadaEl) || !medio) return
+
+  await intentarSinEstado(
+    'marcarCuotaPagadaAction',
+    'No se pudo registrar el pago de la cuota',
+    () =>
+      marcarCuotaPagada(cuotaId, {
+        pagada_el: pagadaEl,
+        medio_pago: medio,
+        comprobante: comprobante || null,
+      }),
+  )
+
+  revalidatePath('/plataforma')
+  if (labId) revalidatePath(`/plataforma/${labId}`)
+}
+
+/** Anula una cuota emitida por error. No se borra: la anulación es información. */
+export async function anularCuotaAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  const cuotaId = String(formData.get('cuota_id') ?? '')
+  const nota = String(formData.get('nota') ?? '').trim()
+  if (!cuotaId || !nota) return
+
+  await intentarSinEstado('anularCuotaAction', 'No se pudo anular la cuota', () =>
+    anularCuota(cuotaId, nota),
+  )
+
+  revalidatePath('/plataforma')
+  if (labId) revalidatePath(`/plataforma/${labId}`)
 }
 
 /** Crea un usuario en un laboratorio ajeno. */

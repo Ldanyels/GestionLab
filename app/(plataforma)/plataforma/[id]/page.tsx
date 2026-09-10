@@ -12,7 +12,16 @@ import { DOCUMENTOS_LEGALES } from '@/lib/legal/textos.generated'
 import { FichaLaboratorio } from '@/components/plataforma/FichaLaboratorio'
 import { UsuariosDeLaboratorio } from '@/components/plataforma/UsuariosDeLaboratorio'
 import { FacturacionLaboratorio } from '@/components/plataforma/FacturacionLaboratorio'
-import { guardarFacturacionAction, restablecerClaveDeLaboratorioAction } from './actions'
+import { CobranzaLaboratorio } from '@/components/plataforma/CobranzaLaboratorio'
+import { cuotasDeLaboratorio, generarCuotasFaltantes } from '@/lib/cuotas/data'
+import { hoyLima } from '@/lib/trabajos/agenda'
+import {
+  anularCuotaAction,
+  guardarCondicionesDeCobroAction,
+  guardarFacturacionAction,
+  marcarCuotaPagadaAction,
+  restablecerClaveDeLaboratorioAction,
+} from './actions'
 
 /**
  * Ficha de un laboratorio ajeno.
@@ -31,10 +40,15 @@ export default async function LaboratorioPage({
   const resumen = await resumenDeLaboratorio(id)
   if (!resumen) notFound()
 
-  const [trabajos, usuarios, aceptaciones] = await Promise.all([
+  // Se generan las cuotas que falten antes de leerlas: así la ficha muestra el
+  // periodo en curso sin esperar a que nadie pase por la lista.
+  await generarCuotasFaltantes(resumen.laboratorio)
+
+  const [trabajos, usuarios, aceptaciones, cuotas] = await Promise.all([
     trabajosDeLaboratorio(id),
     usuariosParaElPanel(id),
     aceptacionesDeLaboratorio(id),
+    cuotasDeLaboratorio(id),
   ])
 
   // El acceso se registra después de comprobar que el laboratorio existe: una
@@ -49,6 +63,15 @@ export default async function LaboratorioPage({
         ‹ Laboratorios
       </Link>
       <FichaLaboratorio resumen={resumen} trabajos={trabajos} />
+
+      <CobranzaLaboratorio
+        lab={resumen.laboratorio}
+        cuotas={cuotas}
+        hoy={hoyLima()}
+        guardarCondiciones={guardarCondicionesDeCobroAction}
+        marcarPagada={marcarCuotaPagadaAction}
+        anular={anularCuotaAction}
+      />
 
       <FacturacionLaboratorio
         labId={id}
