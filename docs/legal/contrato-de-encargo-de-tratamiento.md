@@ -12,8 +12,9 @@
 **EL RESPONSABLE:** el laboratorio dental **[RAZÓN SOCIAL DEL LABORATORIO]**,
 RUC **[RUC]**, domiciliado en **[DOMICILIO]**.
 
-**EL ENCARGADO:** **[NOMBRE COMPLETO O RAZÓN SOCIAL DEL PROVEEDOR]**, RUC **[RUC]**, domiciliado
-en **[DOMICILIO FISCAL]**, que presta el servicio GestionLab.
+**EL ENCARGADO:** **Luis Daniel Benítez Benítez**, persona natural con negocio, con nombre
+comercial **Skardiam Systems** y **RUC 15612020377**, con domicilio fiscal en Urb. San Diego, Mz. L2, Lote 20, San Martín de Porres, Lima, Lima, Perú, que
+presta el servicio GestionLab.
 
 ## Por qué existe este contrato
 

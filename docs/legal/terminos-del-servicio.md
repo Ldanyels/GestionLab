@@ -7,8 +7,8 @@
 
 ## 1. Las partes
 
-Por un lado **[NOMBRE COMPLETO O RAZÓN SOCIAL], RUC [RUC]**, con domicilio
-fiscal en **[DOMICILIO FISCAL]** («el Proveedor»). Por el otro, el laboratorio dental que contrata el
+Por un lado **Luis Daniel Benítez Benítez**, persona natural con negocio, con nombre comercial
+**Skardiam Systems**, **RUC 15612020377** y domicilio fiscal en Urb. San Diego, Mz. L2, Lote 20, San Martín de Porres, Lima, Lima, Perú («el Proveedor»). Por el otro, el laboratorio dental que contrata el
 servicio («el Laboratorio»), identificado en la orden de servicio o en el
 formulario de alta.
 
@@ -55,11 +55,16 @@ cuántas personas del Laboratorio pueden tener cuenta.
 El plan anual equivale a **diez meses**: dos meses sin costo por pagar
 adelantado. Los montos están en soles.
 
-**Comprobante e impuestos.** El Proveedor emite **recibo por honorarios
-electrónico**, que **no está sujeto a IGV**: el monto de la tabla es el total a
-pagar, sin impuesto añadido. Si en el futuro el Proveedor pasara a emitir
-factura, el IGV se sumaría al precio y se avisaría con la antelación de la
-sección «Cambios de precio».
+**Comprobante e impuestos.** El Proveedor emite el comprobante de pago que
+corresponde a su régimen tributario. A la fecha de estos términos emite
+**boleta de venta electrónica**, y **el precio de la tabla no lleva IGV
+añadido**: el monto indicado es el total a pagar.
+
+Si en el futuro el Proveedor pasara a emitir factura con IGV, el impuesto se
+sumaría al precio y se avisaría con la antelación de la sección «Cambios de
+precio». **El Laboratorio que necesite factura para sustentar el gasto debe
+decirlo antes de contratar**, porque el comprobante que hoy se emite no permite
+usar crédito fiscal.
 
 ### Cómo se factura
 
@@ -128,7 +133,7 @@ emplea para entrenar sistemas de inteligencia artificial.
 
 El Laboratorio puede exportar su información en cualquier momento desde el
 propio sistema (reportes en PDF y ticket) y solicitar una copia completa
-escribiendo a **[CORREO DE CONTACTO]**.
+escribiendo a **luidanielbenitez5@gmail.com**.
 
 El tratamiento de los datos personales se rige por el
 [contrato de encargo de tratamiento](contrato-de-encargo-de-tratamiento.md).

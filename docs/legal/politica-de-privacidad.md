@@ -8,10 +8,10 @@
 ## 1. Quiénes somos
 
 GestionLab es un sistema de gestión para laboratorios dentales, operado por
-**[NOMBRE COMPLETO O RAZÓN SOCIAL], RUC [RUC]**, con domicilio fiscal en
-**[DOMICILIO FISCAL]**, Perú.
+**Luis Daniel Benítez Benítez**, persona natural con negocio, con nombre comercial
+**Skardiam Systems** y **RUC 15612020377**, con domicilio fiscal en Urb. San Diego, Mz. L2, Lote 20, San Martín de Porres, Lima, Lima, Perú
 
-Para cualquier asunto sobre datos personales: **[CORREO DE CONTACTO]**.
+Para cualquier asunto sobre datos personales: **luidanielbenitez5@gmail.com**.
 
 ## 2. Dos papeles distintos, y conviene distinguirlos
 
@@ -110,7 +110,7 @@ personales, y presentar un reclamo ante la **Autoridad Nacional de Protección d
 Datos Personales** del Ministerio de Justicia y Derechos Humanos.
 
 - **Si eres usuario del sistema** (administrador o técnico de un laboratorio):
-  escríbenos a **[CORREO DE CONTACTO]**. Respondemos en el plazo que fija la
+  escríbenos a **luidanielbenitez5@gmail.com**. Respondemos en el plazo que fija la
   ley.
 - **Si eres paciente**: dirígete al laboratorio que te atiende. Nosotros no
   decidimos sobre esos datos y no podemos atender la solicitud directamente,

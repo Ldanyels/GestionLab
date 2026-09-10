@@ -74,35 +74,55 @@ Por qué estos números, para cuando haya que revisarlos:
   que paginar las consultas en vez de traer la lista completa y filtrar en
   memoria, que es como está hecho hoy.
 
-### Cómo se factura hoy: recibo por honorarios
+### Cómo facturar: boleta de venta, no recibo por honorarios
 
-El Proveedor tiene **RUC 10** y emite **recibo por honorarios electrónico**, no
-factura. Consecuencias que ya están recogidas en los términos:
+Situación según la ficha RUC del 2026-09-10: **persona natural con negocio**,
+RUC 15612020377, nombre comercial **Skardiam Systems**, actividad principal
+**6201 – Programación informática**. Afecto a **Nuevo RUS** y a **renta de 4ta
+categoría**. Comprobantes habilitados: **boleta de venta** (desde 01/2024) y
+**recibo por honorarios** (desde 08/2025). **No factura.**
 
-- **No se añade IGV.** El precio de la tabla es el total.
-- **Retención del 8%** cuando el recibo pasa de S/1,500. Con los planes
-  mensuales no aplica; con el anual de S/2,500 sí, así que se recibirían S/2,300
-  y los S/200 quedan como pago a cuenta del impuesto a la renta, acreditable en
-  la declaración anual. No es dinero perdido: es caja adelantada.
-- Se puede evitar pidiendo la **suspensión de retenciones** en SUNAT
-  (formulario 1609), o emitiendo el anual en dos recibos por debajo del umbral.
-- Los términos dicen expresamente que **la retención cuenta como pago**. Sin esa
-  cláusula, un cliente que retiene paga S/2,300 por un recibo de S/2,500 y el
-  contrato lo trataría como impago, habilitando una suspensión injusta.
+**Cobrar la suscripción con boleta de venta, no con recibo por honorarios.** Tres
+razones:
 
-**Lo que hay que consultar con el contador**, porque no es una cuestión de
-redacción: el recibo por honorarios corresponde a **renta de cuarta categoría**,
-que es el ejercicio independiente de una profesión —y el desarrollo de software
-lo es—. Pero cobrar una suscripción recurrente por el **uso de un producto** a
-varios clientes se parece más a renta de **tercera categoría**, que exige
-factura o boleta y otro régimen.
+1. Vender el uso de un sistema es una operación del negocio, no el ejercicio
+   independiente de una profesión. La boleta es el comprobante que le
+   corresponde.
+2. **Evita la retención del 8%.** Esa retención solo aplica a los recibos por
+   honorarios. Con boleta, el laboratorio paga el importe completo, y desaparece
+   el problema del plan anual: se cobran los S/2,500, no S/2,300.
+3. **La cuota del Nuevo RUS es fija y mínima:** S/20 al mes hasta S/5,000 de
+   ingresos mensuales (categoría 1), S/50 hasta S/8,000 (categoría 2). Con veinte
+   laboratorios a S/250 todavía se está en categoría 1.
 
-Con uno o dos clientes y el trabajo hecho personalmente, el recibo por
-honorarios es defendible. La señal para revisarlo es cuando los clientes paguen
-por usar el sistema y no por horas tuyas. Dos cosas que cambian al pasar a
-tercera categoría: se emite factura con IGV, y se pueden **deducir los costos
-reales** —Supabase, Vercel, Culqi—, que en cuarta categoría no se deducen porque
-va una deducción fija del 20%.
+La cláusula de retención de los términos se queda igualmente: no estorba, y
+cubre el caso de que alguna vez se emita un recibo por honorarios por un trabajo
+de desarrollo a medida.
+
+#### Dos cosas que hay que preguntarle al contador
+
+**La primera es la importante, y conviene no dejarla pasar.** El Nuevo RUS está
+pensado para «personas naturales **no profesionales**», y hay fuentes que ubican
+los **servicios de informática —programación y consultoría informática—** entre
+las actividades **excluidas** del régimen. La página de SUNAT sobre actividades
+no comprendidas no las nombra de forma expresa, así que **no está resuelto**, y
+en la ficha RUC la profesión figura como «no especificada», lo que juega a
+favor.
+
+Importa porque si SUNAT considera que la actividad está excluida, la
+reclasificación es **retroactiva**, y la situación existe desde enero de 2024, no
+desde ahora. Es una pregunta de media hora con un contador y no debería
+postergarse.
+
+**La segunda es comercial.** Con boleta de venta el laboratorio **no obtiene
+crédito fiscal** y su deducción del gasto es limitada. Un laboratorio formal
+puede exigir factura, y el Nuevo RUS no permite emitirla: haría falta pasar a
+**RER** o **MYPE Tributario**. Eso tiene una ventaja añadida —permite **deducir
+los costos reales**: Supabase, Vercel, Culqi— y un costo: contabilidad más
+exigente y pagos que dejan de ser una cuota fija.
+
+Los términos ya lo dicen: quien necesite factura debe avisarlo antes de
+contratar.
 
 ### MasterLab: cliente fundador, sin costo
 
