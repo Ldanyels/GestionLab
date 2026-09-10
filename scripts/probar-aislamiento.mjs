@@ -500,6 +500,80 @@ async function comprobarAccesosDePlataforma(comoA, labA, labB) {
   )
 }
 
+/*
+  El registro de errores es del proveedor, no del inquilino.
+
+  `error_registrado` lleva RLS activo y **ninguna política**, como `cuota` y
+  `aceptacion`. La comprobación importa más aquí que en las tablas normales: los
+  mensajes de error de un laboratorio hablan de sus datos, y esta tabla los junta
+  todos en un mismo sitio. Si se viera desde la clave del navegador, sería la
+  única tabla del sistema que rompe el aislamiento en las dos direcciones a la
+  vez.
+*/
+async function comprobarErroresRegistrados(comoA, labA) {
+  console.log('\nRegistro de errores (solo del proveedor)')
+
+  const huella = `${PREFIJO.replace(/[^a-z0-9]/gi, '').slice(0, 8)}aislamiento`
+  const { error: errAnotar } = await admin.rpc('anotar_error', {
+    p_huella: huella,
+    p_donde: `${PREFIJO} prueba`,
+    p_mensaje: `${PREFIJO} mensaje con la marca ${MARCA_B}`,
+    p_codigo: 'PRUEBA',
+    p_laboratorio_id: labA,
+  })
+  if (errAnotar) {
+    ausentes.push(`error_registrado / anotar_error (migración 0025): ${errAnotar.message}`)
+    return
+  }
+
+  // 1. No se ve, ni siquiera la fila que habla del propio laboratorio.
+  const { data: vistos } = await comoA.from('error_registrado').select('*')
+  comprobar(
+    'error_registrado: el laboratorio no ve ninguna fila',
+    (vistos ?? []).length === 0,
+    `${(vistos ?? []).length} fila(s)`,
+  )
+  comprobar('error_registrado: la respuesta no contiene la marca sembrada', !hayFuga(vistos))
+
+  // 2. Pedirla por su huella tampoco la devuelve.
+  const { data: directa } = await comoA
+    .from('error_registrado')
+    .select('huella')
+    .eq('huella', huella)
+  comprobar(
+    'error_registrado: pedir la fila por su huella no devuelve nada',
+    (directa ?? []).length === 0,
+  )
+
+  // 3. Tampoco se puede escribir: sin políticas, el insert rebota.
+  const { data: insertada, error: errInsert } = await comoA
+    .from('error_registrado')
+    .insert({ huella: `${huella}-intruso`, donde: 'intruso', mensaje: 'intruso' })
+    .select('huella')
+  comprobar(
+    'error_registrado: el laboratorio no puede insertar',
+    Boolean(errInsert) || (insertada ?? []).length === 0,
+  )
+
+  /*
+    4. Y no puede llamar a la función que escribe.
+
+    Con `security invoker` el RLS ya la haría rebotar; el permiso revocado es la
+    segunda línea. Se comprueban las dos porque si algún día la función pasara a
+    `security definer` por comodidad, esta comprobación es la que avisaría.
+  */
+  const { error: errRpcAjeno } = await comoA.rpc('anotar_error', {
+    p_huella: `${huella}-rpc`,
+    p_donde: 'intruso',
+    p_mensaje: 'intruso',
+    p_codigo: null,
+    p_laboratorio_id: labA,
+  })
+  comprobar('error_registrado: el laboratorio no puede llamar a anotar_error', Boolean(errRpcAjeno))
+
+  await admin.from('error_registrado').delete().like('huella', `${huella}%`)
+}
+
 // ── Limpieza ──────────────────────────────────────────────────
 async function limpiar(laboratorios, usuarios) {
   console.log('\nLimpieza')
@@ -581,6 +655,7 @@ try {
   usuarios.push(await comprobarHuerfano(labB))
   await comprobarAltaAislada(labB)
   await comprobarAccesosDePlataforma(comoA, labA, labB)
+  await comprobarErroresRegistrados(comoA, labA)
 } catch (e) {
   fallas.push(`Error de preparación: ${e.message}`)
   console.error(`\n✗ ${e.message}`)
