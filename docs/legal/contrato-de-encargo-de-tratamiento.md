@@ -110,16 +110,14 @@ contractuales y compromisos de seguridad de dichos proveedores.
 
 ## 7. Verificación
 
-El Responsable puede solicitar, hasta **1 vez al año** y con
-**15 días** de aviso, información sobre el cumplimiento de este
-contrato. El Encargado responderá por escrito y pondrá a disposición el
-historial de accesos y cambios correspondiente a los datos del Responsable.
+**El Responsable puede consultar en cualquier momento**, por su cuenta y sin
+pedir permiso, el historial de accesos y cambios sobre sus datos, en
+**Configuración → Historial de actividad** dentro del propio sistema. Ahí
+aparece cada acceso y cada modificación del Encargado, marcada como «Soporte» y
+con el correo de quien la hizo, distinguible de lo que hace su propio equipo.
 
-> **Advertencia para la revisión legal, y para Skardiam:** hoy ese historial
-> existe en la base de datos y le pertenece al laboratorio por las políticas de
-> acceso, **pero no hay pantalla donde él pueda consultarlo por su cuenta**. Se
-> le entrega a solicitud. Si se quiere prometer consulta directa, hay que
-> construir esa pantalla antes de firmar esta cláusula así.
+Además, puede solicitar hasta **1 vez al año** y con **15 días** de aviso
+información por escrito sobre el cumplimiento de este contrato.
 
 ## 8. Devolución y eliminación
 

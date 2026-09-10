@@ -89,9 +89,11 @@ dependen de nuestra buena voluntad:
 - **No vemos nombres de pacientes.** Las pantallas de soporte no traen ese dato
   de la base de datos: un trabajo se identifica por su tipo, su doctor y su
   fecha.
-- **Queda registrado.** Cada vez que entramos a tu laboratorio, y cada cambio
-  que hacemos, se guarda con el correo de quien lo hizo, qué hizo y cuál era el
-  valor anterior.
+- **Queda registrado, y lo puedes ver.** Cada vez que entramos a tu
+  laboratorio, y cada cambio que hacemos, se guarda con el correo de quien lo
+  hizo, qué hizo y cuál era el valor anterior. Lo consultas cuando quieras en
+  **Configuración → Historial de actividad**, marcado como «Soporte» para que
+  lo distingas de lo que hace tu equipo.
 
 ## 6. Cuánto tiempo los guardamos
 

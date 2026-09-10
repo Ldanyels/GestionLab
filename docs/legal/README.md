@@ -165,12 +165,12 @@ los documentos van a hacer. Conviene que sean ciertas antes de firmar:
    en Perú o a una región con garantías, que es trabajo de infraestructura, no
    de redacción.
 
-2. **El laboratorio no puede consultar el historial de tus accesos.** El sistema
-   registra cada visita y cada cambio que haces desde el panel de plataforma,
-   con tu correo, y por las políticas de la base ese dato le pertenece a él. Pero
-   **no hay pantalla donde verlo.** El contrato de encargo promete transparencia:
-   o se construye esa pantalla, o el contrato promete algo que el cliente no
-   puede comprobar.
+2. ~~El laboratorio no puede consultar el historial de tus accesos.~~
+   **Resuelto el 2026-09-10.** La pantalla ya existía —Configuración → Historial
+   de actividad— pero no leía las columnas de atribución de plataforma, así que
+   un cambio tuyo aparecía como «Sistema». Ahora se muestra como «Soporte» con
+   tu correo y el detalle de lo que cambiaste. La cláusula de verificación del
+   contrato ya promete algo que el cliente puede comprobar por su cuenta.
 
 3. **Vercel está en plan Hobby, que prohíbe el uso comercial.** No es materia de
    protección de datos, pero es el riesgo más inmediato de todos: cobrar con el
