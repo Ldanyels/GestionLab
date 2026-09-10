@@ -6,7 +6,10 @@ import {
   resumenDeLaboratorio,
   trabajosDeLaboratorio,
 } from '@/lib/plataforma/laboratorio-detalle'
+import { usuariosParaElPanel } from '@/lib/plataforma/usuarios'
 import { FichaLaboratorio } from '@/components/plataforma/FichaLaboratorio'
+import { UsuariosDeLaboratorio } from '@/components/plataforma/UsuariosDeLaboratorio'
+import { restablecerClaveDeLaboratorioAction } from './actions'
 
 /**
  * Ficha de un laboratorio ajeno.
@@ -25,7 +28,10 @@ export default async function LaboratorioPage({
   const resumen = await resumenDeLaboratorio(id)
   if (!resumen) notFound()
 
-  const trabajos = await trabajosDeLaboratorio(id)
+  const [trabajos, usuarios] = await Promise.all([
+    trabajosDeLaboratorio(id),
+    usuariosParaElPanel(id),
+  ])
 
   // El acceso se registra después de comprobar que el laboratorio existe: una
   // dirección tecleada al azar no debe ensuciar el historial de nadie. Y no se
@@ -34,11 +40,16 @@ export default async function LaboratorioPage({
   if (correo) await registrarAccesoDePlataforma(id, correo)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Link href="/plataforma" className="inline-block text-[13.5px] text-[var(--color-muted)]">
         ‹ Laboratorios
       </Link>
       <FichaLaboratorio resumen={resumen} trabajos={trabajos} />
+      <UsuariosDeLaboratorio
+        labId={id}
+        usuarios={usuarios}
+        accion={restablecerClaveDeLaboratorioAction}
+      />
     </div>
   )
 }

@@ -29,6 +29,63 @@ export function filaDeAcceso(laboratorioId: string, correo: string): FilaDeAcces
   }
 }
 
+/** Un cambio hecho desde el panel, tal como se guarda. */
+export interface FilaDeCambio {
+  laboratorio_id: string
+  tabla: string
+  registro_id: string
+  accion: 'INSERT' | 'UPDATE' | 'DELETE'
+  usuario_id: null
+  usuario_nombre: null
+  actor_plataforma: string
+  detalle: string
+}
+
+export interface Cambio {
+  tabla: string
+  registroId: string
+  accion: 'INSERT' | 'UPDATE' | 'DELETE'
+  /** En español y en pasado: se lee en el historial del laboratorio. */
+  detalle: string
+}
+
+export function filaDeCambio(
+  laboratorioId: string,
+  correo: string,
+  cambio: Cambio,
+): FilaDeCambio {
+  return {
+    laboratorio_id: laboratorioId,
+    tabla: cambio.tabla,
+    registro_id: cambio.registroId,
+    accion: cambio.accion,
+    usuario_id: null,
+    usuario_nombre: null,
+    actor_plataforma: correo.trim().toLowerCase(),
+    detalle: cambio.detalle,
+  }
+}
+
+/**
+ * Registra un cambio hecho desde el panel.
+ *
+ * A diferencia del acceso, este **sí lanza** si no puede escribir. Un cambio en
+ * los datos de un laboratorio ajeno sin constancia de quién lo hizo es
+ * justamente lo que el diseño promete que no ocurre, así que preferimos que la
+ * operación falle a que se aplique a oscuras.
+ */
+export async function registrarCambioDePlataforma(
+  laboratorioId: string,
+  correo: string,
+  cambio: Cambio,
+): Promise<void> {
+  const admin = createAdminSupabase()
+  const { error } = await admin
+    .from('auditoria')
+    .insert(filaDeCambio(laboratorioId, correo, cambio))
+  if (error) throw new Error(error.message)
+}
+
 /**
  * Deja constancia de que la plataforma abrió este laboratorio.
  *

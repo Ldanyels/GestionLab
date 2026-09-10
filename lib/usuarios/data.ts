@@ -20,8 +20,17 @@ export interface UsuarioItem {
   permisos: string[]
 }
 
-export async function listUsuarios(): Promise<UsuarioItem[]> {
-  const labId = await laboratorioIdActual()
+/**
+ * Usuarios de un laboratorio dado.
+ *
+ * Toma el laboratorio por parámetro para que sirva a los dos llamadores: la
+ * pantalla del propio laboratorio (que pasa el de la sesión) y el panel de
+ * plataforma (que no tiene sesión de inquilino y pasa el que está mirando).
+ * Copiar esta función cambiando esa línea habría duplicado el respaldo de
+ * permisos de más abajo, y una de las dos copias se quedaría sin el próximo
+ * arreglo.
+ */
+export async function usuariosDeLaboratorio(labId: string): Promise<UsuarioItem[]> {
   const admin = createAdminSupabase()
   type Fila = { id: string; nombre: string; rol: Rol; permisos?: string[] | null }
 
@@ -56,8 +65,20 @@ export async function listUsuarios(): Promise<UsuarioItem[]> {
   }))
 }
 
-/** Verifica que un usuario pertenezca al laboratorio del admin actual. */
-async function perteneceALab(id: string, labId: string): Promise<boolean> {
+export async function listUsuarios(): Promise<UsuarioItem[]> {
+  return usuariosDeLaboratorio(await laboratorioIdActual())
+}
+
+/**
+ * Verifica que un usuario pertenezca al laboratorio indicado.
+ *
+ * Exportada porque es **la barrera real** contra tocar usuarios de otro
+ * laboratorio, no un adorno: la clave de servicio omite RLS por diseño, así que
+ * sin esta comprobación bastaría pasar un identificador ajeno. El panel de
+ * plataforma la reutiliza tal cual en vez de reimplementarla; duplicar una
+ * comprobación de seguridad es como las dos copias acaban divergiendo.
+ */
+export async function perteneceALab(id: string, labId: string): Promise<boolean> {
   const admin = createAdminSupabase()
   const { data } = await admin
     .from('perfil')
@@ -67,8 +88,11 @@ async function perteneceALab(id: string, labId: string): Promise<boolean> {
   return (data as { laboratorio_id: string } | null)?.laboratorio_id === labId
 }
 
-export async function crearUsuario(input: UsuarioInput): Promise<void> {
-  const labId = await laboratorioIdActual()
+/** Crea un usuario en el laboratorio indicado. Ver `usuariosDeLaboratorio`. */
+export async function crearUsuarioEnLaboratorio(
+  labId: string,
+  input: UsuarioInput,
+): Promise<string> {
   const admin = createAdminSupabase()
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -96,6 +120,11 @@ export async function crearUsuario(input: UsuarioInput): Promise<void> {
     await admin.auth.admin.deleteUser(userId)
     throw new Error(pErr.message)
   }
+  return userId
+}
+
+export async function crearUsuario(input: UsuarioInput): Promise<void> {
+  await crearUsuarioEnLaboratorio(await laboratorioIdActual(), input)
 }
 
 export async function cambiarRolUsuario(id: string, rol: Rol): Promise<void> {
@@ -144,10 +173,24 @@ export async function eliminarUsuario(id: string): Promise<void> {
  * identificador exista.
  */
 export async function restablecerClave(id: string, password: string): Promise<void> {
-  const labId = await laboratorioIdActual()
-  if (!(await perteneceALab(id, labId))) return
+  await restablecerClaveEnLaboratorio(await laboratorioIdActual(), id, password)
+}
+
+/**
+ * Como `restablecerClave`, para un laboratorio indicado por parámetro.
+ *
+ * Devuelve si lo hizo: el panel de plataforma necesita saberlo para no
+ * registrar en auditoría un cambio que no ocurrió.
+ */
+export async function restablecerClaveEnLaboratorio(
+  labId: string,
+  id: string,
+  password: string,
+): Promise<boolean> {
+  if (!(await perteneceALab(id, labId))) return false
 
   const admin = createAdminSupabase()
   const { error } = await admin.auth.admin.updateUserById(id, { password })
   if (error) throw new Error(error.message)
+  return true
 }
