@@ -12,7 +12,7 @@
 **EL RESPONSABLE:** el laboratorio dental **[RAZÓN SOCIAL DEL LABORATORIO]**,
 RUC **[RUC]**, domiciliado en **[DOMICILIO]**.
 
-**EL ENCARGADO:** **[RAZÓN SOCIAL DEL PROVEEDOR]**, RUC **[RUC]**, domiciliado
+**EL ENCARGADO:** **[NOMBRE COMPLETO O RAZÓN SOCIAL DEL PROVEEDOR]**, RUC **[RUC]**, domiciliado
 en **[DOMICILIO FISCAL]**, que presta el servicio GestionLab.
 
 ## Por qué existe este contrato

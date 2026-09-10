@@ -7,8 +7,8 @@
 
 ## 1. Las partes
 
-Por un lado **[RAZÓN SOCIAL], RUC [RUC]**, domiciliada en **[DOMICILIO
-FISCAL]** («el Proveedor»). Por el otro, el laboratorio dental que contrata el
+Por un lado **[NOMBRE COMPLETO O RAZÓN SOCIAL], RUC [RUC]**, con domicilio
+fiscal en **[DOMICILIO FISCAL]** («el Proveedor»). Por el otro, el laboratorio dental que contrata el
 servicio («el Laboratorio»), identificado en la orden de servicio o en el
 formulario de alta.
 
@@ -53,8 +53,13 @@ cuántas personas del Laboratorio pueden tener cuenta.
 | Usuarios ilimitados | S/ 350 | S/ 3,500 | sin límite |
 
 El plan anual equivale a **diez meses**: dos meses sin costo por pagar
-adelantado. Los montos están en soles e **incluyen** los impuestos que
-correspondan.
+adelantado. Los montos están en soles.
+
+**Comprobante e impuestos.** El Proveedor emite **recibo por honorarios
+electrónico**, que **no está sujeto a IGV**: el monto de la tabla es el total a
+pagar, sin impuesto añadido. Si en el futuro el Proveedor pasara a emitir
+factura, el IGV se sumaría al precio y se avisaría con la antelación de la
+sección «Cambios de precio».
 
 ### Cómo se factura
 
@@ -68,6 +73,18 @@ correspondan.
 - Vencimiento: **15 días** desde la emisión del comprobante.
 - Cambiar de plan mensual a anual se puede en cualquier momento, descontando lo
   ya pagado del periodo en curso.
+
+### Retención de impuesto a la renta
+
+Si el Laboratorio está obligado a actuar como agente de retención, **puede
+retener el porcentaje que la ley le exija** sobre el recibo por honorarios y
+abonar la diferencia.
+
+**Esa retención cuenta como pago.** El Laboratorio cumple entregando el importe
+neto más la constancia de retención correspondiente, y no se considera impago
+para efectos de la sección 5. Con los montos mensuales de la tabla la retención
+normalmente no aplica, porque solo procede cuando el recibo supera el importe
+que fija SUNAT; con el plan anual pagado en un solo recibo, sí.
 
 ### Cambios de precio
 

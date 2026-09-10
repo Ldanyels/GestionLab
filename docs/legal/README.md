@@ -74,6 +74,36 @@ Por qué estos números, para cuando haya que revisarlos:
   que paginar las consultas en vez de traer la lista completa y filtrar en
   memoria, que es como está hecho hoy.
 
+### Cómo se factura hoy: recibo por honorarios
+
+El Proveedor tiene **RUC 10** y emite **recibo por honorarios electrónico**, no
+factura. Consecuencias que ya están recogidas en los términos:
+
+- **No se añade IGV.** El precio de la tabla es el total.
+- **Retención del 8%** cuando el recibo pasa de S/1,500. Con los planes
+  mensuales no aplica; con el anual de S/2,500 sí, así que se recibirían S/2,300
+  y los S/200 quedan como pago a cuenta del impuesto a la renta, acreditable en
+  la declaración anual. No es dinero perdido: es caja adelantada.
+- Se puede evitar pidiendo la **suspensión de retenciones** en SUNAT
+  (formulario 1609), o emitiendo el anual en dos recibos por debajo del umbral.
+- Los términos dicen expresamente que **la retención cuenta como pago**. Sin esa
+  cláusula, un cliente que retiene paga S/2,300 por un recibo de S/2,500 y el
+  contrato lo trataría como impago, habilitando una suspensión injusta.
+
+**Lo que hay que consultar con el contador**, porque no es una cuestión de
+redacción: el recibo por honorarios corresponde a **renta de cuarta categoría**,
+que es el ejercicio independiente de una profesión —y el desarrollo de software
+lo es—. Pero cobrar una suscripción recurrente por el **uso de un producto** a
+varios clientes se parece más a renta de **tercera categoría**, que exige
+factura o boleta y otro régimen.
+
+Con uno o dos clientes y el trabajo hecho personalmente, el recibo por
+honorarios es defendible. La señal para revisarlo es cuando los clientes paguen
+por usar el sistema y no por horas tuyas. Dos cosas que cambian al pasar a
+tercera categoría: se emite factura con IGV, y se pueden **deducir los costos
+reales** —Supabase, Vercel, Culqi—, que en cuarta categoría no se deducen porque
+va una deducción fija del 20%.
+
 ### MasterLab: cliente fundador, sin costo
 
 MasterLab **no paga**, de forma indefinida, a cambio de poner el sistema a

@@ -8,7 +8,8 @@
 ## 1. Quiénes somos
 
 GestionLab es un sistema de gestión para laboratorios dentales, operado por
-**[RAZÓN SOCIAL], RUC [RUC]**, con domicilio en **[DOMICILIO FISCAL]**, Perú.
+**[NOMBRE COMPLETO O RAZÓN SOCIAL], RUC [RUC]**, con domicilio fiscal en
+**[DOMICILIO FISCAL]**, Perú.
 
 Para cualquier asunto sobre datos personales: **[CORREO DE CONTACTO]**.
 
