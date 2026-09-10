@@ -16,13 +16,20 @@ export interface AceptacionRegistrada {
  */
 export function documentosPendientes(
   aceptadas: readonly AceptacionRegistrada[],
+  documentos: readonly DocumentoLegal[] = DOCUMENTOS_LEGALES,
 ): DocumentoLegal[] {
   const yaEsta = new Set(aceptadas.map((a) => `${a.documento}@${a.version}`))
-  return DOCUMENTOS_LEGALES.filter((d) => !yaEsta.has(`${d.clave}@${d.version}`))
+  return documentos.filter(
+    // Un borrador no se pide aceptar. Ver `esBorrador` en el documento.
+    (d) => !d.esBorrador && !yaEsta.has(`${d.clave}@${d.version}`),
+  )
 }
 
-export function todoAceptado(aceptadas: readonly AceptacionRegistrada[]): boolean {
-  return documentosPendientes(aceptadas).length === 0
+export function todoAceptado(
+  aceptadas: readonly AceptacionRegistrada[],
+  documentos: readonly DocumentoLegal[] = DOCUMENTOS_LEGALES,
+): boolean {
+  return documentosPendientes(aceptadas, documentos).length === 0
 }
 
 /**

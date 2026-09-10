@@ -111,15 +111,25 @@ export interface DocumentoLegal {
   hash: string
   /** El documento en HTML, para mostrarlo. Generado desde el markdown. */
   html: string
+  /**
+   * Si sigue marcado como borrador para revisión legal.
+   *
+   * Un borrador **no se pide aceptar**: un cliente leyendo «Borrador para
+   * revisión legal» en la pantalla que le bloquea el acceso sería peor que no
+   * pedirle nada. Se activa solo cuando el abogado aprueba y se retira esa
+   * nota, porque retirarla cambia la huella y obliga a volver a sellar.
+   */
+  esBorrador: boolean
 }
 
 export const DOCUMENTOS_LEGALES: readonly DocumentoLegal[] = ${JSON.stringify(
-  sellados.map(({ clave, titulo, version, hash, html }) => ({
+  sellados.map(({ clave, titulo, version, hash, html, esBorrador }) => ({
     clave,
     titulo,
     version,
     hash,
     html,
+    esBorrador,
   })),
   null,
   2,

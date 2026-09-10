@@ -57,8 +57,9 @@ export default async function LaboratorioPage({
         <h2 className="text-[17px] font-bold tracking-[-0.01em]">Condiciones aceptadas</h2>
         {aceptaciones.length === 0 ? (
           <p className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] p-4 text-center text-[13.5px] text-[var(--color-muted)]">
-            Este laboratorio todavía no ha aceptado las condiciones. Se le pedirá la próxima
-            vez que su administrador entre.
+            {DOCUMENTOS_LEGALES.every((d) => d.esBorrador)
+              ? 'Todavía no se le pide aceptar nada: los documentos siguen marcados como borrador para revisión legal. En cuanto se apruebe el texto y se retire esa nota, se le pedirá la próxima vez que entre su administrador.'
+              : 'Este laboratorio todavía no ha aceptado las condiciones. Se le pedirá la próxima vez que su administrador entre.'}
           </p>
         ) : (
           <ul className="space-y-1.5">
