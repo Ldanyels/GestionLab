@@ -156,6 +156,22 @@ export default async function CuentasPage({
                     </li>
                   ))}
                 </ul>
+
+                {/*
+                  El enlace a cobrar va en la fila del consultorio que debe.
+
+                  Esta pantalla es donde se mira a quién hay que cobrarle, así
+                  que es donde tiene que estar la acción de cobrar. Antes había
+                  que salir, buscar el consultorio y entrar a su ficha.
+                */}
+                {g.saldo > 0.001 ? (
+                  <Link
+                    href={`/consultorios/${g.consultorio_id}/cobrar`}
+                    className="mt-2.5 block border-t border-[var(--color-border)] pt-2.5 text-[13px] font-semibold text-[var(--color-accent)]"
+                  >
+                    Registrar pago →
+                  </Link>
+                ) : null}
               </Card>
             </li>
           ))}

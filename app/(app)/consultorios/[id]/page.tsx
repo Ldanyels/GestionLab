@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getConsultorio } from '@/lib/consultorios/data'
 import { getSessionPerfil } from '@/lib/auth'
-import { veMontos } from '@/lib/permisos'
+import { puedeRegistrarAbonos, veMontos } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
 import { colorConsultorio } from '@/lib/consultorios/color'
@@ -26,6 +26,7 @@ export default async function ConsultorioDetallePage({
   const [consultorio, perfil] = await Promise.all([getConsultorio(id), getSessionPerfil()])
   if (!consultorio) notFound()
   const montos = veMontos(perfil)
+  const puedeCobrar = puedeRegistrarAbonos(perfil)
 
   const grupo = montos
     ? agruparPorConsultorio(await filasReporte({ consultorioId: id })).grupos[0]
@@ -86,6 +87,18 @@ export default async function ConsultorioDetallePage({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--color-border)] pt-3">
+          {/*
+            «Registrar pago» va primero y en color de acento: es la acción que
+            se hace cada semana, mientras editar el consultorio se hace una vez.
+          */}
+          {puedeCobrar ? (
+            <Link
+              href={`/consultorios/${consultorio.id}/cobrar`}
+              className="font-semibold text-[var(--color-accent)]"
+            >
+              Registrar pago
+            </Link>
+          ) : null}
           <Link href={`/consultorios/${consultorio.id}/editar`} className={enlace}>
             Editar
           </Link>
