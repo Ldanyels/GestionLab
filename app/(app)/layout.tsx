@@ -5,6 +5,10 @@ import { esSesionSuperAdmin } from '@/lib/plataforma/acceso'
 import { AppShell } from '@/components/nav/AppShell'
 import { PantallaSuspendida } from '@/components/laboratorio/PantallaSuspendida'
 import { PantallaSinLaboratorio } from '@/components/laboratorio/PantallaSinLaboratorio'
+import { PantallaAceptacion } from '@/components/legal/PantallaAceptacion'
+import { pendientesDeLaboratorio } from '@/lib/legal/data'
+import { nombreLaboratorioActual } from '@/lib/tenant'
+import { aceptarDocumentosAction } from './legal/actions'
 
 export default async function AppLayout({
   children,
@@ -32,6 +36,27 @@ export default async function AppLayout({
   // rebote sería un bucle.
   if (estaSuspendido(laboratorio)) {
     return <PantallaSuspendida rol={perfil.rol} />
+  }
+
+  /*
+    Condiciones sin aceptar: se pide antes de dejar entrar.
+    
+    Solo al administrador, que es quien representa al laboratorio y puede
+    comprometerlo. A un técnico no se le bloquea el trabajo por un contrato que
+    no le corresponde firmar; el panel de plataforma muestra qué laboratorios
+    siguen sin aceptar, que es donde eso se vigila.
+  */
+  if (perfil.rol === 'admin') {
+    const pendientes = await pendientesDeLaboratorio(perfil.laboratorio_id)
+    if (pendientes.length > 0) {
+      return (
+        <PantallaAceptacion
+          documentos={pendientes}
+          laboratorio={await nombreLaboratorioActual()}
+          action={aceptarDocumentosAction}
+        />
+      )
+    }
   }
 
   return (

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:aislamiento": "node --env-file=.env.local scripts/probar-aislamiento.mjs",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "sellar:legales": "node scripts/sellar-legales.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
@@ -35,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "jsdom": "^29.1.1",
+    "marked": "^18.0.12",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
