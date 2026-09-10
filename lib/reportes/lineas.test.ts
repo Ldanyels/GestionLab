@@ -6,6 +6,7 @@ function fila(p: Partial<FilaReporte>): FilaReporte {
   return {
     id: 't1',
     fecha_ingreso: '2026-09-01',
+    entregado_el: null,
     estado: 'en_curso',
     paciente: null,
     resumen: 'Corona',

@@ -16,6 +16,9 @@ export default async function ReporteTicketPage({
     hasta?: string
     consultorio?: string
     doctor?: string
+    estado?: string
+    periodo?: string
+    pago?: string
     mostrar?: string
   }>
 }) {

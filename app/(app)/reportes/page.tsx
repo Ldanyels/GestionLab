@@ -5,7 +5,9 @@ import { KpiTile } from '@/components/ui/KpiTile'
 import { requirePermiso } from '@/lib/auth'
 import { veMontos, veMontosReportes } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
-import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
+import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
+import { contarFilasPorCobro, filtrarFilasPorCobro } from '@/lib/reportes/cobro'
+import { contarPorEstado } from '@/lib/trabajos/filtro'
 import { resolverFiltros, etiquetaRango, queryFiltros } from '@/lib/reportes/filtros'
 import { opcionesFiltro } from '@/lib/reportes/opciones'
 import { FiltrosReporte } from '@/components/reportes/FiltrosReporte'
@@ -21,6 +23,9 @@ export default async function ReportesPage({
     hasta?: string
     consultorio?: string
     doctor?: string
+    estado?: string
+    periodo?: string
+    pago?: string
     mostrar?: string
   }>
 }) {
@@ -32,8 +37,20 @@ export default async function ReportesPage({
   const sp = await searchParams
   const f = resolverFiltros(sp)
   const [todas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
-  const filas = f.soloPendientes ? soloConSaldo(todas) : todas
+  const filas = filtrarFilasPorCobro(todas, f.pago)
   const { grupos, totales } = agruparPorConsultorio(filas)
+
+  /*
+    Los conteos se calculan sobre lo que los otros filtros ya dejaron pasar,
+    para que ningún número prometa resultados que el filtro combinado no va a
+    devolver. El de estado va sobre `todas` porque el estado ya se acotó en la
+    consulta: si se contara sobre lo filtrado, el estado activo sería el único
+    con un número distinto de cero.
+  */
+  const conteoEstado = contarPorEstado(
+    todas.map((t) => ({ estado: t.estado as EstadoTrabajo })),
+  )
+  const conteoPago = contarFilasPorCobro(todas)
   const query = queryFiltros(f)
 
   return (
@@ -56,11 +73,10 @@ export default async function ReportesPage({
       </div>
 
       <FiltrosReporte
-        desde={f.desde}
-        hasta={f.hasta}
-        consultorioId={f.consultorioId}
-        doctorId={f.doctorId}
-        soloPendientes={f.soloPendientes}
+        filtros={f}
+        conteoEstado={conteoEstado}
+        conteoPago={conteoPago}
+        montos={montos}
         consultorios={opciones.consultorios}
         doctores={opciones.doctores}
       />

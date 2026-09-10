@@ -35,6 +35,9 @@ export async function GET(req: Request): Promise<Response> {
       hasta: url.searchParams.get('hasta') ?? undefined,
       consultorio: url.searchParams.get('consultorio') ?? undefined,
       doctor: url.searchParams.get('doctor') ?? undefined,
+      estado: url.searchParams.get('estado') ?? undefined,
+      periodo: url.searchParams.get('periodo') ?? undefined,
+      pago: url.searchParams.get('pago') ?? undefined,
       mostrar: url.searchParams.get('mostrar') ?? undefined,
     })
     const [filasCrudas, laboratorioCrudo] = await Promise.all([

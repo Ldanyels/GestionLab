@@ -1,6 +1,7 @@
 export interface FilaReporte {
   id: string
   fecha_ingreso: string
+  entregado_el: string | null
   estado: string
   paciente: string | null
   resumen: string

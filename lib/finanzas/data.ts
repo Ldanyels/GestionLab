@@ -1,5 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { armarResumen, type ResumenFinanciero } from './calculo'
+// Se reexporta para no romper a quien ya la importaba de aquí.
+export { rangoMesActual } from './mes'
 
 export interface PuntoMes {
   mes: string
@@ -23,18 +25,6 @@ export interface CuentaConsultorio {
   facturado: number
   pagado: number
   saldo: number
-}
-
-function fmtFecha(d: Date): string {
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
-}
-
-/** Rango [desde, hasta] del mes actual (fechas locales YYYY-MM-DD). */
-export function rangoMesActual(): { desde: string; hasta: string } {
-  const now = new Date()
-  const desde = new Date(now.getFullYear(), now.getMonth(), 1)
-  const hasta = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  return { desde: fmtFecha(desde), hasta: fmtFecha(hasta) }
 }
 
 export async function resumen(
