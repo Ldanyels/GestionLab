@@ -1,6 +1,6 @@
 import { rangoMesActual } from '@/lib/finanzas/mes'
 import { hoyLima } from '@/lib/trabajos/agenda'
-import { campoFechaDe, type CampoFecha } from '@/lib/trabajos/periodo'
+import type { CampoFecha } from '@/lib/trabajos/periodo'
 import { resolverFiltroPago, type FiltroPago } from '@/lib/trabajos/pago'
 import type { EstadoTrabajo } from '@/lib/trabajos/estado'
 import {
@@ -32,6 +32,8 @@ export interface ParamsReporte {
   estado?: string
   periodo?: string
   pago?: string
+  /** `entrega` acota por la fecha real de salida. Solo sobre entregados. */
+  fecha?: string
   /** Enlaces antiguos: `mostrar=todos` equivalía a no filtrar por cobro. */
   mostrar?: string
 }
@@ -57,12 +59,30 @@ function resolverPago(sp: ParamsReporte): FiltroPago {
 }
 
 /**
+ * Qué fecha acotan `desde` y `hasta`.
+ *
+ * Por omisión la de ingreso, **también sobre entregados**, y es una decisión
+ * corregida: acoplarla al estado hacía que elegir «Entregados» descartara en
+ * silencio los trabajos entregados antes de que el sistema registrara la fecha
+ * de salida. En una pantalla cuyo recorte de fechas está siempre activo, eso
+ * convertía un filtro de estado en uno de fecha.
+ *
+ * La fecha de entrega se pide a mano, y solo se acepta sobre entregados: en
+ * cualquier otro estado no hay fecha de salida y la lista saldría vacía sin que
+ * se vea la causa.
+ */
+function resolverCampoFecha(
+  valor: string | undefined,
+  estado: EstadoTrabajo | undefined,
+): CampoFecha {
+  return valor === 'entrega' && estado === 'entregado' ? 'entregado_el' : 'fecha_ingreso'
+}
+
+/**
  * Normaliza los parámetros de la URL.
  *
- * Por defecto: mes en curso y solo lo pendiente por cobrar. El campo de fecha
- * que se acota depende del estado elegido —sobre entregados se acota por la
- * fecha real de entrega—, que es lo que permite preguntar «qué entregamos este
- * mes» en vez de «qué ingresó este mes y además ya salió».
+ * Por defecto: mes en curso, por fecha de ingreso, y solo lo pendiente por
+ * cobrar.
  */
 export function resolverFiltros(sp: ParamsReporte): FiltrosResueltos {
   const mes = rangoMesActual()
@@ -88,7 +108,7 @@ export function resolverFiltros(sp: ParamsReporte): FiltrosResueltos {
     consultorioId: sp.consultorio || undefined,
     doctorId: sp.doctor || undefined,
     estado,
-    campoFecha: campoFechaDe(estado ?? null),
+    campoFecha: resolverCampoFecha(sp.fecha, estado),
     pago,
     soloPendientes: pago === 'por_cobrar',
   }
@@ -109,6 +129,7 @@ export function queryFiltros(f: FiltrosResueltos): string {
   if (f.consultorioId) qs.set('consultorio', f.consultorioId)
   if (f.doctorId) qs.set('doctor', f.doctorId)
   if (f.estado) qs.set('estado', f.estado)
+  if (f.campoFecha === 'entregado_el') qs.set('fecha', 'entrega')
   if (f.pago !== 'por_cobrar') qs.set('pago', f.pago)
   return qs.toString()
 }
@@ -147,6 +168,11 @@ export function enlaceReporte(
     params.set('hasta', n.hasta)
   }
   if (n.estado) params.set('estado', n.estado)
+  // La fecha de entrega solo tiene sentido sobre entregados, así que se suelta
+  // al salir de ese estado en vez de dejar la pantalla vacía sin explicación.
+  if (n.estado === 'entregado' && n.campoFecha === 'entregado_el') {
+    params.set('fecha', 'entrega')
+  }
   if (n.pago !== 'por_cobrar') params.set('pago', n.pago)
   if (n.consultorioId) params.set('consultorio', n.consultorioId)
   if (n.doctorId) params.set('doctor', n.doctorId)

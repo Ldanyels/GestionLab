@@ -36,21 +36,50 @@ export default async function ReportesPage({
   const soloAdmin = veMontos(perfil)
   const sp = await searchParams
   const f = resolverFiltros(sp)
-  const [todas, opciones] = await Promise.all([filasReporte(f), opcionesFiltro()])
-  const filas = filtrarFilasPorCobro(todas, f.pago)
+  /*
+    El periodo se trae SIN acotar por estado, y por fecha de ingreso, porque de
+    esa lista salen los conteos de las cuatro pastillas de estado. Contarlas
+    sobre una lista ya recortada por el estado activo dejaba las otras tres en
+    cero; y contarlas por la fecha de entrega hacía que «Entregados» prometiera
+    16 y devolviera 4, porque 12 de ellos se entregaron antes de que el sistema
+    registrara la fecha de salida.
+  */
+  const [delPeriodo, opciones] = await Promise.all([
+    filasReporte({ ...f, estado: undefined, campoFecha: 'fecha_ingreso' }),
+    opcionesFiltro(),
+  ])
+
+  const conteoEstado = contarPorEstado(
+    delPeriodo.map((t) => ({ estado: t.estado as EstadoTrabajo })),
+  )
+
+  /*
+    Solo cuando se pide expresamente la fecha de entrega hace falta una segunda
+    consulta, porque ese recorte no se puede hacer en memoria sobre el anterior:
+    son conjuntos distintos (un trabajo pudo ingresar en agosto y salir en
+    septiembre). El número de la pastilla se ajusta a lo que esa consulta
+    devuelve, para que siga diciendo la verdad.
+  */
+  const porEntrega = f.campoFecha === 'entregado_el'
+  const sinCobro = porEntrega
+    ? await filasReporte(f)
+    : f.estado
+      ? delPeriodo.filter((t) => t.estado === f.estado)
+      : delPeriodo
+  if (porEntrega) conteoEstado.entregado = sinCobro.length
+
+  const conteoPago = contarFilasPorCobro(sinCobro)
+  const filas = filtrarFilasPorCobro(sinCobro, f.pago)
   const { grupos, totales } = agruparPorConsultorio(filas)
 
   /*
-    Los conteos se calculan sobre lo que los otros filtros ya dejaron pasar,
-    para que ningún número prometa resultados que el filtro combinado no va a
-    devolver. El de estado va sobre `todas` porque el estado ya se acotó en la
-    consulta: si se contara sobre lo filtrado, el estado activo sería el único
-    con un número distinto de cero.
+    Cuántos entregados del periodo no tienen fecha de salida registrada. Se
+    avisa en pantalla: si no, al mirar por fecha de entrega la lista aparece
+    más corta y no hay forma de saber por qué.
   */
-  const conteoEstado = contarPorEstado(
-    todas.map((t) => ({ estado: t.estado as EstadoTrabajo })),
-  )
-  const conteoPago = contarFilasPorCobro(todas)
+  const entregadosSinFecha = delPeriodo.filter(
+    (t) => t.estado === 'entregado' && !t.entregado_el,
+  ).length
   const query = queryFiltros(f)
 
   return (
@@ -77,6 +106,7 @@ export default async function ReportesPage({
         conteoEstado={conteoEstado}
         conteoPago={conteoPago}
         montos={montos}
+        entregadosSinFecha={entregadosSinFecha}
         consultorios={opciones.consultorios}
         doctores={opciones.doctores}
       />

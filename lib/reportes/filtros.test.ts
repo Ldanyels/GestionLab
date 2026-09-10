@@ -81,19 +81,6 @@ describe('resolverFiltros · estado', () => {
   })
 })
 
-describe('resolverFiltros · campo de fecha', () => {
-  // Es lo que permite preguntar «qué entregamos este mes». Sin esto, un
-  // reporte de entregados seguiría acotado por la fecha de ingreso.
-  it('sobre entregados acota por la fecha real de entrega', () => {
-    expect(resolverFiltros({ estado: 'entregado' }).campoFecha).toBe('entregado_el')
-  })
-
-  it('en cualquier otro caso acota por la de ingreso', () => {
-    expect(resolverFiltros({}).campoFecha).toBe('fecha_ingreso')
-    expect(resolverFiltros({ estado: 'cerrado' }).campoFecha).toBe('fecha_ingreso')
-  })
-})
-
 describe('resolverFiltros · cobro', () => {
   it('por defecto sigue mostrando solo lo pendiente', () => {
     expect(resolverFiltros({}).pago).toBe('por_cobrar')
@@ -168,5 +155,47 @@ describe('enlaceReporte', () => {
   it('quitar el estado lo saca de la URL', () => {
     const con = resolverFiltros({ estado: 'entregado' })
     expect(enlaceReporte(con, { estado: undefined })).not.toContain('estado=')
+  })
+})
+
+describe('resolverFiltros · qué fecha se acota (corrección)', () => {
+  /*
+    Antes el campo se acoplaba al estado, y como el recorte de fechas de esta
+    pantalla está siempre activo, elegir «Entregados» descartaba en silencio
+    los 12 trabajos entregados antes de que existiera la fecha de salida. El
+    conteo decía 16 y la lista mostraba 4.
+  */
+  it('entregados se acota por fecha de ingreso, como los demás', () => {
+    expect(resolverFiltros({ estado: 'entregado' }).campoFecha).toBe('fecha_ingreso')
+  })
+
+  it('la fecha de entrega se pide explícitamente', () => {
+    expect(resolverFiltros({ estado: 'entregado', fecha: 'entrega' }).campoFecha).toBe(
+      'entregado_el',
+    )
+  })
+
+  // Un trabajo en curso no tiene fecha de entrega: acotar por ella devolvería
+  // siempre una lista vacía, y el usuario no vería la causa.
+  it('sin estado entregado se ignora la petición', () => {
+    expect(resolverFiltros({ fecha: 'entrega' }).campoFecha).toBe('fecha_ingreso')
+    expect(resolverFiltros({ estado: 'en_curso', fecha: 'entrega' }).campoFecha).toBe(
+      'fecha_ingreso',
+    )
+  })
+})
+
+describe('enlaceReporte · qué fecha se acota', () => {
+  it('lleva la fecha de entrega en la URL', () => {
+    const f = resolverFiltros({ estado: 'entregado', fecha: 'entrega' })
+    expect(enlaceReporte(f)).toContain('fecha=entrega')
+  })
+
+  // Si arrastrara `fecha=entrega` al cambiar de estado, la pantalla quedaría
+  // vacía sin explicación.
+  it('salir de entregados suelta la fecha de entrega', () => {
+    const f = resolverFiltros({ estado: 'entregado', fecha: 'entrega' })
+    expect(enlaceReporte(f, { estado: 'en_curso' })).not.toContain('fecha=')
+    expect(enlaceReporte(f, { estado: undefined })).not.toContain('fecha=')
   })
 })

@@ -8,7 +8,7 @@ import {
   PERIODOS_REPORTE,
   type PeriodoReporte,
 } from '@/lib/reportes/periodo'
-import { campoFechaDe, ETIQUETA_CAMPO_FECHA } from '@/lib/trabajos/periodo'
+import { ETIQUETA_CAMPO_FECHA } from '@/lib/trabajos/periodo'
 import { ETIQUETA_FILTRO_PAGO, type FiltroPago } from '@/lib/trabajos/pago'
 import type { ConteoEstados } from '@/lib/trabajos/filtro'
 import type { EstadoTrabajo } from '@/lib/trabajos/estado'
@@ -48,6 +48,8 @@ interface Props {
   conteoPago: Record<FiltroPago, number>
   /** false = técnico sin permiso de importes: el cobro no se ofrece. */
   montos: boolean
+  /** Entregados del periodo sin fecha de salida registrada, para avisar. */
+  entregadosSinFecha: number
   consultorios: ConsultorioOpcion[]
   doctores: DoctorOpcion[]
 }
@@ -69,10 +71,13 @@ export function FiltrosReporte({
   conteoEstado,
   conteoPago,
   montos,
+  entregadosSinFecha,
   consultorios,
   doctores,
 }: Props) {
-  const campoFecha = campoFechaDe(f.estado ?? null)
+  const campoFecha = f.campoFecha ?? 'fecha_ingreso'
+  const porEntrega = campoFecha === 'entregado_el'
+  const verEleccionDeFecha = f.estado === 'entregado'
   const doctoresVisibles = f.consultorioId
     ? doctores.filter((d) => d.consultorio_id === f.consultorioId)
     : doctores
@@ -119,12 +124,43 @@ export function FiltrosReporte({
           aria-label={`Periodo por fecha de ${ETIQUETA_CAMPO_FECHA[campoFecha].toLowerCase()}`}
           className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
         >
-          <span
-            aria-hidden
-            className="shrink-0 pr-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)] opacity-70"
-          >
-            {ETIQUETA_CAMPO_FECHA[campoFecha]}
-          </span>
+          {/*
+            Con un solo campo posible es un rótulo —dice sobre qué fecha se
+            está contando— y sobre entregados se convierte en la elección entre
+            las dos, que es la única combinación donde la de salida existe.
+          */}
+          {verEleccionDeFecha ? (
+            <span
+              role="group"
+              aria-label="Qué fecha acotar"
+              className="mr-1 flex shrink-0 items-center gap-0.5 rounded-full border border-[var(--color-border)] p-0.5"
+            >
+              {(['fecha_ingreso', 'entregado_el'] as const).map((c) => {
+                const activo = campoFecha === c
+                return (
+                  <Link
+                    key={c}
+                    href={enlaceReporte(f, { campoFecha: c })}
+                    aria-pressed={activo}
+                    className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold uppercase tracking-[0.06em] transition-colors ${
+                      activo
+                        ? 'bg-[var(--color-accent)] text-[var(--color-accent-contrast)]'
+                        : 'text-[var(--color-muted)] hover:text-[var(--color-accent)]'
+                    }`}
+                  >
+                    {ETIQUETA_CAMPO_FECHA[c]}
+                  </Link>
+                )
+              })}
+            </span>
+          ) : (
+            <span
+              aria-hidden
+              className="shrink-0 pr-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)] opacity-70"
+            >
+              {ETIQUETA_CAMPO_FECHA[campoFecha]}
+            </span>
+          )}
           {PERIODOS_REPORTE.map((p: PeriodoReporte) => {
             const activo = f.periodo === p
             return (
@@ -145,6 +181,14 @@ export function FiltrosReporte({
         </nav>
       </div>
 
+      {porEntrega && entregadosSinFecha > 0 ? (
+        <p className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--color-muted)] sm:w-auto">
+          <span className="num font-semibold">{entregadosSinFecha}</span> entregados no tienen
+          fecha de salida registrada y quedan fuera de este recorte: se entregaron antes de que
+          el sistema la guardara. Míralos por <strong className="font-semibold">Ingreso</strong>.
+        </p>
+      ) : null}
+
       {f.periodo === 'rango' ? (
         <form
           method="get"
@@ -154,6 +198,7 @@ export function FiltrosReporte({
           {/* GET: los demás filtros viajan ocultos o se perderían al aplicar. */}
           <input type="hidden" name="periodo" value="rango" />
           {f.estado ? <input type="hidden" name="estado" value={f.estado} /> : null}
+          {porEntrega ? <input type="hidden" name="fecha" value="entrega" /> : null}
           {f.pago !== 'por_cobrar' ? (
             <input type="hidden" name="pago" value={f.pago} />
           ) : null}
@@ -187,13 +232,22 @@ export function FiltrosReporte({
       */}
       <form method="get" action="/reportes" className="w-full sm:w-auto">
         {f.periodo !== 'mes' ? <input type="hidden" name="periodo" value={f.periodo} /> : null}
-        {f.periodo === 'rango' ? (
+        {porEntrega && entregadosSinFecha > 0 ? (
+        <p className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--color-muted)] sm:w-auto">
+          <span className="num font-semibold">{entregadosSinFecha}</span> entregados no tienen
+          fecha de salida registrada y quedan fuera de este recorte: se entregaron antes de que
+          el sistema la guardara. Míralos por <strong className="font-semibold">Ingreso</strong>.
+        </p>
+      ) : null}
+
+      {f.periodo === 'rango' ? (
           <>
             <input type="hidden" name="desde" value={f.desde} />
             <input type="hidden" name="hasta" value={f.hasta} />
           </>
         ) : null}
         {f.estado ? <input type="hidden" name="estado" value={f.estado} /> : null}
+        {porEntrega ? <input type="hidden" name="fecha" value="entrega" /> : null}
         {f.pago !== 'por_cobrar' ? <input type="hidden" name="pago" value={f.pago} /> : null}
 
         <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
