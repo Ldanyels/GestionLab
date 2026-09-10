@@ -14,6 +14,8 @@ import {
   crearItemDeCatalogoDesdeLaPlataforma,
 } from '@/lib/plataforma/correcciones'
 import { catalogoSchema } from '@/lib/catalogo/schema'
+import { datosFacturacionSchema } from '@/lib/facturacion/documento'
+import { guardarFacturacion } from '@/lib/facturacion/data'
 import { usuarioSchema } from '@/lib/usuarios/data'
 import { intentar, intentarSinEstado } from '@/lib/acciones'
 
@@ -180,6 +182,34 @@ export async function crearItemDeCatalogoAction(
 
   revalidatePath(`/plataforma/${labId}/catalogo`)
   return { error: '' }
+}
+
+/** Guarda los datos de facturación de un laboratorio. */
+export async function guardarFacturacionAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const correo = await correoSesion()
+  if (!correo) return
+
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  if (!labId) return
+
+  const parsed = datosFacturacionSchema.safeParse({
+    doc_tipo: String(formData.get('doc_tipo') ?? ''),
+    doc_numero: String(formData.get('doc_numero') ?? ''),
+    razon_social: String(formData.get('razon_social') ?? ''),
+    direccion_fiscal: String(formData.get('direccion_fiscal') ?? ''),
+  })
+  // Sin estado de formulario que devolver: el navegador ya exige los campos, y
+  // un número mal escrito se corrige volviendo a guardar.
+  if (!parsed.success) return
+
+  await intentarSinEstado(
+    'guardarFacturacionAction',
+    'No se pudieron guardar los datos de facturación',
+    () => guardarFacturacion(labId, parsed.data, correo),
+  )
+
+  revalidatePath(`/plataforma/${labId}`)
 }
 
 /** Crea un usuario en un laboratorio ajeno. */

@@ -16,6 +16,10 @@ function lab(p: Partial<LaboratorioFila> = {}): LaboratorioFila {
     creado_en: '2026-07-13T10:00:00Z',
     usuarios: 4,
     trabajos: 20,
+    doc_tipo: 'RUC',
+    doc_numero: '20512345678',
+    razon_social: 'Laboratorio MasterLab E.I.R.L.',
+    direccion_fiscal: null,
     ...p,
   }
 }

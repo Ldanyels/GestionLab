@@ -11,7 +11,8 @@ import { aceptacionesDeLaboratorio } from '@/lib/legal/data'
 import { DOCUMENTOS_LEGALES } from '@/lib/legal/textos.generated'
 import { FichaLaboratorio } from '@/components/plataforma/FichaLaboratorio'
 import { UsuariosDeLaboratorio } from '@/components/plataforma/UsuariosDeLaboratorio'
-import { restablecerClaveDeLaboratorioAction } from './actions'
+import { FacturacionLaboratorio } from '@/components/plataforma/FacturacionLaboratorio'
+import { guardarFacturacionAction, restablecerClaveDeLaboratorioAction } from './actions'
 
 /**
  * Ficha de un laboratorio ajeno.
@@ -48,6 +49,12 @@ export default async function LaboratorioPage({
         ‹ Laboratorios
       </Link>
       <FichaLaboratorio resumen={resumen} trabajos={trabajos} />
+
+      <FacturacionLaboratorio
+        labId={id}
+        datos={resumen.laboratorio}
+        accion={guardarFacturacionAction}
+      />
 
       {/*
         Qué condiciones aceptó y quién. Es lo que se consulta cuando un cliente

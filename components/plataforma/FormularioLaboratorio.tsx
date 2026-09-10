@@ -75,6 +75,46 @@ export function FormularioLaboratorio({ action, errorInicial = '' }: Props) {
         </p>
       </fieldset>
 
+      <fieldset className="space-y-3.5">
+        <legend className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-accent)]">
+          Datos para el comprobante
+        </legend>
+        {/*
+          Opcionales: un laboratorio puede arrancar en el mes de cortesía antes
+          de que le pidas sus datos fiscales. El panel los muestra como
+          pendientes mientras falten, así que no se pierden por dejarlos vacíos.
+        */}
+        <p className="text-[12.5px] leading-relaxed text-[var(--color-muted)]">
+          Puedes dejarlos en blanco y completarlos después desde su ficha. Hacen falta
+          para emitirle la boleta.
+        </p>
+
+        <div className="grid grid-cols-[130px_1fr] gap-2">
+          <label className="space-y-1">
+            <span className={etiqueta}>Documento</span>
+            <select name="facTipo" defaultValue="RUC" className={campo}>
+              <option value="RUC">RUC</option>
+              <option value="DNI">DNI</option>
+              <option value="CE">C. extranjería</option>
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className={etiqueta}>Número</span>
+            <input name="facNumero" type="text" inputMode="numeric" maxLength={20} className={campo} />
+          </label>
+        </div>
+
+        <label className="block space-y-1">
+          <span className={etiqueta}>Nombre o razón social</span>
+          <input name="facRazonSocial" type="text" maxLength={200} className={campo} />
+        </label>
+
+        <label className="block space-y-1">
+          <span className={etiqueta}>Dirección fiscal (opcional)</span>
+          <input name="facDireccion" type="text" maxLength={200} className={campo} />
+        </label>
+      </fieldset>
+
       <p className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[12.5px] leading-relaxed text-[var(--color-muted)]">
         El laboratorio arranca <strong className="font-semibold">sin catálogo</strong>, sin
         consultorios y sin productos. Su administrador los crea desde Configuración.

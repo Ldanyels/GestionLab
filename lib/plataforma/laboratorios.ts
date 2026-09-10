@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { ErrorParaElUsuario } from '@/lib/errores'
+import { datosFacturacionSchema, TIPOS_DOC } from '@/lib/facturacion/documento'
 import type { Laboratorio } from '@/lib/supabase/types'
 
 export const laboratorioNuevoSchema = z.object({
@@ -18,6 +19,39 @@ export const laboratorioNuevoSchema = z.object({
   // No se recorta, igual que en el resto del sistema: un espacio es un
   // carácter válido de la contraseña.
   adminPassword: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+
+  /*
+    Datos de facturación: opcionales en el alta.
+
+    Un laboratorio puede arrancar en el mes de cortesía antes de que se le
+    pidan sus datos fiscales, y exigirlos aquí obligaría a inventarlos o a
+    posponer el alta. Se completan después desde el panel, que los muestra
+    como pendientes mientras falten.
+
+    Si se escribe el número, se valida el grupo completo: unos datos fiscales a
+    medias no sirven para emitir nada.
+  */
+  facTipo: z.enum(TIPOS_DOC).optional(),
+  facNumero: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/[\s-]/g, ''))
+    .optional(),
+  facRazonSocial: z.string().trim().max(200).optional(),
+  facDireccion: z.string().trim().max(200).optional(),
+}).superRefine((d, ctx) => {
+  if (!d.facNumero) return
+  const parsed = datosFacturacionSchema.safeParse({
+    doc_tipo: d.facTipo ?? 'RUC',
+    doc_numero: d.facNumero,
+    razon_social: d.facRazonSocial ?? '',
+    direccion_fiscal: d.facDireccion ?? '',
+  })
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      ctx.addIssue({ code: 'custom', message: issue.message, path: ['facNumero'] })
+    }
+  }
 })
 export type LaboratorioNuevo = z.infer<typeof laboratorioNuevoSchema>
 
@@ -25,6 +59,10 @@ export interface LaboratorioFila extends Laboratorio {
   creado_en: string
   usuarios: number
   trabajos: number
+  doc_tipo: string | null
+  doc_numero: string | null
+  razon_social: string | null
+  direccion_fiscal: string | null
 }
 
 /**
@@ -40,7 +78,7 @@ export async function listarLaboratorios(): Promise<LaboratorioFila[]> {
   const admin = createAdminSupabase()
   const { data, error } = await admin
     .from('laboratorio')
-    .select('id, nombre, plan, estado, creado_en, perfil(count), trabajo(count)')
+    .select('id, nombre, plan, estado, creado_en, doc_tipo, doc_numero, razon_social, direccion_fiscal, perfil(count), trabajo(count)')
     .order('creado_en', { ascending: true })
   if (error) throw new Error(error.message)
 
@@ -57,6 +95,10 @@ export async function listarLaboratorios(): Promise<LaboratorioFila[]> {
     creado_en: l.creado_en,
     usuarios: l.perfil?.[0]?.count ?? 0,
     trabajos: l.trabajo?.[0]?.count ?? 0,
+    doc_tipo: l.doc_tipo,
+    doc_numero: l.doc_numero,
+    razon_social: l.razon_social,
+    direccion_fiscal: l.direccion_fiscal,
   }))
 }
 
@@ -79,7 +121,14 @@ export async function crearLaboratorioConAdmin(
 
   const { data: lab, error: errLab } = await admin
     .from('laboratorio')
-    .insert({ nombre: input.laboratorio })
+    .insert({
+      nombre: input.laboratorio,
+      // Si no vinieron, quedan en nulo y el panel los pide.
+      doc_tipo: input.facNumero ? (input.facTipo ?? 'RUC') : null,
+      doc_numero: input.facNumero || null,
+      razon_social: input.facRazonSocial || null,
+      direccion_fiscal: input.facDireccion || null,
+    })
     .select('id')
     .single()
   if (errLab) throw new Error(errLab.message)

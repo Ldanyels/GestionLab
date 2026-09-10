@@ -27,6 +27,10 @@ export async function crearLaboratorioAction(
     adminNombre: String(formData.get('adminNombre') ?? ''),
     adminEmail: String(formData.get('adminEmail') ?? ''),
     adminPassword: String(formData.get('adminPassword') ?? ''),
+    facTipo: String(formData.get('facTipo') ?? 'RUC'),
+    facNumero: String(formData.get('facNumero') ?? ''),
+    facRazonSocial: String(formData.get('facRazonSocial') ?? ''),
+    facDireccion: String(formData.get('facDireccion') ?? ''),
   })
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
