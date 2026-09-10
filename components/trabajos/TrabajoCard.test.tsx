@@ -94,3 +94,62 @@ describe('TrabajoCard', () => {
     expect(screen.queryByText(/Entregad?o? \d\d\/\d\d/)).toBeNull()
   })
 })
+
+describe('TrabajoCard — atraso', () => {
+  /*
+    La lista de trabajos es donde el técnico decide qué hacer a continuación, y
+    una fecha pasada en gris no se distingue de una futura. Estas pruebas fijan
+    que el atraso se vea ahí, no solo en la pantalla Hoy.
+  */
+  it('marca «Atrasada» cuando la fecha pasó y sigue en curso', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({ fecha_entrega: '2026-09-05', estado: 'en_curso' })}
+        montos
+        hoy="2026-09-10"
+      />,
+    )
+    expect(container.textContent).toContain('Atrasada')
+  })
+
+  it('no marca nada si la fecha aún no llegó', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({ fecha_entrega: '2026-09-20', estado: 'en_curso' })}
+        montos
+        hoy="2026-09-10"
+      />,
+    )
+    expect(container.textContent).not.toContain('Atrasada')
+    expect(container.textContent).toContain('Entrega')
+  })
+
+  it('un entregado no está atrasado aunque su fecha haya pasado', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={{
+          ...trabajo({ fecha_entrega: '2026-08-01', estado: 'entregado' }),
+          entregado_el: '2026-08-03',
+        }}
+        montos
+        hoy="2026-09-10"
+      />,
+    )
+    expect(container.textContent).not.toContain('Atrasada')
+    expect(container.textContent).toContain('Entregado')
+  })
+
+  /*
+    Sin `hoy` la tarjeta no marca nada. Calcularlo con el reloj del dispositivo
+    marcaría atrasado, en otra zona horaria, un trabajo que vence hoy.
+  */
+  it('sin la fecha de hoy no marca atraso', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({ fecha_entrega: '2026-09-05', estado: 'en_curso' })}
+        montos
+      />,
+    )
+    expect(container.textContent).not.toContain('Atrasada')
+  })
+})

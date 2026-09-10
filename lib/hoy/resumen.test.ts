@@ -38,12 +38,49 @@ describe('resumenHoy', () => {
     ).toBe(0)
   })
 
+  /*
+    Las atrasadas son el aviso de la pantalla: fecha prometida ya pasada y el
+    trabajo aún sin entregar. En la lista de arriba solo hay una —la del 08
+    sigue en curso el 09— y las cerradas o entregadas no cuentan aunque su
+    fecha haya pasado.
+  */
+  it('cuenta las atrasadas: prometidas y aún sin entregar', () => {
+    expect(resumenHoy(trabajos, '2026-09-09').atrasadas).toBe(1)
+  })
+
+  it('lo cerrado o entregado no cuenta como atrasado', () => {
+    expect(
+      resumenHoy(
+        [
+          { estado: 'cerrado', fecha_ingreso: '2026-09-01', fecha_entrega: '2026-09-02', saldo: 0 },
+          {
+            estado: 'entregado',
+            fecha_ingreso: '2026-09-01',
+            fecha_entrega: '2026-09-02',
+            saldo: 0,
+          },
+        ],
+        '2026-09-09',
+      ).atrasadas,
+    ).toBe(0)
+  })
+
+  it('un trabajo sin fecha nunca está atrasado', () => {
+    expect(
+      resumenHoy(
+        [{ estado: 'en_curso', fecha_ingreso: '2026-01-01', fecha_entrega: null, saldo: 0 }],
+        '2026-09-09',
+      ).atrasadas,
+    ).toBe(0)
+  })
+
   it('sin trabajos todo es cero', () => {
     expect(resumenHoy([], '2026-09-08')).toEqual({
       ingresadosHoy: 0,
       entregasHoy: 0,
       enCurso: 0,
       porCobrar: 0,
+      atrasadas: 0,
     })
   })
 })

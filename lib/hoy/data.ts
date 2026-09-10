@@ -7,6 +7,7 @@ import {
   realizadosDelDia,
   sinRepetir,
 } from '@/lib/trabajos/agenda'
+import { estadoDeEntrega } from '@/lib/trabajos/plazo'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
 import type { TrabajoListItem } from '@/lib/trabajos/types'
@@ -22,6 +23,13 @@ export interface ResumenHoy {
   entregasHoy: number
   enCurso: number
   porCobrar: number
+  /**
+   * Prometidas y aún sin entregar, con la fecha ya pasada.
+   *
+   * Es el único número de esta pantalla que exige una acción: los demás
+   * informan, este señala a quién hay que llamar hoy.
+   */
+  atrasadas: number
 }
 
 /** KPIs de la pantalla Hoy. Puro. */
@@ -40,6 +48,7 @@ export function resumenHoy(
     enCurso: trabajos.filter((t) => t.estado === 'en_curso').length,
     porCobrar:
       Math.round(trabajos.reduce((s, t) => s + Math.max(0, t.saldo), 0) * 100) / 100,
+    atrasadas: trabajos.filter((t) => estadoDeEntrega(t, hoy) === 'atrasada').length,
   }
 }
 
@@ -82,6 +91,8 @@ export interface DatosHoy {
   entregas: TrabajoListItem[]
   /** Entregas con fecha de hoy ya cerradas o entregadas, sin repetir. */
   realizados: TrabajoListItem[]
+  /** Prometidas con la fecha pasada y aún sin entregar, la más vieja primero. */
+  atrasados: TrabajoListItem[]
   resumen: ResumenHoy
   deuda: FilaDeuda[]
   montos: boolean
@@ -108,9 +119,21 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
     montos ? deudaPorConsultorio() : Promise.resolve([]),
   ])
   const ingresados = ingresadosDelDia(trabajos, hoy)
+  /*
+    Las atrasadas NO se quitan de las otras listas con `sinRepetir`.
+
+    Un trabajo atrasado que además ingresó hoy es imposible salvo con plazo
+    cero, y si ocurriera es mejor que salga dos veces: en la sección del día
+    porque entró hoy, y en el aviso porque hay que entregarlo. Esconderlo del
+    aviso por estar listado más arriba es cómo se pierde de vista.
+  */
+  const atrasados = trabajos
+    .filter((t) => estadoDeEntrega(t, hoy) === 'atrasada')
+    .sort((a, b) => (a.fecha_entrega ?? '').localeCompare(b.fecha_entrega ?? ''))
   return {
     hoy,
     ingresados,
+    atrasados,
     entregas: sinRepetir(pendientesDelDia(trabajos, hoy), ingresados),
     realizados: sinRepetir(realizadosDelDia(trabajos, hoy), ingresados),
     resumen: resumenHoy(trabajos, hoy),

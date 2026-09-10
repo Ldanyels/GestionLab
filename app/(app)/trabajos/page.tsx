@@ -132,7 +132,7 @@ export default async function TrabajosPage({
         <ul className="space-y-2.5">
           {trabajos.map((t) => (
             <li key={t.id}>
-              <TrabajoCard trabajo={t} montos={montos} />
+              <TrabajoCard trabajo={t} montos={montos} hoy={hoy} />
             </li>
           ))}
         </ul>

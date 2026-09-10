@@ -11,6 +11,7 @@ import {
   eliminarTrabajo,
   cambiarEstadoTrabajo,
   corregirFechaEntrega,
+  ponerFechaEntrega,
   marcarEtapa,
 } from '@/lib/trabajos/data'
 import { hoyLima } from '@/lib/trabajos/agenda'
@@ -131,6 +132,42 @@ export async function corregirFechaEntregaAction(formData: FormData): Promise<vo
 
   revalidatePath(`/trabajos/${id}`)
   revalidatePath('/trabajos')
+}
+
+/**
+ * Pone, cambia o quita la fecha prometida de entrega desde la ficha.
+ *
+ * Existe para los trabajos que ya están en curso: entrar al formulario completo
+ * para poner una fecha es fricción suficiente como para que no se haga, y ese
+ * fue justamente el problema —46 de 47 trabajos sin fecha.
+ *
+ * Sin permiso especial, como las demás acciones sobre trabajos: prometer una
+ * fecha al consultorio es parte del trabajo del técnico, no una corrección de
+ * control. El límite lo pone RLS, que impide tocar el trabajo de otro
+ * laboratorio aunque se invoque la acción directamente.
+ *
+ * Quitar la fecha se pide con el campo `quitar`, no mandando el campo vacío.
+ * Un vacío puede venir de que el input no se llenó; `quitar` solo puede venir
+ * de que alguien pulsó «Quitar». La diferencia importa porque borrar una fecha
+ * prometida es una decisión, no un descuido.
+ */
+export async function ponerFechaEntregaAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '')
+  const bruto = String(formData.get('fecha_entrega') ?? '').trim()
+  const quitar = String(formData.get('quitar') ?? '') === '1'
+  if (!id) return
+  if (!quitar && !/^\d{4}-\d{2}-\d{2}$/.test(bruto)) return
+
+  const fecha = quitar ? null : bruto
+  await intentarSinEstado(
+    'ponerFechaEntregaAction',
+    'No se pudo guardar la fecha de entrega',
+    () => ponerFechaEntrega(id, fecha),
+  )
+
+  revalidatePath(`/trabajos/${id}`)
+  revalidatePath('/trabajos')
+  revalidatePath('/hoy')
 }
 
 export async function marcarEtapaAction(formData: FormData): Promise<void> {

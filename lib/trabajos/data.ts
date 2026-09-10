@@ -329,6 +329,24 @@ export async function corregirFechaEntrega(id: string, fecha: string): Promise<v
   if (error) throw new Error(error.message)
 }
 
+/**
+ * Pone, cambia o quita la fecha **prometida** de entrega.
+ *
+ * No confundir con `corregirFechaEntrega`, que toca `entregado_el`: esa es la
+ * fecha en que el trabajo salió de verdad, y reescribirla es reescribir el
+ * registro de algo que ya pasó. Esta es la promesa al consultorio, y cambiarla
+ * es parte normal del trabajo diario.
+ *
+ * `null` la quita, y es un caso legítimo: se prometió una fecha, el consultorio
+ * la movió, y hasta que haya una nueva es más honesto no tener ninguna que
+ * arrastrar una que ya no vale.
+ */
+export async function ponerFechaEntrega(id: string, fecha: string | null): Promise<void> {
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.from('trabajo').update({ fecha_entrega: fecha }).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 export async function marcarEtapa(
   id: string,
   estado: EstadoEtapa,

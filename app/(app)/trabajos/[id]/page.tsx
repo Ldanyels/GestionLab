@@ -8,6 +8,7 @@ import { progresoTrabajo } from '@/lib/trabajos/estado'
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
+import { FechaEntregaEditable } from '@/components/trabajos/FechaEntregaEditable'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
 import { EtapaAcciones } from '@/components/trabajos/EtapaAcciones'
 import { PagosSection } from '@/components/trabajos/PagosSection'
@@ -87,6 +88,23 @@ export default async function TrabajoDetallePage({
             <Dato etiqueta="Entrega" valor={t.fecha_entrega ?? 'Sin fecha'} />
           )}
         </div>
+
+        {/*
+          El control de la fecha prometida vive aquí, en la ficha, y no solo en
+          el formulario de edición: entrar al formulario completo para poner una
+          fecha es fricción suficiente como para que no se haga.
+
+          Solo mientras el trabajo no se haya entregado. Después, la fecha que
+          informa es la real, y esa se corrige por otro camino y solo un
+          administrador.
+        */}
+        {t.estado === 'entregado' ? null : (
+          <FechaEntregaEditable
+            trabajoId={t.id}
+            fechaIngreso={t.fecha_ingreso}
+            fechaEntrega={t.fecha_entrega}
+          />
+        )}
 
         <div className="flex flex-wrap gap-2">
           {t.estado !== 'cerrado' ? (

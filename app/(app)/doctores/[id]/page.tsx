@@ -7,6 +7,7 @@ import { listTrabajos } from '@/lib/trabajos/data'
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
+import { hoyLima } from '@/lib/trabajos/agenda'
 
 export default async function DoctorPage({
   params,
@@ -17,6 +18,9 @@ export default async function DoctorPage({
   const [doctor, perfil] = await Promise.all([getDoctor(id), getSessionPerfil()])
   if (!doctor) notFound()
   const montos = veMontos(perfil)
+  // En la zona de Lima: con el reloj del servidor, de noche marcaría atrasado
+  // un trabajo que vence hoy.
+  const hoy = hoyLima()
   const trabajos = await listTrabajos({ doctorId: id })
   const porCobrar =
     Math.round(trabajos.reduce((s, t) => s + Math.max(0, t.saldo), 0) * 100) / 100
@@ -63,7 +67,7 @@ export default async function DoctorPage({
         <ul className="space-y-2.5">
           {trabajos.map((t) => (
             <li key={t.id}>
-              <TrabajoCard trabajo={t} montos={montos} />
+              <TrabajoCard trabajo={t} montos={montos} hoy={hoy} />
             </li>
           ))}
         </ul>

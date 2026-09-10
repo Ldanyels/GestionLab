@@ -34,6 +34,17 @@ export default async function HoyPage() {
             Este cuenta lo que ingresó hoy y coincide con la lista de abajo. */}
         <KpiTile etiqueta="Trabajos de hoy" valor={String(datos.resumen.ingresadosHoy)} />
         <KpiTile etiqueta="En curso" valor={String(datos.resumen.enCurso)} />
+        {/*
+          El mosaico de atrasadas solo aparece cuando hay alguna. Un «0» fijo en
+          rojo se vuelve parte del decorado y deja de leerse el día que dice 3.
+        */}
+        {datos.resumen.atrasadas > 0 ? (
+          <KpiTile
+            etiqueta="Atrasadas"
+            valor={String(datos.resumen.atrasadas)}
+            tono="peligro"
+          />
+        ) : null}
         {datos.montos ? (
           <KpiTile
             etiqueta="Por cobrar"
@@ -73,6 +84,34 @@ export default async function HoyPage() {
         </svg>
         Nuevo trabajo
       </Link>
+
+      {/*
+        Las atrasadas van **antes** que el trabajo del día.
+
+        Es la única sección de la pantalla que pide una acción concreta: llamar
+        al consultorio o terminar el trabajo. Ponerla debajo de la lista del día
+        la dejaría fuera de la primera pantalla del teléfono, que es donde de
+        verdad se lee.
+      */}
+      {datos.atrasados.length > 0 ? (
+        <div className="space-y-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-[17px] font-bold text-[var(--color-danger)]">
+              Atrasadas
+            </h2>
+            <span className="num shrink-0 text-[13.5px] text-[var(--color-muted)]">
+              la más vieja primero
+            </span>
+          </div>
+          <ul className="space-y-2.5">
+            {datos.atrasados.map((t) => (
+              <li key={t.id}>
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {/* Sección principal: el trabajo del día. Antes la pantalla se apoyaba
           solo en la fecha de entrega, que nadie llena, y el técnico no tenía
