@@ -1,9 +1,6 @@
 # Política de privacidad de GestionLab
 
-> **Borrador para revisión legal.** Los datos entre `[CORCHETES]` los completa
-> Skardiam. Última revisión del marco normativo: 2026-09-10.
-
-**Última actualización:** [FECHA DE PUBLICACIÓN]
+**Última actualización:** 10 de septiembre de 2026
 
 ## 1. Quiénes somos
 

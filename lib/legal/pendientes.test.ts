@@ -51,11 +51,19 @@ describe('documentosPendientes', () => {
     expect(documentosPendientes([...TODOS, aceptado('inventado', 'v-1')], APROBADOS)).toEqual([])
   })
 
-  // Hoy los tres documentos reales son borradores, así que no se pide ninguno.
-  // Esta prueba documenta ese estado y fallará —correctamente— cuando se
-  // aprueben, avisando de que la puerta pasa a estar activa.
-  it('con los documentos reales de hoy no se pide nada: siguen en borrador', () => {
-    expect(documentosPendientes([])).toEqual([])
+  /*
+    Los tres documentos reales están aprobados desde el 2026-09-10, así que la
+    puerta está activa: un laboratorio que no haya aceptado nada tiene los tres
+    pendientes.
+
+    Si alguien volviera a marcar uno como borrador, esta prueba lo detectaría.
+  */
+  it('con los documentos reales, un laboratorio nuevo tiene los tres pendientes', () => {
+    expect(documentosPendientes([]).map((d) => d.clave)).toEqual([
+      'terminos',
+      'privacidad',
+      'encargo',
+    ])
   })
 })
 

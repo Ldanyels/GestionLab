@@ -1,9 +1,6 @@
 # Términos del servicio de GestionLab
 
-> **Borrador para revisión legal.** Los datos entre `[CORCHETES]` los completa
-> Skardiam. Última revisión del marco normativo: 2026-09-10.
-
-**Vigentes desde:** [FECHA]
+**Vigentes desde:** 10 de septiembre de 2026
 
 ## 1. Las partes
 

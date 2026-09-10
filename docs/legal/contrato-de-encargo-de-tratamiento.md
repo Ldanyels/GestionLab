@@ -1,11 +1,10 @@
 # Contrato de encargo de tratamiento de datos personales
 
-> **Borrador para revisión legal.** Los datos entre `[CORCHETES]` los completa
-> Skardiam. Última revisión del marco normativo: 2026-09-10.
->
-> Este es el documento que **hay que firmar** con cada laboratorio. Es anexo de
-> los [términos del servicio](terminos-del-servicio.md) y parte inseparable de
-> ellos.
+**Vigente desde:** 10 de septiembre de 2026
+
+> Este contrato es **anexo de los [términos del servicio](terminos-del-servicio.md)
+> y parte inseparable de ellos**. Se acepta junto con ellos al entrar al sistema;
+> con los laboratorios constituidos se firma además en papel.
 
 ## Las partes
 

@@ -1,9 +1,14 @@
 # Cumplimiento de protección de datos — GestionLab
 
-**Estos documentos son borradores para que los revise un abogado.** No los firmes
-ni los publiques sin esa revisión: fijan obligaciones tuyas frente a tus
-clientes y frente a la autoridad, y un error aquí se paga en multas, no en un
-error de compilación.
+**Documentos aprobados y vigentes desde el 10 de septiembre de 2026.**
+Revisados por abogado. Cualquier cambio posterior en su texto **cambia su
+huella y obliga a todos los laboratorios a volver a aceptarlos**, así que no se
+editan a la ligera: se edita el markdown, se ejecuta `pnpm sellar:legales` y se
+despliega.
+
+El régimen tributario fue confirmado por contador: la actividad **sí entra en
+el Nuevo RUS**, de modo que la duda que figuraba en este documento queda
+resuelta y se cobra con **boleta de venta**.
 
 Marco vigente, verificado el 2026-09-10:
 
@@ -99,22 +104,15 @@ La cláusula de retención de los términos se queda igualmente: no estorba, y
 cubre el caso de que alguna vez se emita un recibo por honorarios por un trabajo
 de desarrollo a medida.
 
-#### Dos cosas que hay que preguntarle al contador
+#### Resuelto por el contador
 
-**La primera es la importante, y conviene no dejarla pasar.** El Nuevo RUS está
-pensado para «personas naturales **no profesionales**», y hay fuentes que ubican
-los **servicios de informática —programación y consultoría informática—** entre
-las actividades **excluidas** del régimen. La página de SUNAT sobre actividades
-no comprendidas no las nombra de forma expresa, así que **no está resuelto**, y
-en la ficha RUC la profesión figura como «no especificada», lo que juega a
-favor.
+**La actividad sí entra en el Nuevo RUS** (confirmado el 2026-09-10). La duda
+era razonable —el régimen está pensado para «personas naturales no
+profesionales» y hay fuentes que ubican los servicios de informática entre las
+actividades excluidas— pero la respuesta es que no aplica a este caso, y en la
+ficha RUC la profesión figura como «no especificada».
 
-Importa porque si SUNAT considera que la actividad está excluida, la
-reclasificación es **retroactiva**, y la situación existe desde enero de 2024, no
-desde ahora. Es una pregunta de media hora con un contador y no debería
-postergarse.
-
-**La segunda es comercial.** Con boleta de venta el laboratorio **no obtiene
+#### Lo que sigue siendo una decisión comercial Con boleta de venta el laboratorio **no obtiene
 crédito fiscal** y su deducción del gasto es limitada. Un laboratorio formal
 puede exigir factura, y el Nuevo RUS no permite emitirla: haría falta pasar a
 **RER** o **MYPE Tributario**. Eso tiene una ventaja añadida —permite **deducir
