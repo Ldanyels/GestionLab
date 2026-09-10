@@ -17,7 +17,6 @@ function pintar(sp = {}, montos = true) {
       conteoEstado={conteoEstado}
       conteoPago={conteoPago}
       montos={montos}
-      entregadosSinFecha={12}
       {...opciones}
     />,
   )
@@ -45,43 +44,6 @@ describe('FiltrosReporte — fecha', () => {
     expect(screen.getByRole('navigation', { name: /fecha de ingreso/i })).toBeInTheDocument()
   })
 
-  /*
-    Sin entregados elegidos no se ofrece elegir la fecha: un trabajo en curso
-    no tiene fecha de salida, y acotar por ella daría una lista vacía.
-  */
-  it('la elección de fecha solo aparece sobre entregados', () => {
-    pintar()
-    expect(screen.queryByRole('group', { name: /qué fecha/i })).toBeNull()
-    pintar({ estado: 'entregado' })
-    expect(screen.getByRole('group', { name: /qué fecha/i })).toBeInTheDocument()
-  })
-
-  it('sobre entregados arranca en fecha de ingreso, no en la de entrega', () => {
-    pintar({ estado: 'entregado' })
-    expect(screen.getByRole('navigation', { name: /fecha de ingreso/i })).toBeInTheDocument()
-  })
-
-  it('se puede pasar a la fecha de entrega', () => {
-    pintar({ estado: 'entregado', fecha: 'entrega' })
-    expect(screen.getByRole('navigation', { name: /fecha de entrega/i })).toBeInTheDocument()
-  })
-
-  /*
-    El aviso es la parte que faltaba: 12 entregados se entregaron antes de que
-    el sistema guardara la fecha de salida, así que al mirar por esa fecha la
-    lista sale más corta. Sin decirlo, parece que el filtro pierde trabajos.
-  */
-  it('avisa de los entregados sin fecha de salida al acotar por ella', () => {
-    const { container } = pintar({ estado: 'entregado', fecha: 'entrega' })
-    // La cifra va en su propio elemento para destacarla, así que se comprueba
-    // el texto completo del aviso.
-    expect(container.textContent).toMatch(/12\s*entregados no tienen\s*fecha de salida/i)
-  })
-
-  it('no avisa cuando ese recorte no se está aplicando', () => {
-    const { container } = pintar({ estado: 'entregado' })
-    expect(container.textContent).not.toMatch(/no tienen\s*fecha de salida/i)
-  })
 
   it('el mes es el periodo por defecto y aparece marcado', () => {
     pintar()

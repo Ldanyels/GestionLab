@@ -48,8 +48,6 @@ interface Props {
   conteoPago: Record<FiltroPago, number>
   /** false = técnico sin permiso de importes: el cobro no se ofrece. */
   montos: boolean
-  /** Entregados del periodo sin fecha de salida registrada, para avisar. */
-  entregadosSinFecha: number
   consultorios: ConsultorioOpcion[]
   doctores: DoctorOpcion[]
 }
@@ -71,7 +69,6 @@ export function FiltrosReporte({
   conteoEstado,
   conteoPago,
   montos,
-  entregadosSinFecha,
   consultorios,
   doctores,
 }: Props) {
@@ -181,14 +178,6 @@ export function FiltrosReporte({
         </nav>
       </div>
 
-      {porEntrega && entregadosSinFecha > 0 ? (
-        <p className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--color-muted)] sm:w-auto">
-          <span className="num font-semibold">{entregadosSinFecha}</span> entregados no tienen
-          fecha de salida registrada y quedan fuera de este recorte: se entregaron antes de que
-          el sistema la guardara. Míralos por <strong className="font-semibold">Ingreso</strong>.
-        </p>
-      ) : null}
-
       {f.periodo === 'rango' ? (
         <form
           method="get"
@@ -232,15 +221,7 @@ export function FiltrosReporte({
       */}
       <form method="get" action="/reportes" className="w-full sm:w-auto">
         {f.periodo !== 'mes' ? <input type="hidden" name="periodo" value={f.periodo} /> : null}
-        {porEntrega && entregadosSinFecha > 0 ? (
-        <p className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--color-muted)] sm:w-auto">
-          <span className="num font-semibold">{entregadosSinFecha}</span> entregados no tienen
-          fecha de salida registrada y quedan fuera de este recorte: se entregaron antes de que
-          el sistema la guardara. Míralos por <strong className="font-semibold">Ingreso</strong>.
-        </p>
-      ) : null}
-
-      {f.periodo === 'rango' ? (
+        {f.periodo === 'rango' ? (
           <>
             <input type="hidden" name="desde" value={f.desde} />
             <input type="hidden" name="hasta" value={f.hasta} />

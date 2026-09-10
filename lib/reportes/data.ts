@@ -49,8 +49,31 @@ export async function filasReporte(f: FiltrosReporte = {}): Promise<FilaReporte[
       'id, fecha_ingreso, entregado_el, estado, paciente_nombre, precio_acordado, doctor:doctor_id!inner(id, nombre, consultorio_id, consultorio:consultorio_id(id, nombre)), abonos:abono(monto), items:trabajo_item(cantidad, orden, catalogo:catalogo_trabajo_id(nombre))',
     )
   const campo = f.campoFecha ?? 'fecha_ingreso'
-  if (f.desde) q = q.gte(campo, f.desde)
-  if (f.hasta) q = q.lte(campo, f.hasta)
+  if (campo === 'entregado_el') {
+    /*
+      Al acotar por fecha de salida se incluyen también los entregados que no
+      la tienen registrada. Se entregaron antes de que el sistema la guardara,
+      así que no consta cuándo salieron, y descartarlos hacía que «Entregados»
+      perdiera trabajos en silencio: el conteo decía 16 y la lista mostraba 4.
+      Se prefiere contarlos a inventarles una fecha que nadie registró.
+
+      La consecuencia asumida: un trabajo sin fecha entregado en julio también
+      aparece en el recorte de septiembre. Es inevitable sin el dato, y va
+      desapareciendo por su cuenta: todo lo que se entrega desde ahora sí la
+      lleva.
+    */
+    const dentro = [
+      f.desde ? `entregado_el.gte.${f.desde}` : null,
+      f.hasta ? `entregado_el.lte.${f.hasta}` : null,
+    ].filter(Boolean)
+    q =
+      dentro.length > 0
+        ? q.or(`entregado_el.is.null,and(${dentro.join(',')})`)
+        : q
+  } else {
+    if (f.desde) q = q.gte(campo, f.desde)
+    if (f.hasta) q = q.lte(campo, f.hasta)
+  }
   if (f.estado) q = q.eq('estado', f.estado)
   if (f.doctorId) q = q.eq('doctor_id', f.doctorId)
   if (f.consultorioId) q = q.eq('doctor.consultorio_id', f.consultorioId)

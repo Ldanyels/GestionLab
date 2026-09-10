@@ -71,15 +71,6 @@ export default async function ReportesPage({
   const conteoPago = contarFilasPorCobro(sinCobro)
   const filas = filtrarFilasPorCobro(sinCobro, f.pago)
   const { grupos, totales } = agruparPorConsultorio(filas)
-
-  /*
-    Cuántos entregados del periodo no tienen fecha de salida registrada. Se
-    avisa en pantalla: si no, al mirar por fecha de entrega la lista aparece
-    más corta y no hay forma de saber por qué.
-  */
-  const entregadosSinFecha = delPeriodo.filter(
-    (t) => t.estado === 'entregado' && !t.entregado_el,
-  ).length
   const query = queryFiltros(f)
 
   return (
@@ -106,7 +97,6 @@ export default async function ReportesPage({
         conteoEstado={conteoEstado}
         conteoPago={conteoPago}
         montos={montos}
-        entregadosSinFecha={entregadosSinFecha}
         consultorios={opciones.consultorios}
         doctores={opciones.doctores}
       />
