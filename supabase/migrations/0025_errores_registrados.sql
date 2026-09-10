@@ -42,7 +42,7 @@ create index if not exists error_registrado_ultima_vez_idx
   on error_registrado (ultima_vez desc);
 
 /*
-  Anotar en un solo viaje y sin carreras.
+  Anotar en un solo viaje, sin carreras, y decidir de una vez si toca avisar.
 
   La alternativa —leer, decidir y escribir desde la aplicación— pierde cuentas
   cuando dos peticiones fallan a la vez, que es justo cuando algo se está
@@ -50,6 +50,18 @@ create index if not exists error_registrado_ultima_vez_idx
 
   Si un error vuelve después de haberse marcado resuelto, se reabre: si sigue
   ocurriendo, no estaba arreglado.
+
+  Devuelve si hay que mandar el aviso. La decisión se toma **aquí** y no en la
+  aplicación porque dos peticiones que fallan en el mismo segundo tomarían la
+  misma decisión por separado y mandarían dos correos del mismo problema. Se
+  avisa cuando el error es nuevo, cuando reaparece tras haberse resuelto, y como
+  mucho una vez al día mientras siga ocurriendo: un fallo que se repite mil veces
+  en una tarde es un aviso, no mil.
+
+  `avisado_el` se sella en el mismo momento en que se decide avisar, antes de que
+  el correo salga. Si el envío falla, se pierde ese aviso. Es a propósito: es
+  mejor perder un correo que inundar la bandeja cada vez que el envío falle y se
+  reintente.
 */
 create or replace function anotar_error(
   p_huella text,
@@ -57,16 +69,20 @@ create or replace function anotar_error(
   p_mensaje text,
   p_codigo text,
   p_laboratorio_id uuid
-) returns void
-language sql
+) returns boolean
+language plpgsql
 as $$
-  insert into error_registrado (huella, donde, mensaje, codigo, laboratorios)
+declare
+  v_avisado timestamptz;
+begin
+  insert into error_registrado (huella, donde, mensaje, codigo, laboratorios, avisado_el)
   values (
     p_huella,
     p_donde,
     p_mensaje,
     p_codigo,
-    case when p_laboratorio_id is null then '{}'::uuid[] else array[p_laboratorio_id] end
+    case when p_laboratorio_id is null then '{}'::uuid[] else array[p_laboratorio_id] end,
+    now()
   )
   on conflict (huella) do update set
     veces = error_registrado.veces + 1,
@@ -78,7 +94,20 @@ as $$
       when p_laboratorio_id is null then error_registrado.laboratorios
       when error_registrado.laboratorios @> array[p_laboratorio_id] then error_registrado.laboratorios
       else error_registrado.laboratorios || p_laboratorio_id
-    end;
+    end,
+    avisado_el = case
+      when error_registrado.resuelto_el is not null
+        or error_registrado.avisado_el is null
+        or error_registrado.avisado_el < now() - interval '24 hours'
+      then now()
+      else error_registrado.avisado_el
+    end
+  returning avisado_el into v_avisado;
+
+  -- `now()` es el instante de la transacción y no cambia dentro de ella, así que
+  -- esta igualdad distingue exactamente el caso en que se acaba de sellar.
+  return v_avisado = now();
+end
 $$;
 
 /*

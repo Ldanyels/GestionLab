@@ -1,5 +1,6 @@
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redactar } from '@/lib/registro'
+import { avisarDeError } from './aviso'
 import { huellaDeError, normalizarMensaje } from './huella'
 
 /**
@@ -23,6 +24,7 @@ export interface ErrorRegistrado {
   ultima_vez: string
   laboratorios: string[]
   resuelto_el: string | null
+  /** Cuándo se mandó el aviso por correo de este tipo de error. */
   avisado_el: string | null
 }
 
@@ -64,7 +66,7 @@ export async function anotarError(datos: ErrorAAnotar): Promise<void> {
   try {
     const mensaje = normalizarMensaje(redactar(datos.mensaje)) === '' ? 'sin mensaje' : datos.mensaje
     const admin = createAdminSupabase()
-    const { error } = await admin.rpc('anotar_error', {
+    const { data, error } = await admin.rpc('anotar_error', {
       p_huella: huellaDeError(datos.donde, datos.mensaje),
       p_donde: datos.donde.slice(0, 120),
       // Se guarda el mensaje concreto (redactado y recortado), no el
@@ -74,8 +76,27 @@ export async function anotarError(datos: ErrorAAnotar): Promise<void> {
       p_codigo: datos.codigo,
       p_laboratorio_id: datos.laboratorioId ?? null,
     })
-    if (error && !esEstructuraAusente(error.code)) {
-      console.error(`[anotarError] ${error.code}: ${redactar(error.message)}`)
+    if (error) {
+      if (!esEstructuraAusente(error.code)) {
+        console.error(`[anotarError] ${error.code}: ${redactar(error.message)}`)
+      }
+      return
+    }
+
+    /*
+      La base decide si toca avisar, y ya lo dejó sellado.
+
+      Aquí solo se obedece: si esta petición se llevó el sello, manda el correo.
+      Decidirlo en la aplicación haría que dos peticiones que fallan en el mismo
+      segundo mandaran dos correos del mismo problema.
+    */
+    if (data === true) {
+      await avisarDeError({
+        donde: datos.donde,
+        mensaje: redactar(mensaje).slice(0, 500),
+        codigo: datos.codigo,
+        laboratorioId: datos.laboratorioId ?? null,
+      })
     }
   } catch (e) {
     // Consola y nada más. No hay a quién avisar de que falló el aviso.
@@ -117,17 +138,4 @@ export async function marcarErrorResuelto(huella: string): Promise<void> {
     .update({ resuelto_el: new Date().toISOString() })
     .eq('huella', huella)
   if (error && !esEstructuraAusente(error.code)) throw new Error(error.message)
-}
-
-/** Anota que ya se avisó de este tipo de error, para no repetir el correo. */
-export async function marcarErrorAvisado(huella: string): Promise<void> {
-  try {
-    const admin = createAdminSupabase()
-    await admin
-      .from('error_registrado')
-      .update({ avisado_el: new Date().toISOString() })
-      .eq('huella', huella)
-  } catch {
-    // Peor que repetir un aviso es no enviarlo, así que esto no propaga.
-  }
 }
