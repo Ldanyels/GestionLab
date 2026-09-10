@@ -6,6 +6,7 @@ import { LogoDiente } from './icons'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { ToastProvider } from '@/components/ui/Toast'
 import type { Perfil } from '@/lib/supabase/types'
+import { AvisoSinConexion } from '@/components/conexion/AvisoSinConexion'
 
 /**
  * Estructura de la app: barra lateral en escritorio (≥980 px),
@@ -101,6 +102,12 @@ export function AppShell({
           </main>
         </div>
 
+        {/*
+          El aviso de conexión va en el armazón y no en cada pantalla: la
+          conexión se pierde en cualquier sitio, no solo donde hay un
+          formulario.
+        */}
+        <AvisoSinConexion />
         <BottomNav perfil={perfil} />
       </div>
     </ToastProvider>

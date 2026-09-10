@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { crearAbonoAction, type FormState } from '@/app/(app)/trabajos/actions'
 import { METODOS_PAGO } from '@/lib/abonos/types'
+import { useConexion } from '@/components/conexion/useConexion'
 
 const initial: FormState = { error: '' }
 
@@ -18,6 +19,9 @@ function hoyLocal(): string {
 
 export function AbonoForm({ trabajoId }: { trabajoId: string }) {
   const [state, formAction, pending] = useActionState(crearAbonoAction, initial)
+  // Sin conexión no se envía: un abono que parece registrado y no lo está es
+  // peor que uno sin registrar, porque nadie vuelve a mirarlo.
+  const enLinea = useConexion()
   const formRef = useRef<HTMLFormElement>(null)
   const prev = useRef(state)
   // Fecha controlada, inicializada tras el montaje (evita desajuste de hidratación).
@@ -67,8 +71,8 @@ export function AbonoForm({ trabajoId }: { trabajoId: string }) {
           {state.error}
         </p>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? 'Registrando…' : 'Registrar abono'}
+      <Button type="submit" className="w-full" disabled={pending || !enLinea}>
+        {!enLinea ? 'Sin conexión' : pending ? 'Registrando…' : 'Registrar abono'}
       </Button>
     </form>
   )

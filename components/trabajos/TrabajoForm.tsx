@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from 'react'
 import { formatMoney } from '@/lib/format'
 import { precioTotalTrabajo } from '@/lib/catalogo/precio'
 import { ATAJOS_DE_PLAZO, fechaSugerida, plazoDelTrabajo } from '@/lib/trabajos/plazo'
+import { useConexion } from '@/components/conexion/useConexion'
 import { Card } from '@/components/ui/Card'
 import { TipoSheet } from './TipoSheet'
 import type { FormState } from '@/app/(app)/trabajos/actions'
@@ -52,6 +53,15 @@ export function TrabajoForm({
   fechaIngreso,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, initial)
+  /*
+    Sin conexión no se deja enviar.
+
+    Antes el envío salía igual y terminaba en un botón girando que no llevaba a
+    ninguna parte: el técnico no sabía si el trabajo se había guardado, y el
+    formulario más largo del sistema es el peor sitio para esa duda. Bloquearlo
+    conserva lo escrito y dice por qué.
+  */
+  const enLinea = useConexion()
   const [lineas, setLineas] = useState<Linea[]>(() =>
     trabajo && trabajo.items.length > 0
       ? trabajo.items.map((it, i) => ({
@@ -433,10 +443,10 @@ export function TrabajoForm({
         ) : null}
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !enLinea}
           className="h-[52px] w-full rounded-[var(--radius-md)] bg-[var(--color-accent)] text-base font-semibold text-[var(--color-accent-contrast)] transition-transform active:scale-[0.99] disabled:opacity-50"
         >
-          {pending ? 'Guardando…' : submitLabel}
+          {!enLinea ? 'Sin conexión — espera para guardar' : pending ? 'Guardando…' : submitLabel}
         </button>
       </div>
 
