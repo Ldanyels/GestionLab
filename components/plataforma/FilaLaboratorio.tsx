@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { cambiarEstadoAction } from '@/app/(plataforma)/plataforma/actions'
@@ -14,7 +15,21 @@ export function FilaLaboratorio({ lab }: { lab: LaboratorioFila }) {
     <Card tono="lista" className="space-y-3 p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-[15.5px] font-semibold">{lab.nombre}</p>
+          {/*
+            `prefetch={false}` no es una optimización: es corrección del
+            registro. Next precarga los enlaces al pasar el ratón o al entrar en
+            pantalla, y esa precarga **renderiza la página**, así que se
+            apuntaría un acceso que nadie hizo. Un historial que dice «tu
+            proveedor entró» porque alguien rozó un enlace no es un registro,
+            es una acusación falsa.
+          */}
+          <Link
+            href={`/plataforma/${lab.id}`}
+            prefetch={false}
+            className="truncate text-[15.5px] font-semibold text-[var(--color-accent)]"
+          >
+            {lab.nombre}
+          </Link>
           <p className="mt-0.5 text-[13px] text-[var(--color-muted)]">
             {lab.usuarios} {lab.usuarios === 1 ? 'usuario' : 'usuarios'} · {lab.trabajos}{' '}
             {lab.trabajos === 1 ? 'trabajo' : 'trabajos'}
