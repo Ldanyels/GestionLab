@@ -4,6 +4,8 @@ import { generarCuotasFaltantes, todasLasCuotas } from '@/lib/cuotas/data'
 import { diasDeMora } from '@/lib/cuotas/periodos'
 import { resumenDeCobranza } from '@/lib/cuotas/resumen'
 import { hoyLima } from '@/lib/trabajos/agenda'
+import { erroresRegistrados } from '@/lib/errores-registrados/data'
+import { resumenDeErrores } from '@/lib/errores-registrados/resumen'
 import { formatMoney } from '@/lib/format'
 import { FilaLaboratorio } from '@/components/plataforma/FilaLaboratorio'
 
@@ -24,6 +26,8 @@ export default async function PlataformaPage() {
 
   const cuotas = await todasLasCuotas()
   const cobranza = resumenDeCobranza(cuotas, hoy)
+
+  const errores = resumenDeErrores(await erroresRegistrados(), new Date().toISOString())
 
   /** Días de mora de la cuota más atrasada de cada laboratorio. */
   const moraPorLab = new Map<string, number>()
@@ -71,6 +75,45 @@ export default async function PlataformaPage() {
           tono={cobranza.vencido > 0 ? 'peligro' : undefined}
         />
       </div>
+
+      {/*
+        El estado del sistema, en la primera pantalla del panel.
+
+        Va aquí y no en un menú porque un aviso que hay que ir a buscar no es un
+        aviso. Cuando no hay nada roto ocupa una línea gris; cuando lo hay, se
+        ve desde la puerta.
+      */}
+      <Link
+        href="/plataforma/errores"
+        className={`flex items-center justify-between gap-3 rounded-[var(--radius-md)] border p-2.5 ${
+          errores.sinResolver > 0
+            ? 'border-[var(--color-danger)] bg-[var(--color-surface-2)]'
+            : 'border-[var(--color-border)]'
+        }`}
+      >
+        <span className="min-w-0">
+          <span className="block text-[13.5px] font-semibold">
+            {errores.sinResolver === 0
+              ? 'Sin errores pendientes'
+              : `${errores.sinResolver} ${
+                  errores.sinResolver === 1 ? 'error sin resolver' : 'errores sin resolver'
+                }`}
+          </span>
+          {errores.sinResolver > 0 ? (
+            <span className="block text-[12.5px] text-[var(--color-muted)]">
+              {errores.delDia > 0
+                ? `${errores.delDia} en las últimas 24 h`
+                : 'ninguno en las últimas 24 h'}
+              {errores.laboratoriosAfectados > 0
+                ? ` · ${errores.laboratoriosAfectados} ${
+                    errores.laboratoriosAfectados === 1 ? 'laboratorio' : 'laboratorios'
+                  }`
+                : ''}
+            </span>
+          ) : null}
+        </span>
+        <span className="shrink-0 text-[13px] font-semibold text-[var(--color-accent)]">Ver ›</span>
+      </Link>
 
       {laboratorios.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-8 text-center">

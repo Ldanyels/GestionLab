@@ -8,6 +8,7 @@ import {
   crearLaboratorioConAdmin,
   laboratorioNuevoSchema,
 } from '@/lib/plataforma/laboratorios'
+import { marcarErrorResuelto } from '@/lib/errores-registrados/data'
 import { intentar, intentarSinEstado } from '@/lib/acciones'
 
 /**
@@ -68,4 +69,25 @@ export async function cambiarEstadoAction(formData: FormData): Promise<void> {
   )
 
   revalidatePath('/plataforma')
+}
+
+/**
+ * Marca un tipo de error como atendido.
+ *
+ * No lo borra. Si el fallo vuelve a ocurrir, la base reabre la fila sola y el
+ * error reaparece arriba en la lista: eso es lo que distingue «lo arreglé» de
+ * «creí que lo había arreglado».
+ */
+export async function resolverErrorAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const huella = String(formData.get('huella') ?? '')
+  if (!huella) return
+
+  await intentarSinEstado(
+    'resolverErrorAction',
+    'No se pudo marcar el error como resuelto',
+    () => marcarErrorResuelto(huella),
+  )
+
+  revalidatePath('/plataforma/errores')
 }
