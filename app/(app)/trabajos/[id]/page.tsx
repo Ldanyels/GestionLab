@@ -217,6 +217,9 @@ export default async function TrabajoDetallePage({
           trabajoId={t.id}
           precio={t.precio_acordado}
           puedeBorrar={borraAbonos}
+          // La sección solo se muestra a quien registra abonos, así que quien
+          // llega hasta aquí puede corregirlos.
+          puedeEditar={registraAbonos}
         />
       ) : (
         <Card className="p-3.5 text-sm text-[var(--color-muted)]">

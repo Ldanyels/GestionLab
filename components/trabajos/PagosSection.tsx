@@ -3,6 +3,7 @@ import { totalPagado, saldoPendiente, estadoPago } from '@/lib/abonos/saldo'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { AbonoForm } from './AbonoForm'
+import { AbonoEditable } from './AbonoEditable'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { eliminarAbonoAction } from '@/app/(app)/trabajos/actions'
 
@@ -10,16 +11,26 @@ export async function PagosSection({
   trabajoId,
   precio,
   puedeBorrar,
+  puedeEditar,
 }: {
   trabajoId: string
   precio: number
   /**
-   * Si es falso, no aparece el botón de eliminar de cada abono. Un técnico con
-   * permiso para registrar abonos no puede darlos de baja: si se equivocó en el
-   * monto, lo corrige el administrador. La acción también lo comprueba en el
-   * servidor, esto es solo para no ofrecer un botón que va a rebotar.
+   * Si es falso, no aparece el botón de eliminar de cada abono. Borrar es solo
+   * del administrador: hace desaparecer el registro.
+   *
+   * **Corregir es distinto y sí lo puede hacer el técnico** (ver `puedeEditar`):
+   * quien puede registrar un abono de cualquier monto ya tiene el poder de
+   * equivocarse en cualquier dirección, y obligarlo a pedir ayuda por un error
+   * de tecleo volvía inútil su permiso. Lo que protege el dinero no es el muro,
+   * es que el monto anterior queda en el historial.
+   *
+   * Las acciones lo comprueban en el servidor; esto es solo para no ofrecer
+   * botones que van a rebotar.
    */
   puedeBorrar: boolean
+  /** Quien puede registrar abonos puede corregirlos. */
+  puedeEditar: boolean
 }) {
   const abonos = await listAbonos(trabajoId)
   const pagado = totalPagado(abonos)
@@ -47,28 +58,20 @@ export async function PagosSection({
                 key={a.id}
                 className={i > 0 ? 'border-t border-[var(--color-border)]' : ''}
               >
-                <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-                  <span className="min-w-0">
-                    <span className="num block font-semibold text-[var(--color-success)]">
-                      {formatMoney(a.monto)}
-                    </span>
-                    <span className="block truncate text-xs text-[var(--color-muted)]">
-                      {a.fecha} · {a.metodo}
-                      {a.nota ? ` · ${a.nota}` : ''}
-                    </span>
-                  </span>
-                  {puedeBorrar ? (
+                <AbonoEditable abono={a} trabajoId={trabajoId} puedeEditar={puedeEditar} />
+                {puedeBorrar ? (
+                  <div className="px-3.5 pb-2.5">
                     <ConfirmDialog
                       action={eliminarAbonoAction}
                       fields={{ id: a.id, trabajo_id: trabajoId }}
                       triggerLabel="Eliminar"
-                      triggerClassName="shrink-0 text-[13px] font-semibold text-[var(--color-danger)]"
+                      triggerClassName="text-[13px] font-semibold text-[var(--color-danger)]"
                       title="Eliminar abono"
                       message={`Se borra el abono de ${formatMoney(a.monto)} y el saldo vuelve a subir.`}
                       confirmLabel="Sí, eliminar"
                     />
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

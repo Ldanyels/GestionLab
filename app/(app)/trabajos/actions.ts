@@ -16,7 +16,8 @@ import {
 import { hoyLima } from '@/lib/trabajos/agenda'
 import type { EstadoEtapa, EstadoTrabajo } from '@/lib/trabajos/estado'
 import { abonoSchema } from '@/lib/abonos/schema'
-import { crearAbono, eliminarAbono } from '@/lib/abonos/data'
+import { crearAbono, editarAbono, eliminarAbono } from '@/lib/abonos/data'
+import { anotarDetalle } from '@/lib/auditoria/anotar'
 import { descontarInsumosPorTrabajo } from '@/lib/inventario/data'
 
 export interface FormState {
@@ -173,6 +174,60 @@ export async function crearAbonoAction(
   if (!r.ok) return r.estado
 
   revalidatePath(`/trabajos/${trabajoId}`)
+  return { error: '' }
+}
+
+/**
+ * Corrige un abono ya registrado.
+ *
+ * Lo puede hacer quien puede registrarlos —técnico autorizado o
+ * administrador—, y no solo el administrador: quien puede crear un abono de
+ * cualquier monto ya tiene el poder de equivocarse en cualquier dirección, y
+ * obligarlo a pedir ayuda por un error de tecleo vuelve inútil su permiso.
+ *
+ * Lo que protege el dinero aquí no es el muro de permisos, es que **el monto
+ * anterior queda en el historial**.
+ */
+export async function editarAbonoAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const perfil = await requirePermiso('abonos_registrar')
+
+  const id = String(formData.get('id') ?? '')
+  const trabajoId = String(formData.get('trabajo_id') ?? '')
+  if (!id) return { error: 'Falta el abono' }
+
+  const parsed = abonoSchema.safeParse({
+    monto: String(formData.get('monto') ?? ''),
+    metodo: String(formData.get('metodo') ?? 'efectivo'),
+    fecha: String(formData.get('fecha') ?? ''),
+    nota: String(formData.get('nota') ?? ''),
+  })
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
+  }
+
+  const r = await intentar('editarAbonoAction', 'No se pudo corregir el abono', () =>
+    editarAbono(id, parsed.data),
+  )
+  if (!r.ok) return r.estado
+  if (!r.valor) return { error: 'Ese abono ya no existe' }
+
+  // Después de guardar y sin condicionar nada: `anotarDetalle` no lanza.
+  await anotarDetalle({
+    laboratorioId: perfil.laboratorio_id,
+    tabla: 'abono',
+    registroId: id,
+    accion: 'UPDATE',
+    detalle: r.valor.detalle,
+    usuarioId: perfil.id,
+    usuarioNombre: perfil.nombre,
+  })
+
+  revalidatePath(`/trabajos/${trabajoId || r.valor.trabajoId}`)
+  revalidatePath('/trabajos')
+  revalidatePath('/reportes')
   return { error: '' }
 }
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { FacturacionLaboratorio } from './FacturacionLaboratorio'
+import type { FacturacionGuardada } from '@/lib/facturacion/documento'
 
 const nada = vi.fn(async () => {})
 const completos = {
@@ -10,7 +11,7 @@ const completos = {
   direccion_fiscal: 'Av. Perú 123',
 }
 
-const pintar = (datos = completos) =>
+const pintar = (datos: FacturacionGuardada = completos) =>
   render(<FacturacionLaboratorio labId="l1" datos={datos} accion={nada} />)
 
 describe('FacturacionLaboratorio', () => {
