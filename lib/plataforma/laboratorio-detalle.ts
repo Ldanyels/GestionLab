@@ -75,6 +75,24 @@ export async function trabajosDeLaboratorio(id: string): Promise<TrabajoDePlataf
   return (data as unknown as FilaCrudaDeTrabajo[]).map(aTrabajoDePlataforma)
 }
 
+export interface ItemDeCatalogo {
+  id: string
+  categoria: string
+  nombre: string
+  precio_base: number
+  activo: boolean
+}
+
+/** El catálogo de un laboratorio, ordenado como lo vería él. */
+export async function catalogoDeLaboratorio(labId: string): Promise<ItemDeCatalogo[]> {
+  const { data, error } = await clienteDeLaboratorio(labId)
+    .leer('catalogo_trabajo', 'id, categoria, nombre, precio_base, activo')
+    .order('categoria', { ascending: true })
+    .order('nombre', { ascending: true })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as unknown as ItemDeCatalogo[]
+}
+
 export interface AbonoDePlataforma {
   id: string
   monto: number

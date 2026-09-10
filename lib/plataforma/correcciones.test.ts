@@ -3,6 +3,7 @@ import {
   cambiosEfectivos,
   detalleDeAbonoBorrado,
   detalleDeCorreccion,
+  detalleDePrecioBase,
 } from './correcciones'
 
 const antes = {
@@ -75,6 +76,22 @@ describe('detalleDeAbonoBorrado', () => {
   it('tolera un abono sin fecha', () => {
     expect(detalleDeAbonoBorrado({ monto: 100, fecha: null })).toBe(
       'borró un abono de S/ 100.00',
+    )
+  })
+})
+
+describe('detalleDePrecioBase', () => {
+  // Otra vez el valor anterior: es lo que permite al laboratorio saber si el
+  // precio que ve hoy es el que tenía o uno que le tocaron.
+  it('nombra el tipo de trabajo y los dos precios', () => {
+    expect(detalleDePrecioBase('Corona porcelana', 120, 150)).toBe(
+      'cambió el precio base de Corona porcelana de S/ 120.00 a S/ 150.00',
+    )
+  })
+
+  it('funciona a la baja', () => {
+    expect(detalleDePrecioBase('Prótesis total', 400, 380)).toBe(
+      'cambió el precio base de Prótesis total de S/ 400.00 a S/ 380.00',
     )
   })
 })

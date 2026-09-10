@@ -45,6 +45,14 @@ export default async function LaboratorioPage({
         ‹ Laboratorios
       </Link>
       <FichaLaboratorio resumen={resumen} trabajos={trabajos} />
+
+      <Link
+        href={`/plataforma/${id}/catalogo`}
+        className="inline-block text-[13.5px] font-semibold text-[var(--color-accent)]"
+      >
+        Ver y corregir su catálogo →
+      </Link>
+
       <UsuariosDeLaboratorio
         labId={id}
         usuarios={usuarios}

@@ -9,8 +9,11 @@ import {
 } from '@/lib/plataforma/usuarios'
 import {
   borrarAbonoDesdeLaPlataforma,
+  corregirPrecioBaseDesdeLaPlataforma,
   corregirTrabajoDesdeLaPlataforma,
+  crearItemDeCatalogoDesdeLaPlataforma,
 } from '@/lib/plataforma/correcciones'
+import { catalogoSchema } from '@/lib/catalogo/schema'
 import { usuarioSchema } from '@/lib/usuarios/data'
 import { intentar, intentarSinEstado } from '@/lib/acciones'
 
@@ -112,6 +115,71 @@ export async function borrarAbonoDeLaboratorioAction(formData: FormData): Promis
 
   revalidatePath(`/plataforma/${labId}`)
   if (trabajoId) revalidatePath(`/plataforma/${labId}/trabajos/${trabajoId}`)
+}
+
+/** Corrige el precio base de un tipo del catálogo de un laboratorio ajeno. */
+export async function corregirPrecioBaseAction(formData: FormData): Promise<void> {
+  await requireSuperAdmin()
+  const correo = await correoSesion()
+  if (!correo) return
+
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  const itemId = String(formData.get('item_id') ?? '')
+  const precio = Number(formData.get('precio_base'))
+  if (!labId || !itemId || !Number.isFinite(precio) || precio < 0) return
+
+  await intentarSinEstado(
+    'corregirPrecioBaseAction',
+    'No se pudo corregir el precio',
+    async () => {
+      await corregirPrecioBaseDesdeLaPlataforma(labId, itemId, precio, correo)
+    },
+  )
+
+  revalidatePath(`/plataforma/${labId}/catalogo`)
+}
+
+/** Añade un tipo al catálogo de un laboratorio ajeno. */
+export async function crearItemDeCatalogoAction(
+  _prev: { error: string },
+  formData: FormData,
+): Promise<{ error: string }> {
+  await requireSuperAdmin()
+  const correo = await correoSesion()
+  if (!correo) return { error: 'Sesión no válida' }
+
+  const labId = String(formData.get('laboratorio_id') ?? '')
+  if (!labId) return { error: 'Falta el laboratorio' }
+
+  // Se reutiliza el esquema del catálogo del propio laboratorio: las reglas de
+  // qué es un tipo válido son las mismas, venga de donde venga.
+  const parsed = catalogoSchema.safeParse({
+    categoria: String(formData.get('categoria') ?? ''),
+    nombre: String(formData.get('nombre') ?? ''),
+    precio_base: String(formData.get('precio_base') ?? '0'),
+  })
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
+  }
+
+  const r = await intentar(
+    'crearItemDeCatalogoAction',
+    'No se pudo añadir el tipo al catálogo',
+    () =>
+      crearItemDeCatalogoDesdeLaPlataforma(
+        labId,
+        {
+          categoria: parsed.data.categoria,
+          nombre: parsed.data.nombre,
+          precio_base: parsed.data.precio_base,
+        },
+        correo,
+      ),
+  )
+  if (!r.ok) return r.estado
+
+  revalidatePath(`/plataforma/${labId}/catalogo`)
+  return { error: '' }
 }
 
 /** Crea un usuario en un laboratorio ajeno. */

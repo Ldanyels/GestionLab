@@ -1,4 +1,5 @@
 import { clienteDeLaboratorio } from './cliente'
+import { createAdminSupabase } from '@/lib/supabase/admin'
 import { registrarCambioDePlataforma } from './auditoria'
 import { formatMoney } from '@/lib/format'
 import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
@@ -69,6 +70,14 @@ export function detalleDeCorreccion(
   }
 
   return frases.join('; ')
+}
+
+export function detalleDePrecioBase(
+  nombre: string,
+  antes: number,
+  despues: number,
+): string {
+  return `cambió el precio base de ${nombre} de ${formatMoney(antes)} a ${formatMoney(despues)}`
 }
 
 export function detalleDeAbonoBorrado(abono: { monto: number; fecha: string | null }): string {
@@ -158,4 +167,72 @@ export async function borrarAbonoDesdeLaPlataforma(
     detalle: detalleDeAbonoBorrado(abono),
   })
   return true
+}
+
+/**
+ * Corrige el precio base de un tipo del catálogo de otro laboratorio.
+ *
+ * **No toca los trabajos ya registrados**, y eso es correcto: el precio de un
+ * trabajo se acordó con su consultorio el día que entró, y reescribirlo ahora
+ * cambiaría lo que ese laboratorio ya facturó. El precio base solo afecta a lo
+ * que se registre de aquí en adelante.
+ */
+export async function corregirPrecioBaseDesdeLaPlataforma(
+  labId: string,
+  itemId: string,
+  precioNuevo: number,
+  correoOperador: string,
+): Promise<string> {
+  const cliente = clienteDeLaboratorio(labId)
+
+  const { data, error } = await cliente
+    .leer('catalogo_trabajo', 'id, nombre, precio_base')
+    .eq('id', itemId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) return ''
+
+  const antes = data as unknown as { id: string; nombre: string; precio_base: number }
+  if (antes.precio_base === precioNuevo) return ''
+
+  const { error: errUpdate } = await cliente
+    .escribir('catalogo_trabajo', { precio_base: precioNuevo })
+    .eq('id', itemId)
+  if (errUpdate) throw new Error(errUpdate.message)
+
+  const detalle = detalleDePrecioBase(antes.nombre, antes.precio_base, precioNuevo)
+  await registrarCambioDePlataforma(labId, correoOperador, {
+    tabla: 'catalogo_trabajo',
+    registroId: itemId,
+    accion: 'UPDATE',
+    detalle,
+  })
+  return detalle
+}
+
+/**
+ * Añade un tipo al catálogo de otro laboratorio.
+ *
+ * Sirve para el arranque: un laboratorio recién dado de alta no puede registrar
+ * ningún trabajo hasta tener catálogo, y todavía no sabe usar Configuración.
+ */
+export async function crearItemDeCatalogoDesdeLaPlataforma(
+  labId: string,
+  input: { categoria: string; nombre: string; precio_base: number },
+  correoOperador: string,
+): Promise<void> {
+  const admin = createAdminSupabase()
+  const { data, error } = await admin
+    .from('catalogo_trabajo')
+    .insert({ ...input, laboratorio_id: labId })
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+
+  await registrarCambioDePlataforma(labId, correoOperador, {
+    tabla: 'catalogo_trabajo',
+    registroId: (data as { id: string }).id,
+    accion: 'INSERT',
+    detalle: `añadió al catálogo ${input.nombre} (${input.categoria}) a ${formatMoney(input.precio_base)}`,
+  })
 }
