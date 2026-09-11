@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getConsultorio } from '@/lib/consultorios/data'
 import { getSessionPerfil } from '@/lib/auth'
+import { EnlaceAccion } from '@/components/ui/EnlaceAccion'
 import { puedeRegistrarAbonos, veMontos } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
@@ -86,19 +87,19 @@ export default async function ConsultorioDetallePage({
           </div>
         ) : null}
 
+        {/*
+          «Registrar pago» es la acción que se hace cada semana; editar o
+          archivar el consultorio se hacen una vez. Va como botón y separada de
+          esas dos, que son enlaces de texto: puesta entre ellas se leía como
+          una más y se perdía en pantalla ancha.
+        */}
+        {puedeCobrar ? (
+          <EnlaceAccion href={`/consultorios/${consultorio.id}/cobrar`}>
+            Registrar pago
+          </EnlaceAccion>
+        ) : null}
+
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--color-border)] pt-3">
-          {/*
-            «Registrar pago» va primero y en color de acento: es la acción que
-            se hace cada semana, mientras editar el consultorio se hace una vez.
-          */}
-          {puedeCobrar ? (
-            <Link
-              href={`/consultorios/${consultorio.id}/cobrar`}
-              className="font-semibold text-[var(--color-accent)]"
-            >
-              Registrar pago
-            </Link>
-          ) : null}
           <Link href={`/consultorios/${consultorio.id}/editar`} className={enlace}>
             Editar
           </Link>

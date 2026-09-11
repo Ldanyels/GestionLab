@@ -21,6 +21,7 @@ import { RankingConsultorios } from '@/components/finanzas/RankingConsultorios'
 import { UtilidadMensual } from '@/components/finanzas/UtilidadMensual'
 import { ConsumoInsumos } from '@/components/finanzas/ConsumoInsumos'
 import { FilaDeGasto } from '@/components/finanzas/FilaDeGasto'
+import { EnlaceAccion } from '@/components/ui/EnlaceAccion'
 
 const MESES_LARGOS = [
   'enero',
@@ -72,6 +73,17 @@ export default async function FinanzasPage() {
           >
             Reportes
           </Link>
+          {/*
+            Gastos en la cabecera y no solo al pie de su tarjeta: registrar el
+            recibo de luz es de las pocas cosas que se vienen a hacer a esta
+            pantalla, y tres tarjetas más abajo no se encuentra.
+          */}
+          <Link
+            href="/finanzas/gastos"
+            className="inline-flex h-11 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold text-[var(--color-accent)]"
+          >
+            Gastos
+          </Link>
           <Link
             href="/finanzas/export"
             className="inline-flex h-11 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold"
@@ -116,10 +128,7 @@ export default async function FinanzasPage() {
         {res.operativos === 0 ? (
           <p className="mt-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] p-2.5 text-[12.5px] leading-relaxed text-[var(--color-muted)]">
             No hay gastos de servicios registrados este mes. Mientras la luz, el agua o el
-            alquiler no estén aquí, la utilidad de arriba es más alta que la real.{' '}
-            <Link href="/finanzas/gastos" className="font-semibold text-[var(--color-accent)]">
-              Registrar gastos
-            </Link>
+            alquiler no estén aquí, la utilidad de arriba es más alta que la real.
           </p>
         ) : null}
       </Card>
@@ -159,12 +168,9 @@ export default async function FinanzasPage() {
             </div>
           </>
         )}
-        <Link
-          href="/configuracion/trabajadores"
-          className="mt-2.5 inline-block text-[13px] font-semibold text-[var(--color-accent)]"
-        >
-          Registrar un pago →
-        </Link>
+        <EnlaceAccion href="/configuracion/trabajadores" className="mt-3">
+          Registrar un pago
+        </EnlaceAccion>
       </Card>
 
       {/* Servicios, equipo y otros, por concepto: «cuánto me cuesta la luz». */}
@@ -189,12 +195,9 @@ export default async function FinanzasPage() {
             ))}
           </div>
         )}
-        <Link
-          href="/finanzas/gastos"
-          className="mt-2.5 inline-block text-[13px] font-semibold text-[var(--color-accent)]"
-        >
-          Registrar un gasto →
-        </Link>
+        <EnlaceAccion href="/finanzas/gastos" className="mt-3">
+          Registrar un gasto
+        </EnlaceAccion>
       </Card>
 
       <Card className="space-y-3 p-3.5">

@@ -165,12 +165,21 @@ export default async function CuentasPage({
                   que salir, buscar el consultorio y entrar a su ficha.
                 */}
                 {g.saldo > 0.001 ? (
-                  <Link
-                    href={`/consultorios/${g.consultorio_id}/cobrar`}
-                    className="mt-2.5 block border-t border-[var(--color-border)] pt-2.5 text-[13px] font-semibold text-[var(--color-accent)]"
-                  >
-                    Registrar pago →
-                  </Link>
+                  <div className="mt-2.5 border-t border-[var(--color-border)] pt-2.5">
+                    {/*
+                      Con borde y no como texto suelto: en una lista de
+                      veintiún consultorios, un enlace sin forma se confunde
+                      con los nombres de los doctores de arriba. Compacto y no
+                      a todo el ancho, que multiplicado por veintiuno sería una
+                      pared de botones.
+                    */}
+                    <Link
+                      href={`/consultorios/${g.consultorio_id}/cobrar`}
+                      className="inline-flex h-9 items-center rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold text-[var(--color-accent)] transition-colors hover:border-[var(--color-accent)]"
+                    >
+                      Registrar pago
+                    </Link>
+                  </div>
                 ) : null}
               </Card>
             </li>
