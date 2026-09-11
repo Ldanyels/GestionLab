@@ -2,6 +2,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { laboratorioIdActual } from '@/lib/tenant'
 import type { Consultorio, ConsultorioConDoctores, Doctor } from './types'
 import type { ConsultorioInput, DoctorInput } from './schema'
+import { ordenarPorConsultorio } from './orden'
 
 /** Lista consultorios (activos por defecto), con búsqueda opcional. */
 export async function listConsultorios(
@@ -124,11 +125,22 @@ export async function listDoctoresConConsultorio(): Promise<DoctorOpcion[]> {
     .order('nombre', { ascending: true })
   if (error) throw new Error(error.message)
   type Row = { id: string; nombre: string; consultorio: { nombre: string } | null }
-  return (data as unknown as Row[]).map((d) => ({
-    id: d.id,
-    nombre: d.nombre,
-    consultorio_nombre: d.consultorio?.nombre ?? '—',
-  }))
+  /*
+    El orden se hace aquí y no en la consulta.
+
+    PostgREST ordena por una columna incrustada de forma frágil, y además el
+    orden correcto es el del español —la eñe después de la ene, las tildes sin
+    alterar la letra— que la base resuelve según su configuración regional y no
+    necesariamente como se espera. Son unas decenas de filas: ordenarlas en
+    memoria no cuesta nada y el resultado es el mismo en cualquier proyecto.
+  */
+  return ordenarPorConsultorio(
+    (data as unknown as Row[]).map((d) => ({
+      id: d.id,
+      nombre: d.nombre,
+      consultorio_nombre: d.consultorio?.nombre ?? '—',
+    })),
+  )
 }
 
 export async function crearConsultorio(input: ConsultorioInput): Promise<void> {

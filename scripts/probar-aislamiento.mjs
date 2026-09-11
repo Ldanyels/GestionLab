@@ -597,6 +597,103 @@ async function comprobarErroresRegistrados(comoA, labA) {
   await admin.from('error_registrado').delete().like('huella', `${huella}%`)
 }
 
+/*
+  Aislamiento del **almacenamiento**, no solo de la tabla.
+
+  Las fotos de los trabajos son datos sensibles: van asociadas a un paciente. La
+  tabla `foto_trabajo` guarda la ruta, pero el archivo vive en Storage, y ahí el
+  aislamiento lo imponen las políticas sobre `storage.objects`. Comprobar solo la
+  tabla dejaría sin verificar justo la parte que contiene la imagen.
+
+  El bucket es privado; si alguna vez dejara de serlo, cualquiera con la URL
+  vería fotografías de trabajos dentales sin sesión.
+*/
+async function comprobarAlmacenamientoDeFotos(comoA, labA, labB) {
+  console.log('\nAislamiento del almacenamiento de fotos')
+
+  const { data: bucket, error: errBucket } = await admin.storage.getBucket('trabajos')
+  if (errBucket) {
+    ausentes.push(`bucket 'trabajos' (migración 0029): ${errBucket.message}`)
+    return
+  }
+
+  comprobar('el bucket de fotos es privado', bucket.public === false, `public=${bucket.public}`)
+
+  /*
+    Una imagen de verdad: el bucket solo admite imágenes, y eso también se está
+    comprobando aquí sin quererlo. Es un PNG de un píxel, el archivo válido más
+    pequeño que existe.
+  */
+  const PNG_MINIMO = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  )
+  const imagen = () => new Blob([PNG_MINIMO], { type: 'image/png' })
+
+  // Un archivo de B, puesto con la clave de servicio.
+  const rutaB = `${labB}/${PREFIJO}/recepcion-1-${MARCA_B}.png`
+  const { error: errPoner } = await admin.storage
+    .from('trabajos')
+    .upload(rutaB, imagen(), { contentType: 'image/png', upsert: true })
+  if (errPoner) {
+    fallas.push(`No se pudo preparar el archivo de B: ${errPoner.message}`)
+    return
+  }
+
+  // 1. A no puede descargarlo.
+  const { data: bajado, error: errBajar } = await comoA.storage.from('trabajos').download(rutaB)
+  comprobar(
+    'un laboratorio no puede descargar el archivo de otro',
+    Boolean(errBajar) || bajado === null,
+  )
+
+  // 2. Ni verlo al listar la carpeta ajena.
+  const { data: listado } = await comoA.storage.from('trabajos').list(labB)
+  comprobar(
+    'no ve archivos al listar la carpeta de otro laboratorio',
+    (listado ?? []).length === 0,
+    `${(listado ?? []).length} archivo(s)`,
+  )
+
+  // 3. Ni firmar un enlace para saltarse lo anterior.
+  const { data: firmado, error: errFirmar } = await comoA.storage
+    .from('trabajos')
+    .createSignedUrl(rutaB, 60)
+  comprobar(
+    'no puede firmar un enlace del archivo ajeno',
+    Boolean(errFirmar) || !firmado?.signedUrl,
+  )
+
+  // 4. Ni escribir dentro de la carpeta de otro.
+  const { error: errEscribir } = await comoA.storage
+    .from('trabajos')
+    .upload(`${labB}/${PREFIJO}/intruso.png`, imagen(), {
+      contentType: 'image/png',
+      upsert: true,
+    })
+  comprobar('no puede subir a la carpeta de otro laboratorio', Boolean(errEscribir))
+
+  // 5. Pero sí en la suya: si no, la prueba no probaría nada.
+  const rutaA = `${labA}/${PREFIJO}/recepcion-1-propia.png`
+  const { error: errPropia } = await comoA.storage
+    .from('trabajos')
+    .upload(rutaA, imagen(), { contentType: 'image/png', upsert: true })
+  comprobar('sí puede subir a su propia carpeta', !errPropia, errPropia?.message)
+
+  // Y una comprobación que salió sola: el bucket rechaza lo que no es imagen.
+  const { error: errTipo } = await admin.storage
+    .from('trabajos')
+    .upload(`${labA}/${PREFIJO}/no-es-imagen.txt`, new Blob(['texto'], { type: 'text/plain' }), {
+      contentType: 'text/plain',
+      upsert: true,
+    })
+  comprobar('el bucket rechaza archivos que no son imágenes', Boolean(errTipo))
+
+  await admin.storage
+    .from('trabajos')
+    .remove([rutaB, rutaA, `${labB}/${PREFIJO}/intruso.png`, `${labA}/${PREFIJO}/no-es-imagen.txt`])
+}
+
 // ── Limpieza ──────────────────────────────────────────────────
 async function limpiar(laboratorios, usuarios) {
   console.log('\nLimpieza')
@@ -679,6 +776,7 @@ try {
   await comprobarAltaAislada(labB)
   await comprobarAccesosDePlataforma(comoA, labA, labB)
   await comprobarErroresRegistrados(comoA, labA)
+  await comprobarAlmacenamientoDeFotos(comoA, labA, labB)
 } catch (e) {
   fallas.push(`Error de preparación: ${e.message}`)
   console.error(`\n✗ ${e.message}`)
