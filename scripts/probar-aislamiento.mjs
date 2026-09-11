@@ -749,6 +749,59 @@ async function comprobarVistaDeListado(comoA, labA, labB) {
   )
 }
 
+/*
+  La función `resumen_hoy` contra el cálculo fila por fila.
+
+  Estas cinco cifras se calculaban antes en TypeScript, con pruebas unitarias.
+  Al mudarlas a la base esa prueba habría quedado verificando código muerto, así
+  que se sustituyó por esto: recorrer los mismos trabajos desde la aplicación,
+  aplicar las reglas a mano, y exigir que la función devuelva lo mismo.
+
+  Es una comprobación más fuerte que la que sustituye, porque corre contra la
+  implementación que de verdad se ejecuta y sobre datos reales.
+*/
+async function comprobarResumenDeHoy(comoA) {
+  console.log('\nResumen de la pantalla Hoy')
+
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date())
+  const { data: fila, error } = await comoA.rpc('resumen_hoy', { p_hoy: hoy }).maybeSingle()
+  if (error) {
+    ausentes.push(`función resumen_hoy (migración 0031): ${error.message}`)
+    return
+  }
+
+  // El cálculo independiente, con las mismas reglas escritas a mano.
+  const { data: trabajos } = await comoA
+    .from('trabajo')
+    .select('estado, fecha_ingreso, fecha_entrega, precio_acordado, abonos:abono(monto)')
+  const lista = trabajos ?? []
+  const saldoDe = (t) =>
+    Number(t.precio_acordado) - (t.abonos ?? []).reduce((s, a) => s + Number(a.monto), 0)
+
+  const esperado = {
+    ingresados_hoy: lista.filter((t) => t.fecha_ingreso === hoy).length,
+    entregas_hoy: lista.filter((t) => t.fecha_entrega === hoy).length,
+    en_curso: lista.filter((t) => t.estado === 'en_curso').length,
+    atrasadas: lista.filter(
+      (t) =>
+        t.fecha_entrega &&
+        t.fecha_entrega < hoy &&
+        t.estado !== 'entregado' &&
+        t.estado !== 'cerrado',
+    ).length,
+    por_cobrar:
+      Math.round(lista.reduce((s, t) => s + Math.max(0, saldoDe(t)), 0) * 100) / 100,
+  }
+
+  for (const clave of Object.keys(esperado)) {
+    const dio = Number(fila?.[clave] ?? 0)
+    const debe = clave === 'por_cobrar' ? esperado[clave] : esperado[clave]
+    const igual =
+      clave === 'por_cobrar' ? Math.abs(dio - debe) < 0.005 : dio === debe
+    comprobar(`resumen_hoy: ${clave} coincide con el cálculo a mano`, igual, `dio ${dio}, debe ${debe}`)
+  }
+}
+
 // ── Limpieza ──────────────────────────────────────────────────
 async function limpiar(laboratorios, usuarios) {
   console.log('\nLimpieza')
@@ -833,6 +886,7 @@ try {
   await comprobarErroresRegistrados(comoA, labA)
   await comprobarAlmacenamientoDeFotos(comoA, labA, labB)
   await comprobarVistaDeListado(comoA, labA, labB)
+  await comprobarResumenDeHoy(comoA)
 } catch (e) {
   fallas.push(`Error de preparación: ${e.message}`)
   console.error(`\n✗ ${e.message}`)
