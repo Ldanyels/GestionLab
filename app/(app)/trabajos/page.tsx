@@ -1,51 +1,78 @@
 import Link from 'next/link'
 import { getSessionPerfil } from '@/lib/auth'
 import { veMontos } from '@/lib/permisos'
-import { listTrabajos } from '@/lib/trabajos/data'
-import { filtrarTrabajos, contarPorEstadoEnPeriodo } from '@/lib/trabajos/filtro'
+import { paginaDeTrabajos, saldosFiltrados } from '@/lib/trabajos/pagina'
+import { totalDePaginas } from '@/lib/trabajos/listado'
 import { resolverFiltrosTrabajos, tituloTrabajos } from '@/lib/trabajos/consulta'
-import { contarPorPago, filtrarPorPago } from '@/lib/trabajos/pago'
-import { campoFechaDe, filtrarPorFecha, rangoDePeriodo } from '@/lib/trabajos/periodo'
-import { resumenLista } from '@/lib/trabajos/resumen-lista'
+import { rangoDePeriodo } from '@/lib/trabajos/periodo'
+import { resumenDeConsulta } from '@/lib/trabajos/resumen-lista'
 import { hoyLima } from '@/lib/trabajos/agenda'
 import { TrabajoCard } from '@/components/trabajos/TrabajoCard'
 import { BarraFiltros } from '@/components/trabajos/BarraFiltros'
 import { SearchBox } from '@/components/ui/SearchBox'
-import type { TrabajoListItem } from '@/lib/trabajos/types'
+import { Paginacion } from '@/components/trabajos/Paginacion'
 
 export default async function TrabajosPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const filtros = resolverFiltrosTrabajos(await searchParams)
+  const params = await searchParams
+  const filtros = resolverFiltrosTrabajos(params)
   const perfil = await getSessionPerfil()
   const montos = veMontos(perfil)
   const hoy = hoyLima()
   const rango = rangoDePeriodo(filtros.periodo, hoy, filtros.desde, filtros.hasta)
+  const pagina = Number(params.pagina ?? 1) || 1
 
-  // Se trae la lista completa: permite contar cada filtro y buscar en varios campos.
-  const todos = await listTrabajos()
+  /*
+    Todo el filtrado ocurre en la base.
 
-  const porEstado = (l: readonly TrabajoListItem[]) =>
-    filtros.estado ? l.filter((t) => t.estado === filtros.estado) : [...l]
-  const porPago = (l: readonly TrabajoListItem[]) => filtrarPorPago(l, filtros.pago)
-  // Viendo entregados, el periodo acota por la fecha real de salida; en el
-  // resto, por la de ingreso. Ver `campoFechaDe`.
-  const campoFecha = campoFechaDe(filtros.estado)
-  const porFecha = (l: readonly TrabajoListItem[]) => filtrarPorFecha(l, rango, campoFecha)
+    Antes esta pantalla descargaba la lista completa —0,97 KB por trabajo— para
+    poder contar cada filtro y buscar en varios campos. Con 18 trabajos diarios
+    eso llegaba a 5,7 MB por carga en un año, y esa descarga la paga el teléfono
+    del técnico. Ahora viajan solo los treinta que se ven; los contadores son
+    consultas que no devuelven ninguna fila.
+  */
+  // `estado` llega como `undefined` cuando no hay filtro; la consulta usa
+  // `null` para ese caso, que es lo que distingue «sin filtrar» de un valor.
+  const consulta = {
+    estado: filtros.estado ?? null,
+    pago: filtros.pago,
+    rango,
+    q: filtros.q ?? '',
+  }
+  const { trabajos, total, conteoEstado, conteoPago } = await paginaDeTrabajos(
+    consulta,
+    pagina,
+  )
 
-  // El conteo de cada control se calcula sobre lo que los otros ya dejaron
-  // pasar, para que ningún número prometa resultados que el filtro combinado
-  // no va a devolver.
-  // El de estado usa su propio conteo: cada estado se filtra por una fecha
-  // distinta, así que no puede calcularse sobre una lista ya filtrada por una
-  // sola de ellas.
-  const conteoEstado = contarPorEstadoEnPeriodo(porPago(todos), rango)
-  const conteoPago = contarPorPago(porFecha(porEstado(todos)))
+  // Los saldos solo se piden a quien ve importes: para un técnico sin ese
+  // permiso, el resumen no lleva dinero y la consulta sobraría.
+  const resumen = resumenDeConsulta(total, montos ? await saldosFiltrados(consulta) : [], montos)
+  const totalPaginas = totalDePaginas(total)
 
-  const trabajos = filtrarTrabajos(porFecha(porPago(porEstado(todos))), filtros.q ?? '')
-  const resumen = resumenLista(trabajos, montos)
+  /** Enlace a otra página conservando los filtros y la búsqueda. */
+  const hrefDePagina = (p: number) => {
+    const q = new URLSearchParams()
+    if (filtros.estado) q.set('estado', filtros.estado)
+    if (filtros.pago !== 'cualquiera') q.set('pago', filtros.pago)
+    if (filtros.periodo !== 'todo') q.set('periodo', filtros.periodo)
+    if (filtros.desde) q.set('desde', filtros.desde)
+    if (filtros.hasta) q.set('hasta', filtros.hasta)
+    if (filtros.q) q.set('q', filtros.q)
+    if (p > 1) q.set('pagina', String(p))
+    const cadena = q.toString()
+    return cadena ? `/trabajos?${cadena}` : '/trabajos'
+  }
+
+  // «Aún no hay trabajos» solo cuando de verdad no hay ninguno, no cuando los
+  // filtros no dejaron pasar nada: son mensajes con salidas distintas.
+  const hayFiltros =
+    Boolean(filtros.estado) ||
+    filtros.pago !== 'cualquiera' ||
+    filtros.periodo !== 'todo' ||
+    Boolean(filtros.q)
 
   return (
     <section className="space-y-4">
@@ -112,14 +139,14 @@ export default async function TrabajosPage({
       {trabajos.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-8 text-center">
           <p className="text-[15px] font-semibold">
-            {todos.length === 0 ? 'Aún no hay trabajos' : 'Nada con estos filtros'}
+            {hayFiltros ? 'Nada con estos filtros' : 'Aún no hay trabajos'}
           </p>
           <p className="mx-auto mt-1 max-w-[34ch] text-[13.5px] leading-relaxed text-[var(--color-muted)]">
-            {todos.length === 0
-              ? 'Toca «+ Nuevo» para registrar el primero.'
-              : 'Ningún trabajo cumple los tres a la vez.'}
+            {hayFiltros
+              ? 'Ningún trabajo cumple los tres a la vez.'
+              : 'Toca «+ Nuevo» para registrar el primero.'}
           </p>
-          {todos.length > 0 ? (
+          {hayFiltros ? (
             <Link
               href="/trabajos"
               className="mt-4 inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 text-[13.5px] font-semibold"
@@ -129,13 +156,16 @@ export default async function TrabajosPage({
           ) : null}
         </div>
       ) : (
-        <ul className="space-y-2.5">
-          {trabajos.map((t) => (
-            <li key={t.id}>
-              <TrabajoCard trabajo={t} montos={montos} hoy={hoy} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="space-y-2.5">
+            {trabajos.map((t) => (
+              <li key={t.id}>
+                <TrabajoCard trabajo={t} montos={montos} hoy={hoy} />
+              </li>
+            ))}
+          </ul>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} hrefDe={hrefDePagina} />
+        </>
       )}
     </section>
   )

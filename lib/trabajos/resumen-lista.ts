@@ -40,3 +40,31 @@ export function resumenLista(
     hayDeuda,
   }
 }
+
+/**
+ * El mismo resumen cuando el conteo y los saldos vienen de la base por separado.
+ *
+ * Con la lista paginada ya no existe «la lista filtrada» en memoria: el total
+ * lo da un conteo que no devuelve filas, y los saldos una consulta de una sola
+ * columna. Esta función junta las dos piezas sin que el texto que se muestra
+ * dependa de cuál de los dos caminos se usó.
+ */
+export function resumenDeConsulta(
+  total: number,
+  saldos: readonly number[],
+  montos: boolean,
+): ResumenLista {
+  if (total === 0) return { conteo: '', monto: null, hayDeuda: false }
+
+  const conteo = `${total} ${total === 1 ? 'trabajo' : 'trabajos'}`
+  if (!montos) return { conteo, monto: null, hayDeuda: false }
+
+  const saldo = Math.round(saldos.reduce((s, v) => s + Math.max(0, v), 0) * 100) / 100
+  const hayDeuda = saldo > UMBRAL
+
+  return {
+    conteo,
+    monto: hayDeuda ? `${formatMoney(saldo)} por cobrar` : 'todo cobrado',
+    hayDeuda,
+  }
+}
