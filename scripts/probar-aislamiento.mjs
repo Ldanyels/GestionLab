@@ -188,6 +188,19 @@ const TABLAS = [
     cambio: { monto: 1 },
   },
   {
+    nombre: 'foto_trabajo',
+    fila: (lab, ids, m) => ({
+      laboratorio_id: lab,
+      trabajo_id: ids.trabajo,
+      momento: 'recepcion',
+      orden: 1,
+      // La ruta empieza por el laboratorio: es de donde la política de
+      // storage.objects deduce de quién es el archivo.
+      ruta: `${lab}/${ids.trabajo}/recepcion-1-${m.etiqueta}.jpg`,
+    }),
+    cambio: { momento: 'entrega' },
+  },
+  {
     nombre: 'movimiento_inventario',
     fila: (lab, ids, m) => ({
       laboratorio_id: lab,

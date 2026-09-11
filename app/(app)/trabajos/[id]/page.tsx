@@ -9,6 +9,8 @@ import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { FechaEntregaEditable } from '@/components/trabajos/FechaEntregaEditable'
+import { FotosDelTrabajo } from '@/components/fotos/FotosDelTrabajo'
+import { fotosConEnlace } from '@/lib/fotos/data'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
 import { EtapaAcciones } from '@/components/trabajos/EtapaAcciones'
 import { PagosSection } from '@/components/trabajos/PagosSection'
@@ -29,6 +31,9 @@ export default async function TrabajoDetallePage({
   const { id } = await params
   const [t, perfil] = await Promise.all([getTrabajo(id), getSessionPerfil()])
   if (!t) notFound()
+  // Después del `notFound`: no tiene sentido firmar enlaces de un trabajo que
+  // no existe.
+  const fotos = await fotosConEnlace(id)
 
   const progreso = progresoTrabajo(t.etapas)
   const montos = veMontos(perfil)
@@ -226,6 +231,16 @@ export default async function TrabajoDetallePage({
           </ul>
         )}
       </div>
+
+      {/*
+        Las fotos van antes que los pagos: son parte de hacer el trabajo, no de
+        cobrarlo, y quien abre esta ficha en el taller viene a eso.
+
+        Cualquiera del laboratorio puede añadirlas y borrarlas, como puede
+        cambiar el estado del trabajo: el técnico es quien tiene la pieza en la
+        mano cuando llega y cuando sale.
+      */}
+      <FotosDelTrabajo trabajoId={t.id} fotos={fotos} puedeEditar />
 
       {/* La sección de pagos se abre al técnico con permiso de abonos: para
           cobrar necesita ver el precio y el saldo de este trabajo. El costeo

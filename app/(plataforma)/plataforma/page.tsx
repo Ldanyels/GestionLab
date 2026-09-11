@@ -4,6 +4,7 @@ import { generarCuotasFaltantes, todasLasCuotas } from '@/lib/cuotas/data'
 import { diasDeMora } from '@/lib/cuotas/periodos'
 import { resumenDeCobranza } from '@/lib/cuotas/resumen'
 import { hoyLima } from '@/lib/trabajos/agenda'
+import { borrarFotosVencidas } from '@/lib/fotos/data'
 import { erroresRegistrados } from '@/lib/errores-registrados/data'
 import { resumenDeErrores } from '@/lib/errores-registrados/resumen'
 import { formatMoney } from '@/lib/format'
@@ -23,6 +24,19 @@ export default async function PlataformaPage() {
     renderizado no duplica nada.
   */
   for (const lab of laboratorios) await generarCuotasFaltantes(lab)
+
+  /*
+    Borrado de las fotos que pasaron los 6 meses.
+
+    Aquí y no en una tarea programada, por la misma razón que las cuotas: no
+    depende de que un cron se dispare en un servicio aparte. Va por la clave de
+    servicio y alcanza a **todos** los laboratorios, porque es una obligación
+    que el contrato de encargo pone sobre el proveedor, no sobre el cliente.
+
+    Es un tope de 500 por vez y no lanza: si quedan más, se borran en la
+    siguiente visita.
+  */
+  await borrarFotosVencidas()
 
   const cuotas = await todasLasCuotas()
   const cobranza = resumenDeCobranza(cuotas, hoy)

@@ -46,11 +46,18 @@ son las de sesión, imprescindibles para mantenerte identificado.
 - El trabajo dental encargado: tipo, pieza, fechas y precio acordado.
 - Doctor y consultorio que lo solicitan.
 - Pagos registrados sobre ese trabajo.
+- **Fotografías del trabajo dental**, tomadas por el laboratorio al recibirlo y
+  al entregarlo, hasta un máximo de dos en cada momento. Sirven para dejar
+  constancia del estado de la pieza y evitar discrepancias entre el laboratorio
+  y el consultorio.
 
 **El nombre del paciente asociado a un trabajo dental constituye un dato de
 salud**, y los datos de salud son datos sensibles según la Ley N° 29733: la
-categoría con mayor protección. Los tratamos únicamente para prestar el servicio
-al laboratorio.
+categoría con mayor protección. **Las fotografías del trabajo, al ir asociadas a
+ese paciente, reciben el mismo tratamiento.** Se guardan en almacenamiento
+privado, nunca en direcciones públicas, y solo se muestran a usuarios del propio
+laboratorio mediante enlaces temporales que caducan. Los tratamos únicamente
+para prestar el servicio al laboratorio.
 
 ## 4. Dónde están los datos, y quién más los toca
 
@@ -99,6 +106,14 @@ Mientras el laboratorio sea cliente, y **60 días** después de
 terminar el contrato, para darle tiempo de exportar su información. Pasado ese
 plazo se eliminan, salvo lo que debamos conservar por obligación contable o
 tributaria.
+
+**Las fotografías de los trabajos se eliminan a los 6 meses** de haberse
+tomado, automáticamente y sin que nadie tenga que pedirlo. Se conservan ese
+plazo porque su finalidad —dejar constancia del estado de una pieza— deja de
+tener sentido una vez cerrada cualquier discrepancia sobre el trabajo, y la ley
+exige guardar los datos solo el tiempo necesario para el fin que los justifica.
+El borrado alcanza también al archivo en el almacenamiento, no solo a su
+referencia en la base de datos.
 
 ## 7. Tus derechos
 

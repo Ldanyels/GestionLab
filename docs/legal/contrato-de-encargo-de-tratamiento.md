@@ -33,8 +33,8 @@ obligado a cumplir.
 | **Finalidad** | Prestar el servicio GestionLab: registro y gestión de trabajos de laboratorio dental, cobranza, inventario y reportes. |
 | **Duración** | La del contrato de servicio, más el periodo de devolución o eliminación de la cláusula 8. |
 | **Categorías de titulares** | Pacientes del Responsable; doctores y personal de los consultorios que le encargan trabajos; usuarios del sistema del Responsable. |
-| **Categorías de datos** | Nombre del paciente; el trabajo dental encargado, con su tipo, pieza, fechas y precio; doctor y consultorio solicitantes; pagos registrados. |
-| **Datos sensibles** | **Sí.** El nombre del paciente asociado a un trabajo dental constituye un dato de salud. |
+| **Categorías de datos** | Nombre del paciente; el trabajo dental encargado, con su tipo, pieza, fechas y precio; doctor y consultorio solicitantes; pagos registrados; **fotografías del trabajo dental** tomadas al recibirlo y al entregarlo, hasta dos en cada momento. |
+| **Datos sensibles** | **Sí.** El nombre del paciente asociado a un trabajo dental constituye un dato de salud, y las fotografías del trabajo, al ir asociadas a ese paciente, reciben el mismo tratamiento. |
 
 ## 2. Obligaciones del Encargado
 
@@ -57,8 +57,11 @@ El Encargado se obliga a:
    datos, **sin demora y como máximo dentro de las 24 horas** de detectarla, con
    la información que el Responsable necesite para cumplir su propia obligación
    de notificar a la ANPD dentro de 48 horas.
-7. **Devolver o eliminar los datos** al terminar, según la cláusula 8.
-8. **Permitir la verificación** del cumplimiento de este contrato, según la
+7. **Eliminar las fotografías de los trabajos a los 6 meses** de haberse
+   tomado, de forma automática y sin que el Responsable deba solicitarlo. El
+   borrado alcanza al archivo almacenado y no solo a su referencia.
+8. **Devolver o eliminar los datos** al terminar, según la cláusula 8.
+9. **Permitir la verificación** del cumplimiento de este contrato, según la
    cláusula 7.
 
 ## 3. Obligaciones del Responsable
@@ -75,6 +78,8 @@ El Responsable se obliga a:
 4. **Registrar únicamente los datos necesarios.** El sistema no exige el nombre
    del paciente para registrar un trabajo: si el Responsable prefiere
    identificarlos con un código propio, puede hacerlo, y reduce su exposición.
+   Las fotografías del trabajo son igualmente opcionales; el sistema funciona
+   sin ellas.
 5. **Atender las solicitudes de sus titulares**: es él quien responde ante sus
    pacientes, no el Encargado.
 
@@ -86,6 +91,9 @@ sistema, no solo por esta cláusula:
 
 - **No incluye nombres de pacientes.** Las pantallas de soporte no consultan ese
   campo en la base de datos.
+- **No incluye las fotografías de los trabajos.** El Encargado puede corregir un
+  dato mal registrado sin ver las imágenes de las piezas de los pacientes del
+  Responsable.
 - **Queda registrado** cada acceso y cada modificación, con la identidad de quien
   lo hizo, qué hizo y el valor anterior del dato.
 - **Se limita** a devolver accesos perdidos y corregir datos mal registrados.
