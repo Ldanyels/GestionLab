@@ -61,7 +61,8 @@ function GrupoDeFotos({
   puedeEditar: boolean
 }) {
   const enLinea = useConexion()
-  const entrada = useRef<HTMLInputElement>(null)
+  const camara = useRef<HTMLInputElement>(null)
+  const galeria = useRef<HTMLInputElement>(null)
   const [subiendo, setSubiendo] = useState(false)
   const [error, setError] = useState('')
 
@@ -110,7 +111,10 @@ function GrupoDeFotos({
       setError(e instanceof Error ? e.message : 'No se pudo subir la foto')
     } finally {
       setSubiendo(false)
-      if (entrada.current) entrada.current.value = ''
+      // Se limpian los dos: si no, elegir dos veces la misma foto seguida no
+      // dispara el `change` y parece que el botón dejó de funcionar.
+      if (camara.current) camara.current.value = ''
+      if (galeria.current) galeria.current.value = ''
     }
   }
 
@@ -170,12 +174,28 @@ function GrupoDeFotos({
       {puedeEditar && !lleno ? (
         <>
           {/*
-            Un solo `accept="image/*"` sin `capture`: en el teléfono el sistema
-            ofrece cámara y galería, que es justo lo que se pidió. Forzar
-            `capture` abriría la cámara siempre y quitaría la galería.
+            Dos entradas y no una.
+
+            Se intentó con un solo `accept="image/*"` confiando en que el
+            teléfono ofreciera cámara y galería: en la práctica va directo a la
+            galería y la cámara no aparece. `capture="environment"` es lo que
+            abre la cámara, y abre la trasera —la pieza está sobre la mesa, no
+            delante de la cara—, pero entonces esa entrada ya no sirve para la
+            galería. Cada una hace una cosa y el usuario elige cuál.
           */}
           <input
-            ref={entrada}
+            ref={camara}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const archivo = e.target.files?.[0]
+              if (archivo) void subir(archivo)
+            }}
+          />
+          <input
+            ref={galeria}
             type="file"
             accept="image/*"
             className="hidden"
@@ -184,14 +204,34 @@ function GrupoDeFotos({
               if (archivo) void subir(archivo)
             }}
           />
-          <button
-            type="button"
-            disabled={subiendo || !enLinea}
-            onClick={() => entrada.current?.click()}
-            className="inline-flex h-11 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm font-semibold text-[var(--color-accent)] disabled:opacity-50 sm:w-auto sm:px-4"
-          >
-            {!enLinea ? 'Sin conexión' : subiendo ? 'Subiendo…' : 'Añadir foto'}
-          </button>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={subiendo || !enLinea}
+              onClick={() => camara.current?.click()}
+              aria-label="Tomar foto con la cámara"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm font-semibold text-[var(--color-accent)] disabled:opacity-50"
+            >
+              <IconoCamara />
+              {!enLinea ? 'Sin conexión' : subiendo ? 'Subiendo…' : 'Cámara'}
+            </button>
+            {/*
+              La galería al costado y en tono menor: lo normal es fotografiar la
+              pieza que se tiene delante, y elegir una ya tomada es la
+              excepción.
+            */}
+            <button
+              type="button"
+              disabled={subiendo || !enLinea}
+              onClick={() => galeria.current?.click()}
+              aria-label="Elegir foto de la galería"
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold text-[var(--color-muted)] disabled:opacity-50"
+            >
+              <IconoGaleria />
+              Galería
+            </button>
+          </div>
         </>
       ) : null}
 
@@ -201,5 +241,44 @@ function GrupoDeFotos({
         </p>
       ) : null}
     </div>
+  )
+}
+
+function IconoCamara() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 7h3l2-2h8l2 2h3v12H3z" />
+      <circle cx="12" cy="12.5" r="3.5" />
+    </svg>
+  )
+}
+
+function IconoGaleria() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="8.5" cy="10" r="1.5" />
+      <path d="m21 16-5-5-4 4-2-2-7 7" />
+    </svg>
   )
 }
