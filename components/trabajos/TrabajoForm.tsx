@@ -7,6 +7,7 @@ import { ATAJOS_DE_PLAZO, fechaSugerida, plazoDelTrabajo } from '@/lib/trabajos/
 import { useConexion } from '@/components/conexion/useConexion'
 import { Card } from '@/components/ui/Card'
 import { TipoSheet } from './TipoSheet'
+import { DoctorSheet } from './DoctorSheet'
 import type { FormState } from '@/app/(app)/trabajos/actions'
 import type { DoctorOpcion } from '@/lib/consultorios/data'
 import type { CatalogoTrabajo } from '@/lib/catalogo/types'
@@ -89,8 +90,15 @@ export function TrabajoForm({
   const [manual, setManual] = useState(false)
   /** Índice de la línea que abrió la hoja de tipos; null = cerrada. */
   const [eligiendo, setEligiendo] = useState<number | null>(null)
+  /** Doctor elegido y si la hoja de doctores está abierta. */
+  const [doctorId, setDoctorId] = useState(trabajo?.doctor_id ?? doctorInicial ?? '')
+  const [eligiendoDoctor, setEligiendoDoctor] = useState(false)
 
   const porId = useMemo(() => new Map(tipos.map((t) => [t.id, t])), [tipos])
+  const doctorElegido = useMemo(
+    () => doctores.find((d) => d.id === doctorId),
+    [doctores, doctorId],
+  )
 
   const subtotales = lineas.map((l) => {
     const tipo = porId.get(l.tipoId)
@@ -151,6 +159,11 @@ export function TrabajoForm({
     <form
       action={formAction}
       onSubmit={(e) => {
+        if (!doctorId) {
+          e.preventDefault()
+          setLineasError('Elige el doctor')
+          return
+        }
         if (lineas.some((l) => !l.tipoId)) {
           e.preventDefault()
           setLineasError('Elige el tipo de trabajo en todas las líneas')
@@ -162,24 +175,29 @@ export function TrabajoForm({
       <input type="hidden" name="items" value={itemsJson} />
 
       <Card className="space-y-1 p-3.5">
-        <label className="block space-y-1">
-          <span className={etiqueta}>Consultorio y doctor</span>
-          <select
-            name="doctor_id"
-            required
-            defaultValue={trabajo?.doctor_id ?? doctorInicial ?? ''}
-            className={campo}
+        <span className={etiqueta}>Consultorio y doctor</span>
+        {/*
+          Un botón que abre una hoja con buscador, no un `<select>`.
+
+          Con treinta y nueve doctores, el desplegable del teléfono obliga a
+          desplazar una lista larga sin poder escribir. El valor viaja en un
+          campo oculto para que el formulario se envíe igual que antes.
+        */}
+        <input type="hidden" name="doctor_id" value={doctorId} required />
+        <button
+          type="button"
+          onClick={() => setEligiendoDoctor(true)}
+          className={`mt-1 flex min-h-12 w-full items-center justify-between gap-2 px-3 text-left ${campoBase} hover:border-[var(--color-accent)]`}
+        >
+          <span
+            className={`min-w-0 truncate ${doctorElegido ? '' : 'text-[var(--color-muted)]'}`}
           >
-            <option value="" disabled>
-              Elige un doctor…
-            </option>
-            {doctores.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.consultorio_nombre} — {d.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
+            {doctorElegido
+              ? `${doctorElegido.consultorio_nombre} — ${doctorElegido.nombre}`
+              : 'Elegir doctor…'}
+          </span>
+          <span className="shrink-0 text-[var(--color-muted)]">▾</span>
+        </button>
       </Card>
 
       <div className="space-y-2.5">
@@ -449,6 +467,16 @@ export function TrabajoForm({
           {!enLinea ? 'Sin conexión — espera para guardar' : pending ? 'Guardando…' : submitLabel}
         </button>
       </div>
+
+      <DoctorSheet
+        doctores={doctores}
+        abierta={eligiendoDoctor}
+        onCerrar={() => setEligiendoDoctor(false)}
+        onElegir={(id) => {
+          setDoctorId(id)
+          setLineasError('')
+        }}
+      />
 
       <TipoSheet
         tipos={tipos}

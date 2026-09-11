@@ -1,11 +1,5 @@
+import { coincideConTodas } from '@/lib/busqueda'
 import type { CatalogoTrabajo } from './types'
-
-function normalizar(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-}
 
 /**
  * Filtra tipos de trabajo por texto libre: ignora mayúsculas y tildes,
@@ -14,10 +8,5 @@ function normalizar(s: string): string {
 export function filtrarTipos<
   T extends Pick<CatalogoTrabajo, 'nombre' | 'categoria'>,
 >(tipos: readonly T[], q: string): T[] {
-  const tokens = normalizar(q.trim()).split(/\s+/).filter(Boolean)
-  if (tokens.length === 0) return [...tipos]
-  return tipos.filter((t) => {
-    const texto = normalizar(`${t.categoria} ${t.nombre}`)
-    return tokens.every((tok) => texto.includes(tok))
-  })
+  return tipos.filter((t) => coincideConTodas(`${t.categoria} ${t.nombre}`, q))
 }

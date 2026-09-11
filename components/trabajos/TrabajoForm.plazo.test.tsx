@@ -243,3 +243,58 @@ describe('TrabajoForm — fecha de entrega al editar', () => {
     expect(campoFecha().value).toBe('2026-09-13')
   })
 })
+
+describe('TrabajoForm — elegir doctor', () => {
+  function campoDoctor(): HTMLInputElement {
+    return document.querySelector('input[name="doctor_id"]') as HTMLInputElement
+  }
+
+  const variosDoctores = [
+    { id: 'd1', nombre: 'Dra. Ruiz', consultorio_id: 'c1', consultorio_nombre: 'Arte oral' },
+    { id: 'd2', nombre: 'Dr. Muñoz', consultorio_id: 'c2', consultorio_nombre: 'Visión dental' },
+  ]
+
+  /*
+    Lo que se pidió: escribir, encontrar, y que la hoja se cierre con el doctor
+    puesto. Antes era un `<select>` con 39 opciones que solo se podía
+    desplazar.
+  */
+  it('busca, elige y deja el doctor seleccionado', async () => {
+    const usuario = userEvent.setup()
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={variosDoctores}
+        tipos={[tipo({})]}
+        submitLabel="Crear"
+        fechaIngreso={INGRESO}
+      />,
+    )
+
+    expect(campoDoctor().value).toBe('')
+
+    await usuario.click(screen.getByRole('button', { name: /elegir doctor/i }))
+    await usuario.type(screen.getByLabelText(/buscar doctor/i), 'munoz')
+    await usuario.click(screen.getByRole('button', { name: 'Dr. Muñoz' }))
+
+    expect(campoDoctor().value).toBe('d2')
+    // La hoja se cerró: su buscador ya no está en pantalla.
+    expect(screen.queryByLabelText(/buscar doctor/i)).toBeNull()
+    // Y el botón muestra a quién se eligió, sin tener que volver a abrirla.
+    expect(screen.getByRole('button', { name: /visión dental — dr. muñoz/i })).toBeTruthy()
+  })
+
+  it('respeta el doctor de un trabajo que se está editando', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={variosDoctores}
+        tipos={[tipo({})]}
+        trabajo={trabajoExistente({ doctor_id: 'd1' })}
+        submitLabel="Guardar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    expect(campoDoctor().value).toBe('d1')
+  })
+})
