@@ -28,6 +28,20 @@ export default async function AppLayout({
   // /hoy ↔ /login): mostramos qué pasó, distinguiendo el fallo de lectura
   // (ej. migración pendiente) de un usuario realmente sin laboratorio.
   if (!perfil) {
+    /*
+      Quien administra la plataforma entra directo a su panel.
+
+      Su cuenta no pertenece a ningún laboratorio **a propósito**: así no figura
+      como usuario de ninguno ni aparece en sus listas. Pero el login siempre
+      aterriza en `/hoy`, así que hasta ahora le recibía una pantalla que decía
+      «Cuenta sin laboratorio» —como si le faltara algo— y tenía que pulsar un
+      botón más en cada entrada.
+
+      Solo cuando **no hubo error** al leer el perfil. Si la consulta falló
+      —una migración pendiente, por ejemplo— hay que ver el diagnóstico, no
+      esquivarlo: mandarlo al panel escondería un problema real de la base.
+    */
+    if (superAdmin && !error) redirect('/plataforma')
     return <PantallaSinLaboratorio error={error ?? null} esSuperAdmin={superAdmin} />
   }
 

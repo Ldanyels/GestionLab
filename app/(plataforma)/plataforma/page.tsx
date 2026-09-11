@@ -9,9 +9,11 @@ import { erroresRegistrados } from '@/lib/errores-registrados/data'
 import { resumenDeErrores } from '@/lib/errores-registrados/resumen'
 import { formatMoney } from '@/lib/format'
 import { FilaLaboratorio } from '@/components/plataforma/FilaLaboratorio'
+import { getSessionPerfil } from '@/lib/auth'
 
 export default async function PlataformaPage() {
   const laboratorios = await listarLaboratorios()
+  const tieneLaboratorio = (await getSessionPerfil()) !== null
   const activos = laboratorios.filter((l) => l.estado === 'activo').length
   const hoy = hoyLima()
 
@@ -154,9 +156,18 @@ export default async function PlataformaPage() {
         </ul>
       )}
 
-      <Link href="/hoy" className="inline-block text-[13.5px] text-[var(--color-accent)]">
-        ‹ Volver a mi laboratorio
-      </Link>
+      {/*
+        Solo si de verdad tiene un laboratorio al que volver.
+
+        La cuenta que administra la plataforma no pertenece a ninguno, y desde
+        que entra directo aquí, este enlace la mandaría a `/hoy` y el layout la
+        devolvería al panel: un enlace que no hace nada.
+      */}
+      {tieneLaboratorio ? (
+        <Link href="/hoy" className="inline-block text-[13.5px] text-[var(--color-accent)]">
+          ‹ Volver a mi laboratorio
+        </Link>
+      ) : null}
     </section>
   )
 }
