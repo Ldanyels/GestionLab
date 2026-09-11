@@ -115,6 +115,16 @@ const TABLAS = [
     cambio: { precio_base: 1 },
   },
   {
+    nombre: 'gasto',
+    fila: (lab, ids, m) => ({
+      laboratorio_id: lab,
+      categoria: 'servicio',
+      concepto: `${PREFIJO} luz ${m.etiqueta}`,
+      monto: m.monto,
+    }),
+    cambio: { concepto: `${PREFIJO} intruso` },
+  },
+  {
     nombre: 'plantilla_etapa',
     fila: (lab, ids, m) => ({
       laboratorio_id: lab,

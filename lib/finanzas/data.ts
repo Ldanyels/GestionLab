@@ -1,5 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { armarResumen, type ResumenFinanciero } from './calculo'
+import { gastosDelPeriodo } from '@/lib/gastos/data'
 // Se reexporta para no romper a quien ya la importaba de aquí.
 export { rangoMesActual } from './mes'
 
@@ -41,10 +42,23 @@ export async function resumen(
     materiales: number
     pagos: number
   }
+  /*
+    Los gastos se leen aparte y no dentro de `finanzas_resumen`.
+
+    La función de la base ya calcula ingresos, materiales y pagos; tocarla para
+    añadir una tabla nueva significaría reemplazarla por migración y arriesgar
+    las tres cifras que ya funcionan. La tabla de gastos tiene unas decenas de
+    filas por mes, así que la consulta extra no se nota.
+  */
+  const gastos = await gastosDelPeriodo(desde, hasta)
+  const operativos =
+    Math.round(gastos.reduce((s, g) => s + Number(g.monto), 0) * 100) / 100
+
   return armarResumen({
     ingresos: Number(row.ingresos),
     materiales: Number(row.materiales),
     pagos: Number(row.pagos),
+    operativos,
   })
 }
 

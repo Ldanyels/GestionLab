@@ -137,3 +137,43 @@ export async function totalPagadoTrabajadores(
   if (error) throw new Error(error.message)
   return (data ?? []).reduce((s, p) => s + (p as { monto: number }).monto, 0)
 }
+
+/**
+ * Los pagos de un periodo con el nombre de cada trabajador.
+ *
+ * Trae el nombre en la misma consulta con un join incrustado: pedirlo aparte
+ * por cada pago sería una consulta por trabajador, y el total de pagos de un
+ * mes crece sin límite.
+ *
+ * `trabajador` puede llegar en `null` si el trabajador se eliminó después del
+ * pago; el resumen lo trata como «Trabajador eliminado» en vez de descartarlo,
+ * porque el dinero salió igual.
+ */
+export async function pagosDelPeriodo(
+  desde: string,
+  hasta: string,
+): Promise<{ trabajador_id: string; trabajador: string | null; monto: number }[]> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase
+    .from('pago_trabajador')
+    .select('trabajador_id, monto, trabajador:trabajador_id(nombre)')
+    .gte('fecha', desde)
+    .lte('fecha', hasta)
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map((r) => {
+    const fila = r as unknown as {
+      trabajador_id: string
+      monto: number
+      trabajador: { nombre: string } | { nombre: string }[] | null
+    }
+    // PostgREST devuelve un objeto para una relación de muchos a uno, pero
+    // según cómo infiera la relación puede llegar como arreglo de uno.
+    const t = Array.isArray(fila.trabajador) ? fila.trabajador[0] : fila.trabajador
+    return {
+      trabajador_id: fila.trabajador_id,
+      trabajador: t?.nombre ?? null,
+      monto: Number(fila.monto),
+    }
+  })
+}

@@ -8,6 +8,11 @@ import {
   rangoMesActual,
 } from '@/lib/finanzas/data'
 import { margenPct } from '@/lib/finanzas/calculo'
+import { gastosDelPeriodo } from '@/lib/gastos/data'
+import { resumenDeGastos } from '@/lib/gastos/resumen'
+import { ETIQUETA_CATEGORIA } from '@/lib/gastos/categorias'
+import { pagosDelPeriodo } from '@/lib/trabajadores/data'
+import { resumenDeManoDeObra } from '@/lib/trabajadores/resumen'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { KpiTile } from '@/components/ui/KpiTile'
@@ -15,6 +20,7 @@ import { BarrasMensuales } from '@/components/finanzas/BarrasMensuales'
 import { RankingConsultorios } from '@/components/finanzas/RankingConsultorios'
 import { UtilidadMensual } from '@/components/finanzas/UtilidadMensual'
 import { ConsumoInsumos } from '@/components/finanzas/ConsumoInsumos'
+import { FilaDeGasto } from '@/components/finanzas/FilaDeGasto'
 
 const MESES_LARGOS = [
   'enero',
@@ -34,12 +40,16 @@ const MESES_LARGOS = [
 export default async function FinanzasPage() {
   await requireAdmin()
   const { desde, hasta } = rangoMesActual()
-  const [res, meses, ranking, consumo] = await Promise.all([
+  const [res, meses, ranking, consumo, gastos, pagos] = await Promise.all([
     resumen(desde, hasta),
     porMes(6),
     rankingConsultorios(desde, hasta),
     consumoPorProducto(desde, hasta),
+    gastosDelPeriodo(desde, hasta),
+    pagosDelPeriodo(desde, hasta),
   ])
+  const gastosDelMes = resumenDeGastos(gastos)
+  const manoDeObra = resumenDeManoDeObra(pagos, res.ingresos)
   const margen = margenPct(res)
   const utilidadTono = res.utilidad >= 0 ? 'exito' : 'peligro'
   const [anio, mes] = desde.split('-')
@@ -83,18 +93,108 @@ export default async function FinanzasPage() {
         <KpiTile etiqueta="Margen" valor={`${margen}%`} tono={utilidadTono} />
       </div>
 
+      {/*
+        El desglose de gastos, con la parte de cada uno sobre el total.
+
+        La barra no es decoración: un desglose de tres importes sueltos obliga a
+        dividir mentalmente para saber cuál pesa. La proporción es la pregunta.
+      */}
       <Card className="p-3.5">
-        <h2 className="text-base font-bold">Desglose de gastos</h2>
-        <div className="mt-1.5 space-y-1 text-sm">
-          <div className="flex justify-between gap-3">
-            <span className="text-[var(--color-muted)]">Materiales + merma</span>
-            <span className="num font-semibold">{formatMoney(res.materiales)}</span>
-          </div>
-          <div className="flex justify-between gap-3">
-            <span className="text-[var(--color-muted)]">Pagos a trabajadores</span>
-            <span className="num font-semibold">{formatMoney(res.pagos)}</span>
-          </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-base font-bold">Desglose de gastos</h2>
+          <span className="num text-[15px] font-bold">{formatMoney(res.gastos)}</span>
         </div>
+        <div className="mt-2 space-y-2 text-sm">
+          <FilaDeGasto etiqueta="Materiales + merma" monto={res.materiales} total={res.gastos} />
+          <FilaDeGasto etiqueta="Mano de obra" monto={res.pagos} total={res.gastos} />
+          <FilaDeGasto
+            etiqueta="Servicios, equipo y otros"
+            monto={res.operativos}
+            total={res.gastos}
+          />
+        </div>
+        {res.operativos === 0 ? (
+          <p className="mt-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] p-2.5 text-[12.5px] leading-relaxed text-[var(--color-muted)]">
+            No hay gastos de servicios registrados este mes. Mientras la luz, el agua o el
+            alquiler no estén aquí, la utilidad de arriba es más alta que la real.{' '}
+            <Link href="/finanzas/gastos" className="font-semibold text-[var(--color-accent)]">
+              Registrar gastos
+            </Link>
+          </p>
+        ) : null}
+      </Card>
+
+      {/*
+        Mano de obra: cuánto se llevó cada uno y qué parte de los ingresos es.
+
+        El porcentaje sobre ingresos va arriba y grande porque es el número que
+        dice si el negocio aguanta; el importe suelto no lo delata.
+      */}
+      <Card className="p-3.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-base font-bold">Mano de obra</h2>
+          <span className="num text-[15px] font-bold">{formatMoney(manoDeObra.total)}</span>
+        </div>
+        {manoDeObra.porTrabajador.length === 0 ? (
+          <p className="mt-1.5 text-[13px] text-[var(--color-muted)]">
+            Sin pagos a trabajadores este mes.
+          </p>
+        ) : (
+          <>
+            <p className="mt-0.5 text-[13px] text-[var(--color-muted)]">
+              <span className="num font-bold text-[var(--color-text)]">
+                {manoDeObra.porcentajeDeIngresos}%
+              </span>{' '}
+              de lo que facturaste este mes
+            </p>
+            <div className="mt-2 space-y-2 text-sm">
+              {manoDeObra.porTrabajador.map((t) => (
+                <FilaDeGasto
+                  key={t.trabajador_id}
+                  etiqueta={`${t.trabajador}${t.pagos > 1 ? ` · ${t.pagos} pagos` : ''}`}
+                  monto={t.monto}
+                  total={manoDeObra.total}
+                />
+              ))}
+            </div>
+          </>
+        )}
+        <Link
+          href="/configuracion/trabajadores"
+          className="mt-2.5 inline-block text-[13px] font-semibold text-[var(--color-accent)]"
+        >
+          Registrar un pago →
+        </Link>
+      </Card>
+
+      {/* Servicios, equipo y otros, por concepto: «cuánto me cuesta la luz». */}
+      <Card className="p-3.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-base font-bold">Servicios y otros gastos</h2>
+          <span className="num text-[15px] font-bold">{formatMoney(gastosDelMes.total)}</span>
+        </div>
+        {gastosDelMes.detalle.length === 0 ? (
+          <p className="mt-1.5 text-[13px] text-[var(--color-muted)]">
+            Nada registrado este mes.
+          </p>
+        ) : (
+          <div className="mt-2 space-y-2 text-sm">
+            {gastosDelMes.detalle.map((l) => (
+              <FilaDeGasto
+                key={`${l.categoria}-${l.concepto}`}
+                etiqueta={`${l.concepto}${l.veces > 1 ? ` ×${l.veces}` : ''} · ${ETIQUETA_CATEGORIA[l.categoria]}`}
+                monto={l.monto}
+                total={gastosDelMes.total}
+              />
+            ))}
+          </div>
+        )}
+        <Link
+          href="/finanzas/gastos"
+          className="mt-2.5 inline-block text-[13px] font-semibold text-[var(--color-accent)]"
+        >
+          Registrar un gasto →
+        </Link>
       </Card>
 
       <Card className="space-y-3 p-3.5">
