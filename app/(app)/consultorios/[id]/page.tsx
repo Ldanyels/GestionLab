@@ -28,6 +28,9 @@ export default async function ConsultorioDetallePage({
   if (!consultorio) notFound()
   const montos = veMontos(perfil)
   const puedeCobrar = puedeRegistrarAbonos(perfil)
+  // Borrar un consultorio se lleva sus doctores y su historial: solo el
+  // administrador. Archivar, que no destruye nada, sigue al alcance de todos.
+  const esAdmin = perfil?.rol === 'admin'
 
   const grupo = montos
     ? agruparPorConsultorio(await filasReporte({ consultorioId: id })).grupos[0]
@@ -114,6 +117,7 @@ export default async function ConsultorioDetallePage({
               {consultorio.activo ? 'Archivar' : 'Reactivar'}
             </button>
           </form>
+          {esAdmin ? (
           <span className="ml-auto">
             <ConfirmDialog
               action={eliminarConsultorioAction}
@@ -125,6 +129,7 @@ export default async function ConsultorioDetallePage({
               confirmLabel="Sí, eliminar"
             />
           </span>
+          ) : null}
         </div>
       </Card>
 
@@ -137,7 +142,7 @@ export default async function ConsultorioDetallePage({
         ) : (
           <ul className="space-y-2">
             {consultorio.doctores.map((d) => (
-              <DoctorRow key={d.id} doctor={d} />
+              <DoctorRow key={d.id} doctor={d} puedeEliminar={esAdmin} />
             ))}
           </ul>
         )}

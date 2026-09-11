@@ -15,7 +15,17 @@ import type { Doctor } from '@/lib/consultorios/types'
 
 const initial: FormState = { error: '' }
 
-export function DoctorRow({ doctor }: { doctor: Doctor }) {
+export function DoctorRow({
+  doctor,
+  puedeEliminar,
+}: {
+  doctor: Doctor
+  /**
+   * Solo el administrador borra. La acción lo comprueba en el servidor; esto
+   * es para no ofrecer un botón que va a expulsar a quien lo pulse.
+   */
+  puedeEliminar: boolean
+}) {
   const [editing, setEditing] = useState(false)
   const [state, formAction, pending] = useActionState(editarDoctorAction, initial)
   const prev = useRef(state)
@@ -113,6 +123,7 @@ export function DoctorRow({ doctor }: { doctor: Doctor }) {
             {doctor.activo ? 'Archivar' : 'Reactivar'}
           </button>
         </form>
+        {puedeEliminar ? (
         <ConfirmDialog
           action={eliminarDoctorAction}
           fields={{ id: doctor.id, consultorio_id: doctor.consultorio_id }}
@@ -122,6 +133,7 @@ export function DoctorRow({ doctor }: { doctor: Doctor }) {
           message={`Esto borra a ${doctor.nombre} y TODOS sus trabajos y pagos. No se puede deshacer. ¿Prefieres archivar? Si estás seguro, confirma.`}
           confirmLabel="Sí, eliminar todo"
         />
+        ) : null}
       </span>
     </li>
   )

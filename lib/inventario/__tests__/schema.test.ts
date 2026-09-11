@@ -20,7 +20,15 @@ describe('productoSchema', () => {
 })
 
 describe('deltaMovimiento', () => {
-  const base = { cantidad: 10, ajuste_resta: false, motivo: null, fecha: null }
+  // `costo_unitario` no influye en el signo del movimiento, pero el tipo lo
+  // exige: el fixture se quedó atrás cuando se añadió el costeo de insumos.
+  const base = {
+    cantidad: 10,
+    ajuste_resta: false,
+    costo_unitario: null,
+    motivo: null,
+    fecha: null,
+  }
   it('ingreso suma', () => {
     expect(deltaMovimiento({ ...base, tipo: 'ingreso' })).toBe(10)
   })

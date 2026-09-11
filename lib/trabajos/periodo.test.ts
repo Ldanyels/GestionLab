@@ -7,6 +7,7 @@ import {
   PERIODOS,
   rangoDePeriodo,
   resolverPeriodo,
+  fechaValida,
   restarDias,
 } from './periodo'
 
@@ -190,5 +191,81 @@ describe('filtrarPorFecha sobre la fecha de entrega', () => {
 describe('ETIQUETA_PERIODO', () => {
   it('tiene etiqueta para cada periodo', () => {
     for (const p of PERIODOS) expect(ETIQUETA_PERIODO[p]).toBeTruthy()
+  })
+})
+
+describe('fechaValida — la puerta que cierra la inyección', () => {
+  /*
+    `desde` y `hasta` llegan de la URL y acaban construyendo, como texto, una
+    expresión de filtro que se manda a la base. Se comprobó contra el proyecto
+    real que un valor con paréntesis y comas altera esa expresión y PostgREST
+    **acepta** la consulta manipulada. Esta función es el único sitio por el
+    que pasan todas las pantallas con rango, así que es donde se corta.
+  */
+  it('acepta una fecha normal', () => {
+    expect(fechaValida('2026-09-11')).toBe('2026-09-11')
+  })
+
+  it('rechaza la carga de inyección que se probó contra la base', () => {
+    expect(fechaValida('2026-01-01),estado.eq.cerrado,and(fecha_ingreso.gte.2000-01-01')).toBeNull()
+  })
+
+  it('rechaza cualquier puntuación de la sintaxis de filtros', () => {
+    expect(fechaValida('2026-01-01,x')).toBeNull()
+    expect(fechaValida('2026-01-01)')).toBeNull()
+    expect(fechaValida('(2026-01-01')).toBeNull()
+    expect(fechaValida('2026-01-01.eq.x')).toBeNull()
+    expect(fechaValida('*')).toBeNull()
+  })
+
+  it('rechaza lo vacío y lo ausente', () => {
+    expect(fechaValida('')).toBeNull()
+    expect(fechaValida(undefined)).toBeNull()
+    expect(fechaValida(null)).toBeNull()
+  })
+
+  it('rechaza otros formatos de fecha', () => {
+    expect(fechaValida('11/09/2026')).toBeNull()
+    expect(fechaValida('2026-9-1')).toBeNull()
+    expect(fechaValida('2026-09-11T10:00:00Z')).toBeNull()
+  })
+
+  /*
+    Una fecha con la forma correcta que no existe en el calendario se descarta
+    en vez de corregirse: si el sistema la moviera al 3 de marzo, devolvería
+    resultados de un periodo que nadie pidió.
+  */
+  it('rechaza fechas que no existen', () => {
+    expect(fechaValida('2026-02-31')).toBeNull()
+    expect(fechaValida('2026-13-01')).toBeNull()
+    expect(fechaValida('2026-00-10')).toBeNull()
+  })
+
+  it('acepta el 29 de febrero de un año bisiesto', () => {
+    expect(fechaValida('2028-02-29')).toBe('2028-02-29')
+    expect(fechaValida('2026-02-29')).toBeNull()
+  })
+})
+
+describe('rangoDePeriodo — con fechas manipuladas', () => {
+  /*
+    Lo que importa: una fecha inválida no llega al filtro. Se comporta como si
+    no se hubiera indicado, que es lo que el usuario ve de todos modos.
+  */
+  it('una fecha inyectada se ignora, no se propaga', () => {
+    const r = rangoDePeriodo('rango', '2026-09-11', '2026-01-01),estado.eq.cerrado', undefined)
+    expect(r).toBeNull()
+  })
+
+  it('con una válida y una inyectada, solo sobrevive la válida', () => {
+    const r = rangoDePeriodo('rango', '2026-09-11', '2026-01-01', 'x),y.eq.z')
+    expect(r).toEqual({ desde: '2026-01-01', hasta: '9999-12-31' })
+  })
+
+  it('las fechas válidas siguen funcionando igual que antes', () => {
+    expect(rangoDePeriodo('rango', '2026-09-11', '2026-01-01', '2026-03-31')).toEqual({
+      desde: '2026-01-01',
+      hasta: '2026-03-31',
+    })
   })
 })

@@ -72,7 +72,15 @@ export async function editarTrabajoAction(
   redirect(`/trabajos/${id}`)
 }
 
+/**
+ * Borra un trabajo con sus etapas y sus abonos.
+ *
+ * Solo administradores. Registrar, editar y mover de estado un trabajo es la
+ * labor del técnico; borrarlo destruye también el registro del dinero cobrado
+ * sobre él, y eso no se deshace. Hasta ahora no había ninguna comprobación.
+ */
 export async function eliminarTrabajoAction(formData: FormData): Promise<void> {
+  await requireAdmin()
   const id = String(formData.get('id') ?? '')
   if (!id) return
 

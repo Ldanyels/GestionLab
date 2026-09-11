@@ -57,6 +57,19 @@ export function resolverPeriodo(valor: string | undefined): Periodo {
  * el usuario despliega el rango y aún no elige nada, debe seguir viendo la
  * lista completa, no una pantalla vacía.
  */
+/**
+ * Una fecha `YYYY-MM-DD`, o `null` si no lo es.
+ *
+ * Comprueba también que el calendario la admita: `2026-02-31` tiene la forma
+ * correcta y no existe. Se descarta en vez de corregirse porque una fecha
+ * inventada por el sistema produciría resultados que el usuario no pidió.
+ */
+export function fechaValida(valor: string | undefined | null): string | null {
+  if (!valor || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return null
+  const d = new Date(`${valor}T00:00:00Z`)
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== valor ? null : valor
+}
+
 export function rangoDePeriodo(
   periodo: Periodo,
   hoy: string,
@@ -71,12 +84,24 @@ export function rangoDePeriodo(
     case '30d':
       return { desde: restarDias(hoy, 29), hasta: hoy }
     case 'rango': {
-      if (!desde && !hasta) return null
+      /*
+        Las dos fechas se validan **antes** de usarse.
+
+        Llegan de la URL, y de aquí pasan a construir filtros que se envían a
+        la base como texto. Sin esta comprobación, un valor con paréntesis o
+        comas se cuela dentro de la expresión de filtro y la altera: está
+        probado que PostgREST acepta la consulta manipulada. Rechazar lo que no
+        sea `YYYY-MM-DD` cierra esa vía en el único sitio por el que pasan
+        todas las pantallas que usan un rango.
+      */
+      const a = fechaValida(desde)
+      const b = fechaValida(hasta)
+      if (!a && !b) return null
       // Un extremo suelto acota solo por ese lado. Si vienen al revés se
       // enderezan: es más útil que devolver una lista vacía.
-      const a = desde || '0000-01-01'
-      const b = hasta || '9999-12-31'
-      return a <= b ? { desde: a, hasta: b } : { desde: b, hasta: a }
+      const inicio = a || '0000-01-01'
+      const fin = b || '9999-12-31'
+      return inicio <= fin ? { desde: inicio, hasta: fin } : { desde: fin, hasta: inicio }
     }
     default:
       return null

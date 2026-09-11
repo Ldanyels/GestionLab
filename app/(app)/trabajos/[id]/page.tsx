@@ -137,6 +137,12 @@ export default async function TrabajoDetallePage({
           <Link href={`/trabajos/nuevo?doctor=${t.doctor_id}`} className={enlace}>
             + Otro trabajo para {t.doctor_nombre}
           </Link>
+          {/*
+            Borrar se lleva las etapas y los abonos del trabajo: solo el
+            administrador. La acción lo comprueba en el servidor; aquí se
+            esconde para no ofrecer un botón que expulsa a quien lo pulse.
+          */}
+          {perfil?.rol === 'admin' ? (
           <span className="ml-auto">
             <ConfirmDialog
               action={eliminarTrabajoAction}
@@ -148,6 +154,7 @@ export default async function TrabajoDetallePage({
               confirmLabel="Sí, eliminar"
             />
           </span>
+          ) : null}
         </div>
       </Card>
 
