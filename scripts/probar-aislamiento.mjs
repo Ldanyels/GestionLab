@@ -694,6 +694,61 @@ async function comprobarAlmacenamientoDeFotos(comoA, labA, labB) {
     .remove([rutaB, rutaA, `${labB}/${PREFIJO}/intruso.png`, `${labA}/${PREFIJO}/no-es-imagen.txt`])
 }
 
+/*
+  La vista de listado, que es por donde pasa ahora la lista de trabajos.
+
+  Una vista **no hereda RLS por sí sola**: si se crea sin `security_invoker`,
+  corre con los permisos de quien la creó y devuelve todas las filas de todos
+  los laboratorios. Es el fallo más silencioso posible —nada falla, solo
+  aparecen datos de más— y por eso se comprueba aquí y no se da por supuesto.
+*/
+async function comprobarVistaDeListado(comoA, labA, labB) {
+  console.log('\nAislamiento de la vista de listado')
+
+  const { data: visibles, error } = await comoA.from('trabajo_listado').select('*')
+  if (error) {
+    ausentes.push(`vista trabajo_listado (migración 0030): ${error.message}`)
+    return
+  }
+
+  comprobar('trabajo_listado: la lectura no falla', !error)
+
+  const ajenas = (visibles ?? []).filter((f) => f.laboratorio_id !== labA)
+  comprobar(
+    'trabajo_listado: no devuelve trabajos de otro laboratorio',
+    ajenas.length === 0,
+    ajenas.length ? `${ajenas.length} fila(s) ajena(s)` : '',
+  )
+
+  // Red independiente del `laboratorio_id`: la marca de B viaja en los nombres,
+  // así que aparecería en la columna de búsqueda si hubiera fuga.
+  comprobar('trabajo_listado: no contiene la marca del otro laboratorio', !hayFuga(visibles))
+
+  comprobar(
+    'trabajo_listado: el trabajo propio sí se ve',
+    (visibles ?? []).some((f) => f.laboratorio_id === labA),
+  )
+
+  // Ni pidiendo explícitamente los del otro laboratorio.
+  const { data: forzado } = await comoA.from('trabajo_listado').select('id').eq('laboratorio_id', labB)
+  comprobar(
+    'trabajo_listado: pedir los del otro laboratorio no devuelve nada',
+    (forzado ?? []).length === 0,
+  )
+
+  // Y el contador, que es lo que se muestra en las pastillas de filtro, cuenta
+  // solo lo propio: un número que incluyera trabajos ajenos sería una fuga
+  // aunque las filas no se vieran.
+  const { count } = await comoA
+    .from('trabajo_listado')
+    .select('id', { count: 'exact', head: true })
+  comprobar(
+    'trabajo_listado: el contador no incluye trabajos ajenos',
+    (count ?? 0) === (visibles ?? []).length,
+    `contador=${count} visibles=${(visibles ?? []).length}`,
+  )
+}
+
 // ── Limpieza ──────────────────────────────────────────────────
 async function limpiar(laboratorios, usuarios) {
   console.log('\nLimpieza')
@@ -777,6 +832,7 @@ try {
   await comprobarAccesosDePlataforma(comoA, labA, labB)
   await comprobarErroresRegistrados(comoA, labA)
   await comprobarAlmacenamientoDeFotos(comoA, labA, labB)
+  await comprobarVistaDeListado(comoA, labA, labB)
 } catch (e) {
   fallas.push(`Error de preparación: ${e.message}`)
   console.error(`\n✗ ${e.message}`)
