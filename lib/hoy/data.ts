@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { deudaPorConsultorio } from '@/lib/consultorios/deuda'
 import { hoyLima, sinRepetir } from '@/lib/trabajos/agenda'
+import { nombresDeTipo } from '@/lib/trabajos/pagina'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
 import type { TrabajoListItem } from '@/lib/trabajos/types'
@@ -152,7 +153,29 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
     ])
 
   const filas = (r: { data: unknown }) => (r.data ?? []) as unknown as TrabajoListItem[]
-  const ingresados = filas(ingresadosR)
+
+  /*
+    El tipo de trabajo, que es el titular de cada tarjeta.
+
+    La vista no lo trae con formato: guarda los nombres de los tipos dentro del
+    campo de búsqueda, sin el «2× Corona + 1× Perno» con el que se leen. Se
+    arma con la misma función que la lista de Trabajos, en una consulta por las
+    filas que se muestran —a lo sumo cuatro listas cortas.
+  */
+  const crudos = [
+    ...filas(ingresadosR),
+    ...filas(entregasR),
+    ...filas(realizadosR),
+    ...filas(atrasadosR),
+  ]
+  const nombres = await nombresDeTipo(
+    supabase,
+    [...new Set(crudos.map((t) => t.id))],
+  )
+  const conTipo = (lista: TrabajoListItem[]): TrabajoListItem[] =>
+    lista.map((t) => ({ ...t, tipo_nombre: nombres.get(t.id) ?? '—' }))
+
+  const ingresados = conTipo(filas(ingresadosR))
 
   /*
     Si la función de resumen aún no existe, la pantalla abre con las cifras en
@@ -170,11 +193,11 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
   return {
     hoy,
     ingresados,
-    atrasados: filas(atrasadosR),
+    atrasados: conTipo(filas(atrasadosR)),
     // `sinRepetir` se mantiene: un trabajo que ingresó hoy y además se entrega
     // hoy saldría dos veces en la pantalla.
-    entregas: sinRepetir(filas(entregasR), ingresados),
-    realizados: sinRepetir(filas(realizadosR), ingresados),
+    entregas: sinRepetir(conTipo(filas(entregasR)), ingresados),
+    realizados: sinRepetir(conTipo(filas(realizadosR)), ingresados),
     resumen: {
       ingresadosHoy: Number(r?.ingresados_hoy ?? 0),
       entregasHoy: Number(r?.entregas_hoy ?? 0),

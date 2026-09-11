@@ -47,8 +47,13 @@ async function contar(
  * Se arma aquí y no en la vista porque `resumenItems` ya tiene ese formato
  * probado; duplicarlo en SQL crearía dos versiones que se separarían con el
  * tiempo. Cuesta una consulta más, pero solo por las filas visibles.
+ *
+ * Exportada porque la pantalla Hoy la necesita igual: sus tarjetas muestran el
+ * mismo nombre, y al pasar esa pantalla a consultar la vista se quedaron sin
+ * él —la vista solo guarda los tipos dentro del campo de búsqueda, sin el
+ * formato con el que se leen.
  */
-async function nombresDeTipo(
+export async function nombresDeTipo(
   supabase: Awaited<ReturnType<typeof createServerSupabase>>,
   ids: string[],
 ): Promise<Map<string, string>> {
