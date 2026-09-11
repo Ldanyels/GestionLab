@@ -67,12 +67,20 @@ export default async function PlataformaPage() {
             {laboratorios.length} en total · {activos} con acceso
           </p>
         </div>
-        <Link
-          href="/plataforma/nuevo"
-          className="inline-flex h-11 shrink-0 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
-        >
-          + Nuevo
-        </Link>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/plataforma/metricas"
+            className="inline-flex h-11 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold text-[var(--color-accent)]"
+          >
+            Métricas
+          </Link>
+          <Link
+            href="/plataforma/nuevo"
+            className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
+          >
+            + Nuevo
+          </Link>
+        </div>
       </header>
 
       {/*
