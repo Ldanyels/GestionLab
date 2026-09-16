@@ -298,3 +298,43 @@ describe('TrabajoForm — elegir doctor', () => {
     expect(campoDoctor().value).toBe('d1')
   })
 })
+
+describe('TrabajoForm — aviso de posible duplicado', () => {
+  const unDuplicado = [
+    {
+      id: 'tr-viejo',
+      fecha_ingreso: '2026-09-14',
+      paciente_nombre: 'Jeremías',
+      doctor_nombre: 'Dra. Ruiz',
+      consultorio_nombre: 'Arte oral',
+      tipo_nombre: 'Corona porcelana',
+      precio_acordado: 90,
+      estado: 'en_curso',
+    },
+  ]
+
+  function pintarCon(duplicados: typeof unDuplicado | undefined) {
+    // La acción devuelve el estado que tendría tras el envío que detectó la
+    // coincidencia: es lo que recibe el formulario en la vida real.
+    const accionConAviso = async () => ({ error: '', duplicados })
+    return render(
+      <TrabajoForm
+        action={accionConAviso as never}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Crear trabajo"
+        fechaIngreso={INGRESO}
+      />,
+    )
+  }
+
+  /*
+    Sin coincidencias, el formulario se comporta como siempre: el aviso no
+    puede estorbar en el caso normal, que es la inmensa mayoría.
+  */
+  it('sin duplicados, el botón de guardar es el de siempre', () => {
+    pintarCon(undefined)
+    expect(screen.getByRole('button', { name: 'Crear trabajo' })).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+})

@@ -8,6 +8,7 @@ import { useConexion } from '@/components/conexion/useConexion'
 import { Card } from '@/components/ui/Card'
 import { TipoSheet } from './TipoSheet'
 import { DoctorSheet } from './DoctorSheet'
+import { AvisoDeDuplicado } from './AvisoDeDuplicado'
 import type { FormState } from '@/app/(app)/trabajos/actions'
 import type { DoctorOpcion } from '@/lib/consultorios/data'
 import type { CatalogoTrabajo } from '@/lib/catalogo/types'
@@ -93,6 +94,12 @@ export function TrabajoForm({
   /** Doctor elegido y si la hoja de doctores está abierta. */
   const [doctorId, setDoctorId] = useState(trabajo?.doctor_id ?? doctorInicial ?? '')
   const [eligiendoDoctor, setEligiendoDoctor] = useState(false)
+  /*
+    Cuando el servidor devuelve posibles duplicados, el trabajo **no** se
+    guardó. Este estado permite descartar el aviso y volver al formulario sin
+    perder nada de lo escrito.
+  */
+  const [avisoDescartado, setAvisoDescartado] = useState(false)
 
   const porId = useMemo(() => new Map(tipos.map((t) => [t.id, t])), [tipos])
   const doctorElegido = useMemo(
@@ -459,6 +466,17 @@ export function TrabajoForm({
             className={campo}
           />
         ) : null}
+        {/*
+          El aviso va pegado al botón de guardar: es lo último que se ve antes
+          de decidir, y arriba del formulario quedaría fuera de pantalla en un
+          teléfono con las líneas desplegadas.
+        */}
+        {state.duplicados && state.duplicados.length > 0 && !avisoDescartado ? (
+          <AvisoDeDuplicado
+            duplicados={state.duplicados}
+            onCancelar={() => setAvisoDescartado(true)}
+          />
+        ) : (
         <button
           type="submit"
           disabled={pending || !enLinea}
@@ -466,6 +484,7 @@ export function TrabajoForm({
         >
           {!enLinea ? 'Sin conexión — espera para guardar' : pending ? 'Guardando…' : submitLabel}
         </button>
+        )}
       </div>
 
       <DoctorSheet

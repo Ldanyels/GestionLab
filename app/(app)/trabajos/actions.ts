@@ -15,6 +15,10 @@ import {
   marcarEtapa,
 } from '@/lib/trabajos/data'
 import { hoyLima } from '@/lib/trabajos/agenda'
+import {
+  buscarPosiblesDuplicados,
+  type PosibleDuplicado,
+} from '@/lib/trabajos/duplicados-data'
 import type { EstadoEtapa, EstadoTrabajo } from '@/lib/trabajos/estado'
 import { abonoSchema } from '@/lib/abonos/schema'
 import { crearAbono, editarAbono, eliminarAbono } from '@/lib/abonos/data'
@@ -23,6 +27,14 @@ import { descontarInsumosPorTrabajo } from '@/lib/inventario/data'
 
 export interface FormState {
   error: string
+  /**
+   * Trabajos que pueden ser el mismo que se intenta registrar.
+   *
+   * Cuando llega con contenido, **el trabajo no se guardó**: se está esperando
+   * a que quien lo registra mire lo que ya existe y decida. Opcional para no
+   * tocar a las demás acciones que comparten este tipo.
+   */
+  duplicados?: PosibleDuplicado[]
 }
 
 function leerTrabajo(formData: FormData) {
@@ -36,12 +48,44 @@ function leerTrabajo(formData: FormData) {
   })
 }
 
+/**
+ * Registra un trabajo, avisando antes si puede estar duplicado.
+ *
+ * Un técnico registra un trabajo hoy y mañana otro registra el mismo: queda
+ * información falsa y se le cobra dos veces al consultorio. Se comprueban tres
+ * cosas a la vez —consultorio, paciente y tipo de trabajo— en los cinco días
+ * anteriores.
+ *
+ * Si encuentra algo, **no guarda**: devuelve lo que ya existe para que quien
+ * registra lo mire. Solo un segundo envío con `confirmado` guarda de verdad.
+ * No se bloquea nunca: en los datos reales había cuatro pares de trabajos del
+ * mismo consultorio y tipo que eran encargos legítimos, y un bloqueo los habría
+ * rechazado. Quien registra es quien sabe.
+ */
 export async function crearTrabajoAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const parsed = leerTrabajo(formData)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+
+  if (String(formData.get('confirmado') ?? '') !== '1') {
+    /*
+      La comprobación no puede impedir registrar producción.
+
+      Si falla —la vista no existe, la red se cae— se sigue adelante y se
+      guarda. Un filtro de calidad que deje a un laboratorio sin poder trabajar
+      es peor que el duplicado que evita.
+    */
+    const duplicados = await buscarPosiblesDuplicados({
+      doctorId: parsed.data.doctor_id,
+      pacienteNombre: parsed.data.paciente_nombre,
+      tipos: parsed.data.items.map((i) => i.catalogo_trabajo_id),
+      fechaIngreso: hoyLima(),
+    }).catch(() => [] as PosibleDuplicado[])
+
+    if (duplicados.length > 0) return { error: '', duplicados }
+  }
 
   const r = await intentar('crearTrabajoAction', 'No se pudo guardar el trabajo', () =>
     crearTrabajo(parsed.data),
