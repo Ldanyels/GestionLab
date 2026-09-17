@@ -106,7 +106,7 @@ export default async function HoyPage() {
           <ul className="space-y-2.5">
             {datos.atrasados.map((t) => (
               <li key={t.id}>
-                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado />
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
               </li>
             ))}
           </ul>
@@ -138,7 +138,7 @@ export default async function HoyPage() {
           <ul className="space-y-2.5">
             {datos.ingresados.map((t) => (
               <li key={t.id}>
-                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado />
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
               </li>
             ))}
           </ul>
@@ -154,7 +154,7 @@ export default async function HoyPage() {
           <ul className="space-y-2.5">
             {datos.entregas.map((t) => (
               <li key={t.id}>
-                <TarjetaEntrega trabajo={t} montos={datos.montos} />
+                <TarjetaEntrega trabajo={t} montos={datos.montos} hoy={datos.hoy} />
               </li>
             ))}
           </ul>
@@ -172,7 +172,7 @@ export default async function HoyPage() {
           <ul className="space-y-2.5">
             {datos.realizados.map((t) => (
               <li key={t.id}>
-                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado />
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
               </li>
             ))}
           </ul>

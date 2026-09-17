@@ -50,3 +50,15 @@ export function diasEntre(a: string, b: string): number {
   const [by, bm, bd] = partes(b)
   return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000)
 }
+
+/**
+ * `dd/mm` a partir de una fecha ISO.
+ *
+ * Sin el año a propósito: en una tarjeta el año es ruido —casi todo lo que se
+ * mira es de las últimas semanas— y ocupa el espacio que necesita el resto de
+ * la línea en un teléfono.
+ */
+export function diaMes(iso: string): string {
+  const [, m, d] = iso.slice(0, 10).split('-')
+  return `${d}/${m}`
+}

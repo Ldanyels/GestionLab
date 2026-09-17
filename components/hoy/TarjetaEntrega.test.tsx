@@ -77,3 +77,90 @@ describe('TarjetaEntrega', () => {
     expect(screen.queryByText(/S\//)).not.toBeInTheDocument()
   })
 })
+
+describe('TarjetaEntrega — fechas del trabajo', () => {
+  /*
+    La fecha de ingreso siempre: dice cuánto lleva la pieza en el taller, que
+    es la pregunta que se hace al mirar la pantalla por la mañana.
+  */
+  it('siempre muestra cuándo ingresó', () => {
+    const { container } = render(
+      <TarjetaEntrega trabajo={trabajo({ fecha_ingreso: '2026-09-01' })} montos />,
+    )
+    expect(container.textContent).toContain('Ingresó 01/09')
+  })
+
+  it('muestra la fecha de entrega cuando se le puso una', () => {
+    const { container } = render(
+      <TarjetaEntrega trabajo={trabajo({ fecha_entrega: '2026-09-08' })} montos />,
+    )
+    expect(container.textContent).toContain('Entrega 08/09')
+  })
+
+  /*
+    La mitad de los trabajos no llevan fecha de entrega. Escribir «Entrega —»
+    en todos ellos gastaría la línea en decir que no hay dato.
+  */
+  it('sin fecha de entrega no escribe nada de entrega', () => {
+    const { container } = render(
+      <TarjetaEntrega trabajo={trabajo({ fecha_entrega: null })} montos />,
+    )
+    expect(container.textContent).toContain('Ingresó')
+    expect(container.textContent).not.toContain('Entrega')
+  })
+
+  it('marca «Atrasada» cuando la fecha ya pasó', () => {
+    const { container } = render(
+      <TarjetaEntrega
+        trabajo={trabajo({ fecha_entrega: '2026-09-08', estado: 'en_curso' })}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Atrasada 08/09')
+  })
+
+  it('una entrega futura no se marca', () => {
+    const { container } = render(
+      <TarjetaEntrega
+        trabajo={trabajo({ fecha_entrega: '2026-09-25', estado: 'en_curso' })}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Entrega 25/09')
+    expect(container.textContent).not.toContain('Atrasada')
+  })
+
+  /*
+    En un entregado manda la fecha real de salida, no la prometida: la promesa
+    ya no informa de nada cuando el trabajo salió, y tener las dos a la vez
+    invita a leer una por la otra.
+  */
+  it('en un entregado muestra la fecha real de salida', () => {
+    const { container } = render(
+      <TarjetaEntrega
+        trabajo={trabajo({
+          estado: 'entregado',
+          fecha_entrega: '2026-09-08',
+          entregado_el: '2026-09-10',
+        })}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Entregado 10/09')
+    expect(container.textContent).not.toContain('Atrasada')
+  })
+
+  /*
+    Sin `hoy` no se marca atraso: calcularlo con el reloj del dispositivo
+    marcaría vencido, en otra zona horaria, algo que vence hoy.
+  */
+  it('sin la fecha de hoy no marca atraso', () => {
+    const { container } = render(
+      <TarjetaEntrega trabajo={trabajo({ fecha_entrega: '2026-09-08' })} montos />,
+    )
+    expect(container.textContent).not.toContain('Atrasada')
+  })
+})

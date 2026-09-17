@@ -3,15 +3,10 @@ import { Card } from '@/components/ui/Card'
 import { EstadoBadge } from './EstadoBadge'
 import { PagoChip } from './PagoChip'
 import { estadoDeEntrega } from '@/lib/trabajos/plazo'
+import { diaMes } from '@/lib/fechas'
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import type { TrabajoListItem } from '@/lib/trabajos/types'
-
-/** dd/mm a partir de una fecha ISO. */
-function diaMes(iso: string): string {
-  const [, m, d] = iso.slice(0, 10).split('-')
-  return `${d}/${m}`
-}
 
 interface Props {
   trabajo: TrabajoListItem
