@@ -153,3 +153,86 @@ describe('TrabajoCard — atraso', () => {
     expect(container.textContent).not.toContain('Atrasada')
   })
 })
+
+describe('TrabajoCard — la fecha de ingreso, que faltaba', () => {
+  /*
+    El fallo que corrige esto: la tarjeta solo mostraba la fecha de entrega, y
+    como la mayoría de los trabajos no la lleva, el 71% de la lista salía sin
+    ninguna fecha. Los 58 en curso, todos. Solo se veían los entregados, que
+    son los únicos con una fecha puesta — y eso fue justo lo que se reportó.
+  */
+  it('un trabajo en curso sin fecha prometida muestra cuándo ingresó', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({ estado: 'en_curso', fecha_entrega: null, fecha_ingreso: '2026-09-14' })}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Ingresó 14/09')
+  })
+
+  it('con fecha prometida muestra las dos', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({
+          estado: 'en_curso',
+          fecha_ingreso: '2026-09-14',
+          fecha_entrega: '2026-09-20',
+        })}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Ingresó 14/09')
+    expect(container.textContent).toContain('Entrega 20/09')
+  })
+
+  it('un cerrado sin fecha también muestra el ingreso', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({ estado: 'cerrado', fecha_entrega: null, fecha_ingreso: '2026-09-02' })}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Ingresó 02/09')
+  })
+
+  it('un entregado muestra ingreso y salida real', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={{
+          ...trabajo({ estado: 'entregado', fecha_ingreso: '2026-09-01' }),
+          entregado_el: '2026-09-10',
+        }}
+        montos
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Ingresó 01/09')
+    expect(container.textContent).toContain('Entregado 10/09')
+  })
+
+  /*
+    Un técnico sin permiso de importes ve las fechas igual: no son un dato
+    financiero, son con lo que organiza su trabajo.
+  */
+  it('el técnico sin importes ve las fechas y no el precio', () => {
+    const { container } = render(
+      <TrabajoCard
+        trabajo={trabajo({
+          estado: 'en_curso',
+          fecha_ingreso: '2026-09-14',
+          fecha_entrega: '2026-09-20',
+          precio_acordado: 360,
+        })}
+        montos={false}
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Ingresó 14/09')
+    expect(container.textContent).toContain('Entrega 20/09')
+    expect(container.textContent).not.toContain('360')
+  })
+})

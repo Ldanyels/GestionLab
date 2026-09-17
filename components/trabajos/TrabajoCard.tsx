@@ -20,36 +20,45 @@ interface Props {
 }
 
 /**
- * La fecha de la tarjeta: la real si el trabajo ya salió, la prometida si no.
+ * Las dos fechas del trabajo: cuándo entró y para cuándo está.
  *
- * Un trabajo entregado no muestra la prometida ni como respaldo. Lo que
- * interesa de un entregado es cuándo salió, y ofrecer la promesa en su lugar
- * invitaría a leerla como si fuera la entrega.
+ * El ingreso **siempre**. Antes solo se mostraba la fecha de entrega, y como la
+ * mayoría de los trabajos no la lleva, el 71% de la lista salía sin ninguna
+ * fecha —los 58 en curso, todos—. Solo los entregados mostraban algo, porque
+ * son los únicos con una fecha puesta. La consecuencia práctica era que nadie
+ * podía ver cuánto llevaba una pieza en el taller sin abrirla.
+ *
+ * La de entrega solo si existe, y si el trabajo ya salió manda la **real**: la
+ * promesa deja de informar cuando la pieza se entregó, y tener las dos a la vez
+ * invita a leer una por la otra.
  */
-function FechaDeEntrega({ trabajo: t, hoy }: { trabajo: TrabajoListItem; hoy?: string }) {
+function FechasDelTrabajo({ trabajo: t, hoy }: { trabajo: TrabajoListItem; hoy?: string }) {
   const entregado = t.estado === 'entregado'
-  const fecha = entregado ? t.entregado_el : t.fecha_entrega
-  if (!fecha) return null
+  const prometida = entregado ? null : t.fecha_entrega
 
   /*
     El atraso se marca en la propia tarjeta, no solo en la pantalla Hoy.
 
-    Quien recorre la lista de trabajos está decidiendo qué hacer a
-    continuación, y una fecha pasada en gris no se distingue de una futura. Sin
-    `hoy` la tarjeta no puede saberlo y se comporta como antes: la fecha del
-    dispositivo no sirve, porque en otra zona horaria marcaría atrasado un
-    trabajo que vence hoy.
+    Quien recorre la lista está decidiendo qué hacer a continuación, y una
+    fecha pasada en gris no se distingue de una futura. Sin `hoy` no se marca:
+    el reloj del dispositivo daría por vencido, en otra zona horaria, algo que
+    vence hoy.
   */
   const atrasada = hoy ? estadoDeEntrega(t, hoy) === 'atrasada' : false
 
   return (
-    <span
-      className={`shrink-0 text-xs ${
-        atrasada ? 'font-semibold text-[var(--color-danger)]' : 'text-[var(--color-muted)]'
-      }`}
-    >
-      {entregado ? 'Entregado' : atrasada ? 'Atrasada' : 'Entrega'} {diaMes(fecha)}
-    </span>
+    <p className="num text-xs text-[var(--color-muted)]">
+      Ingresó {diaMes(t.fecha_ingreso)}
+      {entregado && t.entregado_el ? <> · Entregado {diaMes(t.entregado_el)}</> : null}
+      {prometida ? (
+        <>
+          {' · '}
+          <span className={atrasada ? 'font-semibold text-[var(--color-danger)]' : undefined}>
+            {atrasada ? 'Atrasada' : 'Entrega'} {diaMes(prometida)}
+          </span>
+        </>
+      ) : null}
+    </p>
   )
 }
 
@@ -72,10 +81,19 @@ export function TrabajoCard({ trabajo: t, montos, hoy }: Props) {
           {t.paciente_nombre ? ` · ${t.paciente_nombre}` : ''}
         </p>
 
+        {/*
+          Las fechas en su propia línea y no junto al chip de pago.
+
+          Desde que el ingreso se muestra siempre, la línea es más larga que
+          antes; compartiendo fila con el chip y el precio se apretaba en un
+          teléfono. Aquí dispone del ancho completo, y además queda en el mismo
+          sitio que en la pantalla Hoy.
+        */}
+        <FechasDelTrabajo trabajo={t} hoy={hoy} />
+
         <div className="flex items-center justify-between gap-3">
           <span className="flex min-w-0 items-center gap-2">
             {montos ? <PagoChip saldo={t.saldo} /> : null}
-            <FechaDeEntrega trabajo={t} hoy={hoy} />
           </span>
           {montos ? (
             <span className="num shrink-0 text-base font-bold">
