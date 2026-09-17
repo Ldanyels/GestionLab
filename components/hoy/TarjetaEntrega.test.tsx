@@ -164,3 +164,53 @@ describe('TarjetaEntrega — fechas del trabajo', () => {
     expect(container.textContent).not.toContain('Atrasada')
   })
 })
+
+describe('TarjetaEntrega — qué ve un técnico sin permiso de importes', () => {
+  /*
+    Las fechas no son un dato financiero.
+
+    Lo que el permiso `reportes_montos` oculta es el **precio**: cuánto cobra
+    el laboratorio por ese trabajo. Cuándo entró la pieza y para cuándo está
+    prometida es justo lo que el técnico necesita para organizar su día, y
+    esconderlo le dejaría la pantalla sin la información con la que trabaja.
+
+    Esta prueba existe para que nadie las meta detrás de `montos` por descuido
+    al tocar la tarjeta.
+  */
+  it('sigue viendo las dos fechas', () => {
+    const { container } = render(
+      <TarjetaEntrega
+        trabajo={trabajo({ fecha_ingreso: '2026-09-14', fecha_entrega: '2026-09-20' })}
+        montos={false}
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Ingresó 14/09')
+    expect(container.textContent).toContain('Entrega 20/09')
+  })
+
+  it('sigue viendo el aviso de atraso', () => {
+    const { container } = render(
+      <TarjetaEntrega
+        trabajo={trabajo({ fecha_entrega: '2026-09-08', estado: 'en_curso' })}
+        montos={false}
+        hoy="2026-09-17"
+      />,
+    )
+    expect(container.textContent).toContain('Atrasada 08/09')
+  })
+
+  it('pero no el precio', () => {
+    const { container } = render(
+      <TarjetaEntrega trabajo={trabajo({ precio_acordado: 90 })} montos={false} />,
+    )
+    expect(container.textContent).not.toContain('90')
+  })
+
+  it('y el administrador sí ve el precio', () => {
+    const { container } = render(
+      <TarjetaEntrega trabajo={trabajo({ precio_acordado: 90 })} montos />,
+    )
+    expect(container.textContent).toContain('90')
+  })
+})
