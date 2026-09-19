@@ -58,7 +58,7 @@ export async function PagosSection({
 
       <div className="grid grid-cols-3 gap-2 text-center">
         <Cifra etiqueta="Precio" valor={formatMoney(precio)} />
-        <Cifra etiqueta="Adelanto" valor={formatMoney(pagado)} />
+        <Cifra etiqueta="Pagado" valor={formatMoney(pagado)} />
         <Cifra etiqueta="Saldo" valor={formatMoney(saldo)} className={saldoColor} />
       </div>
 
