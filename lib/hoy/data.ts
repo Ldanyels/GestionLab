@@ -6,6 +6,7 @@ import { nombresDeTipo } from '@/lib/trabajos/pagina'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
 import type { TrabajoListItem } from '@/lib/trabajos/types'
+import { registrarError } from '@/lib/registro'
 
 export interface ResumenHoy {
   /** Trabajos que ingresaron hoy. Es el contador que se muestra en pantalla. */
@@ -173,7 +174,21 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
         .eq('fecha', hoy),
     ])
 
-  const filas = (r: { data: unknown }) => (r.data ?? []) as unknown as TrabajoListItem[]
+  /*
+    Una consulta que falla se registra; no se convierte en una lista vacía.
+
+    Así se perdió una sección entera: la vista no tenía `cerrado_el`, la
+    consulta devolvía `42703` y esto la traducía a «no hay movimientos hoy».
+    La pantalla decía «Trabajos de hoy: 9» y justo debajo que no había ninguno,
+    y nada en los registros lo delataba.
+
+    Se sigue devolviendo una lista vacía —la pantalla tiene que abrir— pero
+    ahora el fallo aparece en el registro de errores y llega el aviso.
+  */
+  const filas = (r: { data: unknown; error?: { message: string; code?: string } | null }) => {
+    if (r.error) registrarError('datosHoy', r.error, 'No se pudo cargar parte de la pantalla')
+    return (r.data ?? []) as unknown as TrabajoListItem[]
+  }
 
   /*
     El tipo de trabajo, que es el titular de cada tarjeta.
@@ -218,6 +233,11 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
     con la suma, no dos eventos: es un cobro partido.
   */
   const cobradoPorTrabajo = new Map<string, number>()
+  // Mismo criterio que arriba: si la consulta de abonos falla, se registra en
+  // vez de quedarse callada diciendo que hoy no se cobró nada.
+  if (abonosR.error) {
+    registrarError('datosHoy.abonos', abonosR.error, 'No se pudieron cargar los cobros de hoy')
+  }
   for (const a of ((abonosR.data ?? []) as unknown as { trabajo_id: string; monto: number }[])) {
     cobradoPorTrabajo.set(
       a.trabajo_id,
