@@ -5,16 +5,28 @@ import { Card } from '@/components/ui/Card'
 import { AbonoForm } from './AbonoForm'
 import { AbonoEditable } from './AbonoEditable'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { eliminarAbonoAction } from '@/app/(app)/trabajos/actions'
+import {
+  cambiarEstadoTrabajoAction,
+  eliminarAbonoAction,
+} from '@/app/(app)/trabajos/actions'
 
 export async function PagosSection({
   trabajoId,
   precio,
+  estadoTrabajo,
   puedeBorrar,
   puedeEditar,
 }: {
   trabajoId: string
   precio: number
+  /**
+   * Para saber si ofrecer «Cerrar trabajo» junto al botón de guardar.
+   *
+   * Cerrar vive aquí y no en la cabecera porque es la última decisión del
+   * dinero: se cierra cuando ya no queda nada que cobrar. Entregar, que es del
+   * taller, se quedó arriba.
+   */
+  estadoTrabajo: string
   /**
    * Si es falso, no aparece el botón de eliminar de cada abono. Borrar es solo
    * del administrador: hace desaparecer el registro.
@@ -46,7 +58,7 @@ export async function PagosSection({
 
       <div className="grid grid-cols-3 gap-2 text-center">
         <Cifra etiqueta="Precio" valor={formatMoney(precio)} />
-        <Cifra etiqueta="Pagado" valor={formatMoney(pagado)} />
+        <Cifra etiqueta="Adelanto" valor={formatMoney(pagado)} />
         <Cifra etiqueta="Saldo" valor={formatMoney(saldo)} className={saldoColor} />
       </div>
 
@@ -82,7 +94,24 @@ export async function PagosSection({
         </p>
       )}
 
-      <AbonoForm trabajoId={trabajoId} saldo={saldo} />
+      <AbonoForm
+        trabajoId={trabajoId}
+        saldo={saldo}
+        alLado={
+          estadoTrabajo === 'cerrado' ? null : (
+            <form action={cambiarEstadoTrabajoAction} className="flex-1">
+              <input type="hidden" name="id" value={trabajoId} />
+              <input type="hidden" name="estado" value="cerrado" />
+              <button
+                type="submit"
+                className="h-11 w-full min-w-[160px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 text-sm font-medium transition active:scale-[0.98]"
+              >
+                Cerrar trabajo
+              </button>
+            </form>
+          )
+        }
+      />
     </div>
   )
 }

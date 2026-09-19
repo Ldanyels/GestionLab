@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { crearAbonoAction, type FormState } from '@/app/(app)/trabajos/actions'
@@ -22,12 +23,23 @@ function hoyLocal(): string {
 export function AbonoForm({
   trabajoId,
   saldo,
+  alLado,
 }: {
   trabajoId: string
   /** Lo que falta cobrar. De aquí salen los atajos de monto. */
   saldo: number
+  /**
+   * Un control que va **al lado** del botón de guardar: hoy, cerrar el trabajo.
+   *
+   * Llega como nodo y no como prop suelta porque es otro `<form>`, con su
+   * propia acción, y un formulario no puede ir dentro de otro. Por eso el botón
+   * de guardar sale del `<form>` de abonos y se le asocia con `form=`: es la
+   * única forma de que los dos queden en la misma fila siendo hermanos.
+   */
+  alLado?: ReactNode
 }) {
   const [state, formAction, pending] = useActionState(crearAbonoAction, initial)
+  const idFormulario = `abono-${trabajoId}`
   // Sin conexión no se envía: un abono que parece registrado y no lo está es
   // peor que uno sin registrar, porque nadie vuelve a mirarlo.
   const enLinea = useConexion()
@@ -57,67 +69,85 @@ export function AbonoForm({
   }, [state])
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-2">
-      <input type="hidden" name="trabajo_id" value={trabajoId} />
+    <div className="space-y-2">
+      <form id={idFormulario} ref={formRef} action={formAction} className="space-y-2">
+        <input type="hidden" name="trabajo_id" value={trabajoId} />
+
+        {/*
+          Los atajos van **antes** que los campos: el caso frecuente es cobrar
+          todo lo que falta, y así ese caso se resuelve sin teclear nada. Llenan
+          el monto en vez de enviar solos, para que se pueda ajustar antes de
+          confirmar: un pago es dinero, y no debe salir de un solo toque
+          irreversible.
+        */}
+        {atajos.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {atajos.map((a) => (
+              <button
+                key={a.etiqueta}
+                type="button"
+                onClick={() => setMonto(String(a.monto))}
+                className="h-9 rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
+              >
+                {a.etiqueta} · {formatMoney(a.monto)}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            name="monto"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            value={monto}
+            onChange={(e) => setMonto(e.target.value)}
+            placeholder="Monto (S/)"
+            className={CAMPO_COMPACTO}
+          />
+          <select name="metodo" defaultValue="efectivo" className={CAMPO_COMPACTO}>
+            {METODOS_PAGO.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <input
+            name="fecha"
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            className={CAMPO_COMPACTO}
+          />
+          <input name="nota" placeholder="Nota (opcional)" className={CAMPO_COMPACTO} />
+        </div>
+        {state.error ? (
+          <p role="alert" className="text-sm text-[var(--color-danger)]">
+            {state.error}
+          </p>
+        ) : null}
+      </form>
 
       {/*
-        Los atajos van **antes** que los campos: el caso frecuente es cobrar
-        todo lo que falta, y así ese caso se resuelve sin teclear nada. Llenan
-        el monto en vez de enviar solos, para que se pueda ajustar antes de
-        confirmar: un pago es dinero, y no debe salir de un solo toque
-        irreversible.
-      */}
-      {atajos.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
-          {atajos.map((a) => (
-            <button
-              key={a.etiqueta}
-              type="button"
-              onClick={() => setMonto(String(a.monto))}
-              className="h-9 rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
-            >
-              {a.etiqueta} · {formatMoney(a.monto)}
-            </button>
-          ))}
-        </div>
-      ) : null}
+        Los dos botones del bosquejo: cerrar el trabajo y guardar el adelanto.
 
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="monto"
-          type="number"
-          min="0"
-          step="0.01"
-          required
-          value={monto}
-          onChange={(e) => setMonto(e.target.value)}
-          placeholder="Monto (S/)"
-          className={CAMPO_COMPACTO}
-        />
-        <select name="metodo" defaultValue="efectivo" className={CAMPO_COMPACTO}>
-          {METODOS_PAGO.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-        <input
-          name="fecha"
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          className={CAMPO_COMPACTO}
-        />
-        <input name="nota" placeholder="Nota (opcional)" className={CAMPO_COMPACTO} />
+        «Registrar adelanto» es el nombre que usa el laboratorio —el consultorio
+        adelanta parte y salda al recoger—, y el botón dice lo que hace con lo
+        que se acaba de escribir arriba.
+      */}
+      <div className="flex flex-wrap gap-2">
+        {alLado}
+        <Button
+          type="submit"
+          form={idFormulario}
+          className="min-w-[160px] flex-1"
+          disabled={pending || !enLinea}
+        >
+          {!enLinea ? 'Sin conexión' : pending ? 'Registrando…' : 'Registrar adelanto'}
+        </Button>
       </div>
-      {state.error ? (
-        <p role="alert" className="text-sm text-[var(--color-danger)]">
-          {state.error}
-        </p>
-      ) : null}
-      <Button type="submit" className="w-full" disabled={pending || !enLinea}>
-        {!enLinea ? 'Sin conexión' : pending ? 'Registrando…' : 'Registrar abono'}
-      </Button>
-    </form>
+    </div>
   )
 }

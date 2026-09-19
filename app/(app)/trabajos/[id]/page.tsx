@@ -111,15 +111,30 @@ export default async function TrabajoDetallePage({
           />
         )}
 
+        {/*
+          Entregar y hacer el recibo, los dos como botones y juntos: es la
+          secuencia real del mostrador —sale la pieza, se entrega el papel— y
+          antes el recibo era un enlace de 13 px que nadie veía.
+
+          Cerrar no está aquí: se cerró junto a los pagos, que es cuando se
+          decide. Vuelve a esta fila solo para quien no ve esa sección, para
+          que nadie se quede sin poder cerrar un trabajo.
+        */}
         <div className="flex flex-wrap gap-2">
-          {t.estado !== 'cerrado' ? (
-            <EstadoBtn id={t.id} estado="cerrado" label="Cerrar trabajo" />
-          ) : null}
           {t.estado !== 'entregado' ? (
-            <EstadoBtn id={t.id} estado="entregado" label="Marcar entregado" ghost />
+            <EstadoBtn id={t.id} estado="entregado" label="Marcar entregado" />
           ) : null}
+          <Link
+            href={`/trabajos/${t.id}/recibo`}
+            className="inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 text-sm font-semibold transition active:scale-[0.98]"
+          >
+            Recibo
+          </Link>
           {t.estado !== 'en_curso' ? (
             <EstadoBtn id={t.id} estado="en_curso" label="Reabrir" ghost />
+          ) : null}
+          {t.estado !== 'cerrado' && !registraAbonos ? (
+            <EstadoBtn id={t.id} estado="cerrado" label="Cerrar trabajo" ghost />
           ) : null}
         </div>
 
@@ -128,9 +143,6 @@ export default async function TrabajoDetallePage({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--color-border)] pt-3">
-          <Link href={`/trabajos/${t.id}/recibo`} className={enlace}>
-            Recibo
-          </Link>
           <Link href={`/trabajos/${t.id}/editar`} className={enlace}>
             Editar
           </Link>
@@ -256,6 +268,7 @@ export default async function TrabajoDetallePage({
         <PagosSection
           trabajoId={t.id}
           precio={t.precio_acordado}
+          estadoTrabajo={t.estado}
           puedeBorrar={borraAbonos}
           // La sección solo se muestra a quien registra abonos, así que quien
           // llega hasta aquí puede corregirlos.
