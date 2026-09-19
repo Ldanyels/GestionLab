@@ -2,18 +2,23 @@
 --
 -- Fallo encontrado en producción: la pantalla Hoy decía «Trabajos de hoy: 9» y
 -- justo debajo «Todavía no hay movimientos hoy». Los nueve estaban ahí; lo que
--- fallaba era la consulta.
+-- fallaba era la consulta, porque la vista no tenía la columna que la 0034
+-- añadió a la tabla.
 --
--- La migración 0034 añadió `cerrado_el` a la tabla `trabajo`, pero la vista se
--- había creado en la 0030 enumerando sus columnas una por una, así que no la
--- incluía. Pedirla devolvía `42703` y la aplicación se quedaba con una lista
--- vacía sin decir nada.
+-- **Se borra y se vuelve a crear, no `create or replace`.**
 --
--- Lección que deja: una vista que enumera columnas hay que recrearla cada vez
--- que la tabla de abajo gana una que la vista necesita. `create or replace`
--- aquí es exactamente para eso.
+-- El primer intento usó `create or replace` y PostgreSQL lo rechazó: esa forma
+-- solo admite **añadir columnas al final**, y `cerrado_el` va junto a las otras
+-- fechas, donde se lee. Reemplazar cambiando el orden falla con «cannot change
+-- name of view column». Borrar y recrear no tiene esa restricción y deja la
+-- vista escrita en el orden que tiene sentido leer.
+--
+-- Sin `cascade` a propósito: si algún día algo dependiera de esta vista, el
+-- borrado debe fallar y avisar, no llevárselo por delante en silencio.
 
-create or replace view trabajo_listado
+drop view if exists trabajo_listado;
+
+create view trabajo_listado
 with (security_invoker = on) as
 select
   t.id,
