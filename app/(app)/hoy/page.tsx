@@ -9,7 +9,6 @@ import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { KpiTile } from '@/components/ui/KpiTile'
 import { TarjetaEntrega } from '@/components/hoy/TarjetaEntrega'
-import { TarjetaMovimiento } from '@/components/hoy/TarjetaMovimiento'
 
 export default async function HoyPage() {
   const perfil = await getSessionPerfil()
@@ -115,16 +114,17 @@ export default async function HoyPage() {
       ) : null}
 
       {/*
-        Todo lo que se movió hoy, venga del día que venga.
+        El trabajo del día: lo que ingresó hoy.
 
-        Sustituye a la lista de «lo que ingresó hoy»: un trabajo que entró la
-        semana pasada y se terminó esta mañana también es producción de hoy, y
-        antes no aparecía en ninguna parte. Cada trabajo sale una sola vez, con
-        todas las etiquetas de lo que le pasó.
+        Se probó a sustituirlo por una lista de «movimientos del día» —lo que
+        entró, se cerró, se entregó o se cobró— y el laboratorio pidió volver a
+        esta. La lista de movimientos sigue en el historial por si algún día se
+        retoma; lo que aprendimos es que quien abre esta pantalla por la mañana
+        viene a ver lo que entró, no un registro de actividad.
       */}
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[17px] font-bold">Movimientos de hoy</h2>
+          <h2 className="text-[17px] font-bold">Trabajos de hoy</h2>
           <Link
             href="/trabajos"
             className="shrink-0 text-[13.5px] font-semibold text-[var(--color-accent)]"
@@ -133,23 +133,18 @@ export default async function HoyPage() {
           </Link>
         </div>
 
-        {datos.movimientos.length === 0 ? (
+        {datos.ingresados.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
-            <p className="text-[15px] font-semibold">Todavía no hay movimientos hoy</p>
+            <p className="text-[15px] font-semibold">Todavía no hay trabajos de hoy</p>
             <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
-              Aquí aparece lo que ingrese, se cierre, se entregue o se cobre durante el día.
+              Los que registres hoy aparecen aquí. El resto está en Trabajos.
             </p>
           </div>
         ) : (
           <ul className="space-y-2.5">
-            {datos.movimientos.map((m) => (
-              <li key={m.id}>
-                <TarjetaMovimiento
-                  trabajo={m}
-                  movimientos={m.movimientos}
-                  cobradoHoy={m.cobrado_hoy}
-                  montos={datos.montos}
-                />
+            {datos.ingresados.map((t) => (
+              <li key={t.id}>
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
               </li>
             ))}
           </ul>
@@ -170,6 +165,24 @@ export default async function HoyPage() {
             {datos.entregas.map((t) => (
               <li key={t.id}>
                 <TarjetaEntrega trabajo={t} montos={datos.montos} hoy={datos.hoy} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {datos.realizados.length > 0 ? (
+        <div className="space-y-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-[17px] font-bold">Entregas ya hechas</h2>
+            <span className="num shrink-0 text-[13.5px] text-[var(--color-muted)]">
+              {datos.realizados.length} de {datos.resumen.entregasHoy}
+            </span>
+          </div>
+          <ul className="space-y-2.5">
+            {datos.realizados.map((t) => (
+              <li key={t.id}>
+                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
               </li>
             ))}
           </ul>
