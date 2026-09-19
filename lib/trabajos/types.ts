@@ -16,6 +16,13 @@ export interface Trabajo {
    * en los entregados antes de la migración 0019.
    */
   entregado_el: string | null
+  /**
+   * Cuándo se cerró. La sella el paso a `cerrado` y se vacía al reabrir.
+   *
+   * NULL en los cerrados antes de la migración 0034: esa fecha no se guardaba
+   * en ninguna parte y no se puede reconstruir.
+   */
+  cerrado_el: string | null
   estado: EstadoTrabajo
   precio_acordado: number
   cantidad: number

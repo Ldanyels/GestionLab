@@ -12,6 +12,7 @@ import type {
   TrabajoListItem,
 } from './types'
 import type { TrabajoInput } from './schema'
+import { hoyLima } from './agenda'
 
 const SELECT_LIST =
   '*, doctor:doctor_id(nombre, consultorio:consultorio_id(nombre)), catalogo:catalogo_trabajo_id(nombre, categoria, variable_etiqueta), abonos:abono(monto), items:trabajo_item(cantidad, orden, catalogo:catalogo_trabajo_id(nombre))'
@@ -155,6 +156,17 @@ export async function crearTrabajo(input: TrabajoInput): Promise<string> {
       catalogo_trabajo_id: lineas[0].catalogo_trabajo_id,
       paciente_nombre: input.paciente_nombre,
       pieza: null,
+      /*
+        La fecha se escribe aquí y no se deja al defecto de la base.
+
+        La base ya la calcula en la zona de Lima desde la migración 0033, así
+        que esto es redundante a propósito: un trabajo registrado a las 19:36
+        apareció con la fecha del día siguiente porque el defecto era
+        `current_date`, que es UTC, y nadie lo vio hasta que un laboratorio lo
+        reportó. Con el valor escrito aquí, la fecha que se guarda está a la
+        vista de quien lee este código.
+      */
+      fecha_ingreso: hoyLima(),
       fecha_entrega: input.fecha_entrega,
       cantidad: totalPiezas,
       variable_cantidad: lineas[0].variable_cantidad,
@@ -225,6 +237,13 @@ export async function editarTrabajo(
       catalogo_trabajo_id: lineas[0].catalogo_trabajo_id,
       paciente_nombre: input.paciente_nombre,
       pieza: null,
+      /*
+        `fecha_ingreso` **no** se toca al editar.
+
+        Es cuándo entró la pieza al taller, un hecho pasado; corregirle el
+        precio o el paciente a un trabajo de la semana pasada no puede moverlo
+        a hoy. Se fija solo al crearlo.
+      */
       fecha_entrega: input.fecha_entrega,
       cantidad: totalPiezas,
       variable_cantidad: lineas[0].variable_cantidad,
@@ -305,9 +324,34 @@ export async function cambiarEstadoTrabajo(
     return
   }
 
+  /*
+    El cierre se sella igual que la entrega.
+
+    Sin esta fecha, un trabajo que entró la semana pasada y se terminó esta
+    mañana no aparecía como producción de hoy en ninguna parte: cambiaba de
+    estado y no dejaba rastro. `is('cerrado_el', null)` conserva el primer
+    cierre si alguien reabre y vuelve a cerrar el mismo día.
+  */
+  if (estado === 'cerrado') {
+    const { error: errCierre } = await supabase
+      .from('trabajo')
+      .update({ cerrado_el: hoy })
+      .eq('id', id)
+      .is('cerrado_el', null)
+    if (errCierre) throw new Error(errCierre.message)
+    return
+  }
+
+  /*
+    Al reabrir se borran las dos fechas.
+
+    Un trabajo que vuelve a «en curso» no está ni entregado ni cerrado, y
+    dejarle las fechas puestas lo haría contar como producción de un día en el
+    que, de hecho, se deshizo.
+  */
   const { error: errBorrado } = await supabase
     .from('trabajo')
-    .update({ entregado_el: null })
+    .update({ entregado_el: null, cerrado_el: null })
     .eq('id', id)
     .not('entregado_el', 'is', null)
   if (errBorrado) throw new Error(errBorrado.message)

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import {
   entregasDelDia,
   fechaLarga,
@@ -172,5 +172,46 @@ describe('fechaLarga', () => {
     const texto = fechaLarga('2026-01-01')
     expect(texto).not.toContain('De ')
     expect(texto).toMatch(/^[A-ZÁÉÍÓÚ][a-záéíóú]+ \d{1,2} de [a-z]+$/)
+  })
+})
+
+describe('hoyLima — la zona horaria que corrió las fechas', () => {
+  /*
+    El fallo reportado: un trabajo registrado a las 19:36 apareció con la fecha
+    del día siguiente. La causa era que la base usaba `current_date`, que es
+    UTC, y Lima va cinco horas por detrás: desde las 19:00 de Lima, en UTC ya
+    es mañana.
+
+    Estas pruebas fijan el comportamiento correcto con instantes concretos, que
+    es la única forma de comprobarlo sin esperar a que den las siete.
+  */
+  function limaEn(iso: string): string {
+    vi.setSystemTime(new Date(iso))
+    return hoyLima()
+  }
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  it('a las 19:36 de Lima sigue siendo hoy, no mañana', () => {
+    // 2026-09-19T00:36:00Z son las 19:36 del 18 en Lima.
+    expect(limaEn('2026-09-19T00:36:00.000Z')).toBe('2026-09-18')
+  })
+
+  it('a las 23:59 de Lima sigue siendo el mismo día', () => {
+    expect(limaEn('2026-09-19T04:59:00.000Z')).toBe('2026-09-18')
+  })
+
+  it('pasada la medianoche de Lima ya es el día siguiente', () => {
+    expect(limaEn('2026-09-19T05:01:00.000Z')).toBe('2026-09-19')
+  })
+
+  it('a media mañana no hay ambigüedad', () => {
+    expect(limaEn('2026-09-18T15:00:00.000Z')).toBe('2026-09-18')
   })
 })

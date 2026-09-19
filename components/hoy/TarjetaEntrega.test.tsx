@@ -14,6 +14,7 @@ function trabajo(p: Partial<TrabajoListItem> = {}): TrabajoListItem {
     fecha_ingreso: '2026-09-01',
     fecha_entrega: '2026-09-08',
     entregado_el: null,
+    cerrado_el: null,
     estado: 'en_curso',
     precio_acordado: 90,
     cantidad: 1,

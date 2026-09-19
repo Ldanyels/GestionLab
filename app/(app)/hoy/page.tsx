@@ -9,6 +9,7 @@ import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { KpiTile } from '@/components/ui/KpiTile'
 import { TarjetaEntrega } from '@/components/hoy/TarjetaEntrega'
+import { TarjetaMovimiento } from '@/components/hoy/TarjetaMovimiento'
 
 export default async function HoyPage() {
   const perfil = await getSessionPerfil()
@@ -113,12 +114,17 @@ export default async function HoyPage() {
         </div>
       ) : null}
 
-      {/* Sección principal: el trabajo del día. Antes la pantalla se apoyaba
-          solo en la fecha de entrega, que nadie llena, y el técnico no tenía
-          dónde ver lo que había entrado ni lo que ya estaba hecho. */}
+      {/*
+        Todo lo que se movió hoy, venga del día que venga.
+
+        Sustituye a la lista de «lo que ingresó hoy»: un trabajo que entró la
+        semana pasada y se terminó esta mañana también es producción de hoy, y
+        antes no aparecía en ninguna parte. Cada trabajo sale una sola vez, con
+        todas las etiquetas de lo que le pasó.
+      */}
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[17px] font-bold">Trabajos de hoy</h2>
+          <h2 className="text-[17px] font-bold">Movimientos de hoy</h2>
           <Link
             href="/trabajos"
             className="shrink-0 text-[13.5px] font-semibold text-[var(--color-accent)]"
@@ -127,27 +133,36 @@ export default async function HoyPage() {
           </Link>
         </div>
 
-        {datos.ingresados.length === 0 ? (
+        {datos.movimientos.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
-            <p className="text-[15px] font-semibold">Todavía no hay trabajos de hoy</p>
+            <p className="text-[15px] font-semibold">Todavía no hay movimientos hoy</p>
             <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
-              Los que registres hoy aparecen aquí. El resto está en Trabajos.
+              Aquí aparece lo que ingrese, se cierre, se entregue o se cobre durante el día.
             </p>
           </div>
         ) : (
           <ul className="space-y-2.5">
-            {datos.ingresados.map((t) => (
-              <li key={t.id}>
-                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
+            {datos.movimientos.map((m) => (
+              <li key={m.id}>
+                <TarjetaMovimiento
+                  trabajo={m}
+                  movimientos={m.movimientos}
+                  cobradoHoy={m.cobrado_hoy}
+                  montos={datos.montos}
+                />
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      {/* Las dos secciones por fecha de entrega solo aparecen si hay algo.
-          Hoy están vacías porque nadie llena esa fecha; el día que empiecen a
-          usarla, salen solas sin tocar código. */}
+      {/*
+        Lo que hay que sacar hoy: prometido para hoy y todavía abierto.
+
+        No se solapa con los movimientos: aquello dice qué **pasó**, esto dice
+        qué **falta**. Un trabajo prometido para hoy que nadie ha tocado no
+        tiene ningún movimiento, y es justo el que hay que ver.
+      */}
       {datos.entregas.length > 0 ? (
         <div className="space-y-2.5">
           <h2 className="text-[17px] font-bold">Entregas pendientes de hoy</h2>
@@ -155,24 +170,6 @@ export default async function HoyPage() {
             {datos.entregas.map((t) => (
               <li key={t.id}>
                 <TarjetaEntrega trabajo={t} montos={datos.montos} hoy={datos.hoy} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {datos.realizados.length > 0 ? (
-        <div className="space-y-2.5">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-[17px] font-bold">Entregas ya hechas</h2>
-            <span className="num shrink-0 text-[13.5px] text-[var(--color-muted)]">
-              {datos.realizados.length} de {datos.resumen.entregasHoy}
-            </span>
-          </div>
-          <ul className="space-y-2.5">
-            {datos.realizados.map((t) => (
-              <li key={t.id}>
-                <TarjetaEntrega trabajo={t} montos={datos.montos} conEstado hoy={datos.hoy} />
               </li>
             ))}
           </ul>

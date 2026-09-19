@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { deudaPorConsultorio } from '@/lib/consultorios/deuda'
 import { hoyLima, sinRepetir } from '@/lib/trabajos/agenda'
+import { movimientosDelDia, type ConMovimientos } from './movimientos'
 import { nombresDeTipo } from '@/lib/trabajos/pagina'
 import { veMontos } from '@/lib/permisos'
 import type { Perfil } from '@/lib/supabase/types'
@@ -80,6 +81,11 @@ export interface DatosHoy {
   realizados: TrabajoListItem[]
   /** Prometidas con la fecha pasada y aún sin entregar, la más vieja primero. */
   atrasados: TrabajoListItem[]
+  /**
+   * Todo lo que se movió hoy: lo que ingresó, se cerró, se entregó o se cobró,
+   * sin importar de qué día sea el trabajo.
+   */
+  movimientos: ConMovimientos<TrabajoListItem & { cobrado_hoy: number }>[]
   resumen: ResumenHoy
   deuda: FilaDeuda[]
   montos: boolean
@@ -110,7 +116,7 @@ const TOPE_POR_LISTA = 50
 
 /** Las columnas que pinta la tarjeta. Sin `busqueda`, que solo sirve en la base. */
 const COLUMNAS =
-  'id, laboratorio_id, doctor_id, catalogo_trabajo_id, paciente_nombre, pieza, fecha_ingreso, fecha_entrega, entregado_el, estado, precio_acordado, cantidad, variable_cantidad, notas, creado_en, doctor_nombre, consultorio_id, consultorio_nombre, total_pagado, saldo'
+  'id, laboratorio_id, doctor_id, catalogo_trabajo_id, paciente_nombre, pieza, fecha_ingreso, fecha_entrega, entregado_el, estado, precio_acordado, cantidad, variable_cantidad, notas, creado_en, cerrado_el, doctor_nombre, consultorio_id, consultorio_nombre, total_pagado, saldo'
 
 /**
  * Todo lo que pinta la pantalla Hoy, sin descargar el laboratorio entero.
@@ -129,7 +135,7 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
 
   const lista = () => supabase.from('trabajo_listado').select(COLUMNAS)
 
-  const [resumenFila, ingresadosR, entregasR, realizadosR, atrasadosR, cuentas] =
+  const [resumenFila, ingresadosR, entregasR, realizadosR, atrasadosR, cuentas, movidosR, abonosR] =
     await Promise.all([
       supabase.rpc('resumen_hoy', { p_hoy: hoy }).maybeSingle(),
       lista().eq('fecha_ingreso', hoy).order('creado_en', { ascending: false }).limit(TOPE_POR_LISTA),
@@ -150,6 +156,21 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
         .order('fecha_entrega', { ascending: true })
         .limit(TOPE_POR_LISTA),
       montos ? deudaPorConsultorio() : Promise.resolve([]),
+      /*
+        Los movimientos del día.
+
+        Se piden los trabajos que tienen **alguna** de las tres fechas en hoy y,
+        aparte, los que recibieron un abono hoy. Un `or` sobre las tres fechas y
+        una consulta corta de abonos: las dos devuelven un puñado de filas,
+        porque un laboratorio no mueve cientos de trabajos en un día.
+      */
+      lista()
+        .or(`fecha_ingreso.eq.${hoy},entregado_el.eq.${hoy},cerrado_el.eq.${hoy}`)
+        .limit(TOPE_POR_LISTA),
+      supabase
+        .from('abono')
+        .select('trabajo_id, monto')
+        .eq('fecha', hoy),
     ])
 
   const filas = (r: { data: unknown }) => (r.data ?? []) as unknown as TrabajoListItem[]
@@ -190,8 +211,44 @@ export async function datosHoy(perfil: Perfil | null): Promise<DatosHoy> {
     por_cobrar: number
   } | null
 
+  /*
+    Los abonos de hoy, sumados por trabajo.
+
+    Dos abonos del mismo trabajo el mismo día son un solo movimiento de cobro
+    con la suma, no dos eventos: es un cobro partido.
+  */
+  const cobradoPorTrabajo = new Map<string, number>()
+  for (const a of ((abonosR.data ?? []) as unknown as { trabajo_id: string; monto: number }[])) {
+    cobradoPorTrabajo.set(
+      a.trabajo_id,
+      Math.round(((cobradoPorTrabajo.get(a.trabajo_id) ?? 0) + Number(a.monto)) * 100) / 100,
+    )
+  }
+
+  /*
+    Se unen los trabajos con fecha de hoy y los que solo recibieron un abono.
+
+    Un trabajo cobrado hoy puede ser de hace semanas y no aparecer en la
+    primera consulta; sin esta unión, el movimiento de cobro se perdería justo
+    en los trabajos viejos, que son los que más se cobran.
+  */
+  const movidos = new Map<string, TrabajoListItem & { cobrado_hoy: number }>()
+  for (const t of filas(movidosR)) movidos.set(t.id, { ...t, cobrado_hoy: 0 })
+  for (const [id, monto] of cobradoPorTrabajo) {
+    const ya = movidos.get(id)
+    if (ya) ya.cobrado_hoy = monto
+  }
+  const paraMovimientos = conTipo([...movidos.values()]).map((t) => ({
+    ...t,
+    cobrado_hoy: movidos.get(t.id)?.cobrado_hoy ?? 0,
+    // `cobrado_el` lleva el día si hubo abono: es lo que `movimientosDelDia`
+    // compara, y así la regla de qué cuenta como cobro vive en un solo sitio.
+    cobrado_el: cobradoPorTrabajo.has(t.id) ? [hoy] : [],
+  }))
+
   return {
     hoy,
+    movimientos: movimientosDelDia(paraMovimientos, hoy),
     ingresados,
     atrasados: conTipo(filas(atrasadosR)),
     // `sinRepetir` se mantiene: un trabajo que ingresó hoy y además se entrega

@@ -8,7 +8,20 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
-    exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**'],
+    /*
+      `.kilo/worktrees` es una copia completa del proyecto que deja otra
+      herramienta dentro del repositorio. Sin excluirla, vitest recorre las
+      pruebas dos veces y el total sale al doble —215 archivos en vez de 108—,
+      que es peor que un número equivocado: hace creer que hay cobertura donde
+      solo hay un eco.
+    */
+    exclude: [
+      '**/node_modules/**',
+      '**/e2e/**',
+      '**/.next/**',
+      '**/.kilo/**',
+      '**/worktrees/**',
+    ],
   },
   resolve: { alias: { '@': path.resolve(__dirname, '.') } },
 })
