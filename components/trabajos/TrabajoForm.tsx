@@ -94,6 +94,9 @@ export function TrabajoForm({
   const [fechaTocada, setFechaTocada] = useState(Boolean(trabajo))
   const [fecha, setFecha] = useState(trabajo?.fecha_entrega ?? '')
   const [manual, setManual] = useState(false)
+  const [montoManual, setMontoManual] = useState(
+    trabajo?.precio_acordado != null ? String(trabajo.precio_acordado) : '',
+  )
   /** Índice de la línea que abrió la hoja de tipos; null = cerrada. */
   const [eligiendo, setEligiendo] = useState<number | null>(null)
   /** Doctor elegido y si la hoja de doctores está abierta. */
@@ -449,6 +452,43 @@ export function TrabajoForm({
           )
         })}
 
+        {/*
+          El monto manual va aquí, pegado al subtotal, porque es la misma
+          decisión: cuánto se cobra por lo que se hizo. Al final del formulario
+          quedaba lejos de las cifras que lo motivan —«se cobró solo hasta la
+          prueba»— y había que volver a subir para recordarlas.
+        */}
+        <div className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-3">
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={manual}
+              onChange={(e) => setManual(e.target.checked)}
+              className="mt-0.5 size-5 shrink-0"
+            />
+            Ingresar un monto manual (ej. cobrar solo hasta donde se hizo)
+          </label>
+          {manual ? (
+            <>
+              <input
+                name="precio_manual"
+                type="number"
+                min="0"
+                step="0.01"
+                value={montoManual}
+                onChange={(e) => setMontoManual(e.target.value)}
+                placeholder="Monto manual (S/)"
+                className={campo}
+              />
+              {lineas.length > 1 ? (
+                <p className="text-[12px] text-[var(--color-muted)]">
+                  Reemplaza el total de las {lineas.length} líneas.
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+
         <button
           type="button"
           onClick={agregarLinea}
@@ -559,31 +599,20 @@ export function TrabajoForm({
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-[var(--color-muted)]">
             Total de la cuenta
+            {manual ? (
+              <span className="block text-[12px] font-normal">monto manual</span>
+            ) : null}
           </span>
+          {/*
+            Con el monto manual arriba, en las líneas, el campo queda fuera de
+            pantalla mientras se escribe. La barra repite la cifra porque es lo
+            único que sigue visible: un guion aquí obligaría a subir a
+            comprobar cuánto se va a cobrar.
+          */}
           <span className="num text-[26px] font-bold leading-none">
-            {manual ? '—' : formatMoney(total)}
+            {formatMoney(manual ? Number(montoManual) || 0 : total)}
           </span>
         </div>
-        <label className="flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={manual}
-            onChange={(e) => setManual(e.target.checked)}
-            className="mt-0.5 size-5 shrink-0"
-          />
-          Ingresar un monto manual (ej. cobrar solo hasta donde se hizo)
-        </label>
-        {manual ? (
-          <input
-            name="precio_manual"
-            type="number"
-            min="0"
-            step="0.01"
-            defaultValue={trabajo?.precio_acordado ?? ''}
-            placeholder="Monto manual (S/)"
-            className={campo}
-          />
-        ) : null}
         {/*
           El aviso va pegado al botón de guardar: es lo último que se ve antes
           de decidir, y arriba del formulario quedaría fuera de pantalla en un

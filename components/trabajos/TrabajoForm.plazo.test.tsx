@@ -363,7 +363,10 @@ describe('TrabajoForm — el orden que pidió el laboratorio', () => {
     expect(pos('Paciente')).toBeLessThan(pos('Indicaciones'))
     expect(pos('Indicaciones')).toBeLessThan(pos('Fotos del trabajo'))
     expect(pos('Fotos del trabajo')).toBeLessThan(pos('Trabajos de la cuenta'))
-    expect(pos('Trabajos de la cuenta')).toBeLessThan(pos('Total de la cuenta'))
+    expect(pos('Trabajos de la cuenta')).toBeLessThan(pos('monto manual'))
+    // El monto manual va con las líneas, no al final: es la cifra que
+    // reemplaza al subtotal y se decide mirándolo.
+    expect(pos('monto manual')).toBeLessThan(pos('Total de la cuenta'))
   })
 
   /*
