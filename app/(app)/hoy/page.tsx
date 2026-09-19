@@ -125,12 +125,27 @@ export default async function HoyPage() {
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[17px] font-bold">Trabajos de hoy</h2>
-          <Link
-            href="/trabajos"
-            className="shrink-0 text-[13.5px] font-semibold text-[var(--color-accent)]"
-          >
-            Ver todos →
-          </Link>
+          <span className="flex shrink-0 items-center gap-3">
+            {/*
+              «Entregados hoy» no abre una sección más: lleva a la lista de
+              Trabajos con el filtro ya puesto. Ahí el periodo «hoy» sobre los
+              entregados acota por la fecha **real** de salida, así que incluye
+              los que ingresaron cualquier otro día —que es justo lo que se
+              quiere ver— y además se puede seguir filtrando desde allí.
+            */}
+            <Link
+              href="/trabajos?estado=entregado&periodo=hoy"
+              className="text-[13.5px] font-semibold text-[var(--color-success)]"
+            >
+              Entregados hoy →
+            </Link>
+            <Link
+              href="/trabajos"
+              className="text-[13.5px] font-semibold text-[var(--color-accent)]"
+            >
+              Ver todos →
+            </Link>
+          </span>
         </div>
 
         {datos.ingresados.length === 0 ? (

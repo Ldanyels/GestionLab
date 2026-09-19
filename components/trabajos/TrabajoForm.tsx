@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useMemo, useState } from 'react'
+import { useActionState, useEffect, useMemo, useState } from 'react'
 import { formatMoney } from '@/lib/format'
 import { precioTotalTrabajo } from '@/lib/catalogo/precio'
 import { ATAJOS_DE_PLAZO, fechaSugerida, plazoDelTrabajo } from '@/lib/trabajos/plazo'
@@ -9,6 +9,11 @@ import { Card } from '@/components/ui/Card'
 import { TipoSheet } from './TipoSheet'
 import { DoctorSheet } from './DoctorSheet'
 import { AvisoDeDuplicado } from './AvisoDeDuplicado'
+import { FotosAlCrear } from './FotosAlCrear'
+import { createBrowserSupabase } from '@/lib/supabase/client'
+import { comprimirImagen } from '@/lib/fotos/comprimir'
+import { BUCKET } from '@/lib/fotos/tipos'
+import { reservarFotoAction } from '@/app/(app)/trabajos/[id]/fotos/actions'
 import type { FormState } from '@/app/(app)/trabajos/actions'
 import type { DoctorOpcion } from '@/lib/consultorios/data'
 import type { CatalogoTrabajo } from '@/lib/catalogo/types'
@@ -100,6 +105,59 @@ export function TrabajoForm({
     perder nada de lo escrito.
   */
   const [avisoDescartado, setAvisoDescartado] = useState(false)
+  /** Fotos de «cómo llegó» elegidas antes de guardar. */
+  const [fotos, setFotos] = useState<File[]>([])
+  const [subiendoFotos, setSubiendoFotos] = useState(false)
+  const [errorFotos, setErrorFotos] = useState('')
+
+  /*
+    Cuando la acción devuelve el id, el trabajo ya está creado y toca subir las
+    fotos. Se hace aquí y no en el servidor porque el archivo nunca pasa por
+    Vercel: va del teléfono directo a Supabase, comprimido.
+
+    Si una subida falla, **no se navega**: el trabajo existe y hay que decirlo,
+    con el enlace para abrirlo. Llevarlo a la ficha en silencio dejaría creyendo
+    que la foto está cuando no lo está.
+  */
+  const creadoId = state.creadoId
+  useEffect(() => {
+    if (!creadoId || subiendoFotos) return
+    let cancelado = false
+
+    const subir = async () => {
+      setSubiendoFotos(true)
+      try {
+        const supabase = createBrowserSupabase()
+        for (const archivo of fotos) {
+          const datos = new FormData()
+          datos.set('trabajo_id', creadoId)
+          datos.set('momento', 'recepcion')
+          const reserva = await reservarFotoAction({ error: '', ruta: '', fotoId: '' }, datos)
+          if (reserva.error) throw new Error(reserva.error)
+
+          const blob = await comprimirImagen(archivo)
+          const { error } = await supabase.storage
+            .from(BUCKET)
+            .upload(reserva.ruta, blob, { contentType: 'image/jpeg', upsert: true })
+          if (error) throw new Error(error.message)
+        }
+        if (!cancelado) window.location.assign(`/trabajos/${creadoId}`)
+      } catch (e) {
+        if (!cancelado) {
+          setErrorFotos(e instanceof Error ? e.message : 'No se pudieron subir las fotos')
+          setSubiendoFotos(false)
+        }
+      }
+    }
+    void subir()
+
+    return () => {
+      cancelado = true
+    }
+    // `fotos` no entra en las dependencias a propósito: cambiarlas a mitad de
+    // la subida relanzaría el efecto y subiría dos veces.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creadoId])
 
   const porId = useMemo(() => new Map(tipos.map((t) => [t.id, t])), [tipos])
   const doctorElegido = useMemo(
@@ -180,6 +238,11 @@ export function TrabajoForm({
     >
       {trabajo ? <input type="hidden" name="id" value={trabajo.id} /> : null}
       <input type="hidden" name="items" value={itemsJson} />
+      {/*
+        Le dice a la acción que no redirija: el navegador todavía tiene que
+        subir las fotos, y para eso necesita recibir el id del trabajo.
+      */}
+      {fotos.length > 0 ? <input type="hidden" name="con_fotos" value="1" /> : null}
 
       <Card className="space-y-1 p-3.5">
         <span className={etiqueta}>Consultorio y doctor</span>
@@ -205,6 +268,58 @@ export function TrabajoForm({
           </span>
           <span className="shrink-0 text-[var(--color-muted)]">▾</span>
         </button>
+      </Card>
+
+      {/*
+        El orden lo pidió el laboratorio y sigue cómo se recibe una pieza: quién
+        la manda, de quién es, qué indicó el doctor, cómo llegó, y solo al final
+        qué se le va a hacer y cuánto cuesta.
+
+        Antes el precio venía antes que el paciente, que es el orden de quien
+        cobra, no el de quien recibe.
+      */}
+      <Card className="space-y-3 p-3.5">
+        <label className="block space-y-1">
+          <span className={etiqueta}>
+            Paciente <span className="font-normal">(opcional)</span>
+          </span>
+          <input
+            name="paciente_nombre"
+            defaultValue={trabajo?.paciente_nombre ?? ''}
+            placeholder="Nombre del paciente"
+            className={campo}
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className={etiqueta}>
+            Indicaciones <span className="font-normal">(opcional)</span>
+          </span>
+          <textarea
+            name="notas"
+            rows={3}
+            placeholder="Pieza (11, 21), color, cualquier indicación del doctor…"
+            defaultValue={trabajo?.notas ?? ''}
+            className={`${campo} h-auto py-2`}
+          />
+        </label>
+      </Card>
+
+      {/*
+        Las fotos de cómo llegó, aquí y no después de guardar.
+
+        Es el único momento en que la pieza está delante. Obligar a guardar
+        primero y volver a entrar a la ficha es un paso que no se da, y la
+        evidencia del estado en que llegó se pierde justo cuando más vale.
+
+        Se retienen en el navegador y se suben en cuanto el trabajo tiene id.
+      */}
+      <Card className="space-y-2 p-3.5">
+        <span className={etiqueta}>Fotos del trabajo — cómo llegó</span>
+        <FotosAlCrear
+          archivos={fotos}
+          onCambiar={setFotos}
+          deshabilitado={pending || subiendoFotos}
+        />
       </Card>
 
       <div className="space-y-2.5">
@@ -356,17 +471,6 @@ export function TrabajoForm({
       </div>
 
       <Card className="space-y-3 p-3.5">
-        <label className="block space-y-1">
-          <span className={etiqueta}>
-            Paciente <span className="font-normal">(opcional)</span>
-          </span>
-          <input
-            name="paciente_nombre"
-            defaultValue={trabajo?.paciente_nombre ?? ''}
-            placeholder="Nombre del paciente"
-            className={campo}
-          />
-        </label>
         <div className="space-y-1.5">
           <label className="block space-y-1">
             <span className={etiqueta}>
@@ -417,23 +521,37 @@ export function TrabajoForm({
             ) : null}
           </div>
         </div>
-        <label className="block space-y-1">
-          <span className={etiqueta}>
-            Notas <span className="font-normal">(opcional)</span>
-          </span>
-          <textarea
-            name="notas"
-            rows={3}
-            defaultValue={trabajo?.notas ?? ''}
-            className={`${campo} h-auto py-2`}
-          />
-        </label>
       </Card>
 
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">
           {state.error}
         </p>
+      ) : null}
+
+      {/*
+        El trabajo se guardó pero las fotos no subieron.
+
+        Se dice en claro y con el enlace: lo peor aquí sería llevar a la ficha
+        sin avisar, porque quien registró creería que la evidencia de cómo llegó
+        la pieza quedó guardada. Desde la ficha se pueden añadir a mano.
+      */}
+      {errorFotos && creadoId ? (
+        <div
+          role="alert"
+          className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[var(--color-danger-soft)] p-3"
+        >
+          <p className="text-[13.5px] leading-relaxed">
+            <strong className="font-semibold">El trabajo se guardó</strong>, pero no se
+            pudieron subir las fotos: {errorFotos}
+          </p>
+          <a
+            href={`/trabajos/${creadoId}`}
+            className="inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
+          >
+            Abrir el trabajo y añadirlas ahí
+          </a>
+        </div>
       ) : null}
 
       {/* Barra de total: siempre visible sobre la navegación. */}
@@ -479,10 +597,16 @@ export function TrabajoForm({
         ) : (
         <button
           type="submit"
-          disabled={pending || !enLinea}
+          disabled={pending || subiendoFotos || !enLinea}
           className="h-[52px] w-full rounded-[var(--radius-md)] bg-[var(--color-accent)] text-base font-semibold text-[var(--color-accent-contrast)] transition-transform active:scale-[0.99] disabled:opacity-50"
         >
-          {!enLinea ? 'Sin conexión — espera para guardar' : pending ? 'Guardando…' : submitLabel}
+          {!enLinea
+            ? 'Sin conexión — espera para guardar'
+            : subiendoFotos
+              ? 'Subiendo las fotos…'
+              : pending
+                ? 'Guardando…'
+                : submitLabel}
         </button>
         )}
       </div>

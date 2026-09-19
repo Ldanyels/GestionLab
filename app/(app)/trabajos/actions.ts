@@ -35,6 +35,16 @@ export interface FormState {
    * tocar a las demás acciones que comparten este tipo.
    */
   duplicados?: PosibleDuplicado[]
+  /**
+   * Id del trabajo recién creado.
+   *
+   * Solo llega cuando el formulario traía fotos: entonces la acción **no**
+   * redirige, porque el navegador todavía tiene que subirlas —una foto se
+   * guarda en una carpeta con el id del trabajo, así que no puede subirse antes
+   * de que exista—. Sin fotos, la acción redirige como siempre y este campo
+   * nunca aparece.
+   */
+  creadoId?: string
 }
 
 function leerTrabajo(formData: FormData) {
@@ -94,6 +104,18 @@ export async function crearTrabajoAction(
 
   revalidatePath('/trabajos')
   revalidatePath('/hoy')
+
+  /*
+    Con fotos pendientes se devuelve el id en lugar de redirigir.
+
+    `redirect()` corta la ejecución lanzando, así que el navegador nunca
+    recibiría el id y las fotos elegidas se perderían al cambiar de pantalla.
+    Quien navega, en ese caso, es el cliente: después de subirlas.
+  */
+  if (String(formData.get('con_fotos') ?? '') === '1') {
+    return { error: '', creadoId: r.valor }
+  }
+
   redirect(`/trabajos/${r.valor}`)
 }
 

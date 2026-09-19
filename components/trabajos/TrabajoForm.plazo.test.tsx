@@ -338,3 +338,98 @@ describe('TrabajoForm — aviso de posible duplicado', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 })
+
+describe('TrabajoForm — el orden que pidió el laboratorio', () => {
+  /*
+    El orden sigue cómo se recibe una pieza: quién la manda, de quién es, qué
+    indicó el doctor, cómo llegó, y solo al final qué se le hace y cuánto
+    cuesta. Antes el precio venía antes que el paciente —el orden de quien
+    cobra, no el de quien recibe.
+  */
+  it('las secciones van en el orden acordado', () => {
+    const { container } = render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar trabajo"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    const texto = container.textContent ?? ''
+    const pos = (s: string) => texto.indexOf(s)
+
+    expect(pos('Consultorio y doctor')).toBeLessThan(pos('Paciente'))
+    expect(pos('Paciente')).toBeLessThan(pos('Indicaciones'))
+    expect(pos('Indicaciones')).toBeLessThan(pos('Fotos del trabajo'))
+    expect(pos('Fotos del trabajo')).toBeLessThan(pos('Trabajos de la cuenta'))
+    expect(pos('Trabajos de la cuenta')).toBeLessThan(pos('Total de la cuenta'))
+  })
+
+  /*
+    «Notas» pasó a llamarse «Indicaciones»: es lo que el laboratorio escribe
+    ahí —pieza, color, lo que diga el doctor— y el nombre nuevo lo dice.
+  */
+  it('el campo de notas se llama Indicaciones y sigue siendo el mismo', () => {
+    const { container } = render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    expect(container.textContent).toContain('Indicaciones')
+    // El nombre del campo no cambia: los datos ya guardados siguen ahí.
+    expect(document.querySelector('textarea[name="notas"]')).toBeTruthy()
+  })
+
+  /*
+    La fecha de entrega se conserva. Se pidió reordenar, no quitar nada.
+  */
+  it('la fecha de entrega sigue existiendo', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    expect(document.querySelector('input[name="fecha_entrega"]')).toBeTruthy()
+  })
+
+  it('ofrece cámara y galería para las fotos de cómo llegó', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Cámara' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Galería' })).toBeTruthy()
+  })
+
+  /*
+    Sin fotos no se manda `con_fotos`, así que la acción redirige como siempre.
+    Es lo que mantiene intacto el camino que ya funcionaba: el campo solo
+    aparece cuando hay algo que subir.
+  */
+  it('sin fotos no cambia el camino de guardado', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    expect(document.querySelector('input[name="con_fotos"]')).toBeNull()
+  })
+})
