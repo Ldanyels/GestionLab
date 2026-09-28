@@ -93,6 +93,15 @@ export function TrabajoForm({
   */
   const [fechaTocada, setFechaTocada] = useState(Boolean(trabajo))
   const [fecha, setFecha] = useState(trabajo?.fecha_entrega ?? '')
+  /*
+    La tarjeta de la fecha empieza plegada.
+
+    MasterLab la usó en 1 de 199 trabajos y le estorbaba en una pantalla que ya
+    es larga. Plegada y no quitada: ningún laboratorio nuevo pierde la
+    funcionalidad, y está a un toque. Al editar un trabajo que ya tiene fecha se
+    abre sola, que si no habría que adivinar que está ahí debajo.
+  */
+  const [fechaAbierta, setFechaAbierta] = useState(Boolean(trabajo?.fecha_entrega))
   const [manual, setManual] = useState(false)
   const [montoManual, setMontoManual] = useState(
     trabajo?.precio_acordado != null ? String(trabajo.precio_acordado) : '',
@@ -510,58 +519,82 @@ export function TrabajoForm({
         ) : null}
       </div>
 
-      <Card className="space-y-3 p-3.5">
-        <div className="space-y-1.5">
-          <label className="block space-y-1">
-            <span className={etiqueta}>
-              Fecha de entrega{' '}
-              <span className="font-normal">
-                {plazo !== null && !fechaTocada
-                  ? `(del catálogo: ${plazo} ${plazo === 1 ? 'día' : 'días'})`
-                  : '(opcional)'}
+      {fechaAbierta ? (
+        <Card className="space-y-3 p-3.5">
+          <div className="space-y-1.5">
+            <label className="block space-y-1">
+              <span className={etiqueta}>
+                Fecha de entrega{' '}
+                <span className="font-normal">
+                  {plazo !== null && !fechaTocada
+                    ? `(del catálogo: ${plazo} ${plazo === 1 ? 'día' : 'días'})`
+                    : '(opcional)'}
+                </span>
               </span>
-            </span>
-            <input
-              name="fecha_entrega"
-              type="date"
-              value={fechaEfectiva}
-              onChange={(e) => ponerFecha(e.target.value)}
-              className={campo}
-            />
-          </label>
+              <input
+                name="fecha_entrega"
+                type="date"
+                value={fechaEfectiva}
+                onChange={(e) => ponerFecha(e.target.value)}
+                className={campo}
+              />
+            </label>
 
-          {/*
-            Los atajos son el punto de todo esto: un laboratorio cotiza en días
-            —«acrílico, tres días»— no en fechas de calendario. Mientras hubo
-            que abrir el selector y buscar el día, 46 de 47 trabajos se
-            guardaron sin fecha.
+            {/*
+              Los atajos son el punto de todo esto: un laboratorio cotiza en días
+              —«acrílico, tres días»— no en fechas de calendario. Mientras hubo
+              que abrir el selector y buscar el día, 46 de 47 trabajos se
+              guardaron sin fecha.
 
-            Cuentan desde el ingreso, no desde hoy: al corregir un trabajo que
-            entró el lunes, «3 días» sigue siendo el jueves.
-          */}
-          <div className="flex flex-wrap gap-1.5">
-            {ATAJOS_DE_PLAZO.map((a) => (
-              <button
-                key={a.etiqueta}
-                type="button"
-                onClick={() => ponerFecha(fechaSugerida(fechaIngreso, a.dias) ?? '')}
-                className="h-9 rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
-              >
-                {a.etiqueta}
-              </button>
-            ))}
-            {fechaEfectiva ? (
-              <button
-                type="button"
-                onClick={() => ponerFecha('')}
-                className="h-9 rounded-full px-3 text-[13px] font-semibold text-[var(--color-muted)]"
-              >
-                Quitar fecha
-              </button>
-            ) : null}
+              Cuentan desde el ingreso, no desde hoy: al corregir un trabajo que
+              entró el lunes, «3 días» sigue siendo el jueves.
+            */}
+            <div className="flex flex-wrap gap-1.5">
+              {ATAJOS_DE_PLAZO.map((a) => (
+                <button
+                  key={a.etiqueta}
+                  type="button"
+                  onClick={() => ponerFecha(fechaSugerida(fechaIngreso, a.dias) ?? '')}
+                  className="h-9 rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
+                >
+                  {a.etiqueta}
+                </button>
+              ))}
+              {fechaEfectiva ? (
+                <button
+                  type="button"
+                  onClick={() => ponerFecha('')}
+                  className="h-9 rounded-full px-3 text-[13px] font-semibold text-[var(--color-muted)]"
+                >
+                  Quitar fecha
+                </button>
+              ) : null}
+            </div>
           </div>
+        </Card>
+      ) : (
+        /*
+          Plegada: una línea y nada más.
+
+          El campo sigue existiendo como oculto para que el formulario mande
+          siempre lo mismo —y para que un catálogo con días de entrega no pierda
+          su fecha por estar la tarjeta cerrada—. Cuando hay fecha, la línea la
+          dice: guardar una promesa al consultorio sin que se vea sería peor que
+          el estorbo que se vino a quitar.
+        */
+        <div>
+          <input type="hidden" name="fecha_entrega" value={fechaEfectiva} />
+          <button
+            type="button"
+            onClick={() => setFechaAbierta(true)}
+            className="text-[13.5px] font-semibold text-[var(--color-accent)]"
+          >
+            {fechaEfectiva
+              ? `Entrega: ${fechaEfectiva} · cambiar`
+              : '+ Fecha de entrega (opcional)'}
+          </button>
         </div>
-      </Card>
+      )}
 
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">
@@ -594,8 +627,15 @@ export function TrabajoForm({
         </div>
       ) : null}
 
-      {/* Barra de total: siempre visible sobre la navegación. */}
-      <div className="sticky bottom-[76px] z-10 space-y-3 rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 shadow-[var(--shadow-pop)] min-[980px]:bottom-4">
+      {/*
+        El total y el botón de guardar, al final y quietos.
+
+        Estuvieron flotando sobre la navegación para tener el importe siempre a
+        la vista; el laboratorio lo pidió fijo al final: la pantalla es corta y
+        la barra tapaba la última línea de la cuenta justo cuando se revisa
+        antes de guardar.
+      */}
+      <div className="space-y-3 rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 shadow-[var(--shadow-pop)]">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-[var(--color-muted)]">
             Total de la cuenta

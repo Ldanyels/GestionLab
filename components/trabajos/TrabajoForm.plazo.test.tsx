@@ -45,6 +45,16 @@ function campoFecha(): HTMLInputElement {
 }
 
 /**
+ * Abre la tarjeta de la fecha, que nace plegada.
+ *
+ * Los atajos y el selector solo existen una vez abierta; el campo, en cambio,
+ * está siempre (oculto mientras está plegada).
+ */
+async function abrirFecha(usuario: ReturnType<typeof userEvent.setup>) {
+  await usuario.click(screen.getByRole('button', { name: /fecha de entrega|entrega:/i }))
+}
+
+/**
  * Elige un tipo abriendo la hoja.
  *
  * Acotado al diálogo a propósito: una vez elegido, el botón selector del
@@ -139,6 +149,7 @@ describe('TrabajoForm — fecha de entrega en un alta', () => {
       />,
     )
 
+    await abrirFecha(usuario)
     await usuario.click(screen.getByRole('button', { name: 'Mañana' }))
     expect(campoFecha().value).toBe('2026-09-11')
 
@@ -161,6 +172,7 @@ describe('TrabajoForm — fecha de entrega en un alta', () => {
     await elegirTipo(usuario, /corona porcelana/i)
     expect(campoFecha().value).toBe('2026-09-13')
 
+    await abrirFecha(usuario)
     await usuario.click(screen.getByRole('button', { name: /quitar fecha/i }))
     expect(campoFecha().value).toBe('')
 
@@ -185,6 +197,7 @@ describe('TrabajoForm — fecha de entrega en un alta', () => {
     )
 
     await elegirTipo(usuario, /corona porcelana/i)
+    await abrirFecha(usuario)
 
     expect(container.textContent).toContain('del catálogo: 3 días')
   })
@@ -239,6 +252,7 @@ describe('TrabajoForm — fecha de entrega al editar', () => {
       />,
     )
 
+    await abrirFecha(usuario)
     await usuario.click(screen.getByRole('button', { name: '3 días' }))
     expect(campoFecha().value).toBe('2026-09-13')
   })
@@ -434,5 +448,128 @@ describe('TrabajoForm — el orden que pidió el laboratorio', () => {
       />,
     )
     expect(document.querySelector('input[name="con_fotos"]')).toBeNull()
+  })
+})
+
+describe('TrabajoForm — la fecha de entrega, plegada', () => {
+  /*
+    MasterLab la usó en 1 de 199 trabajos y pidió quitarla de la vista. Se
+    pliega, no se quita: otro laboratorio puede necesitarla el día 1 y está a un
+    toque.
+  */
+  it('en un alta nace plegada: ni selector ni atajos', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Crear"
+        fechaIngreso={INGRESO}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Mañana' })).toBeNull()
+    expect(campoFecha().type).toBe('hidden')
+    expect(screen.getByRole('button', { name: /fecha de entrega/i })).toBeTruthy()
+  })
+
+  it('se abre al tocarla y aparecen los atajos', async () => {
+    const usuario = userEvent.setup()
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Crear"
+        fechaIngreso={INGRESO}
+      />,
+    )
+
+    await abrirFecha(usuario)
+
+    expect(screen.getByRole('button', { name: 'Mañana' })).toBeTruthy()
+    expect(campoFecha().type).toBe('date')
+  })
+
+  /*
+    Plegada no puede significar perdida: un catálogo con días de entrega sigue
+    proponiendo su fecha, y el formulario la manda igual. Lo que no puede pasar
+    es que se guarde una promesa al consultorio sin que nadie la vea, así que la
+    línea plegada la dice.
+  */
+  it('plegada conserva y muestra la fecha que propone el catálogo', async () => {
+    const usuario = userEvent.setup()
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({ dias_entrega: 3 })]}
+        submitLabel="Crear"
+        fechaIngreso={INGRESO}
+      />,
+    )
+
+    await elegirTipo(usuario, /corona porcelana/i)
+
+    expect(campoFecha().type).toBe('hidden')
+    expect(campoFecha().value).toBe('2026-09-13')
+    expect(screen.getByRole('button', { name: /entrega: 2026-09-13/i })).toBeTruthy()
+  })
+
+  /* Al editar un trabajo que ya tiene fecha se abre sola: si no, habría que
+     adivinar que está ahí debajo para poder cambiarla. */
+  it('al editar un trabajo con fecha, se abre sola', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({ dias_entrega: 3 })]}
+        trabajo={trabajoExistente({ fecha_entrega: '2026-09-30' })}
+        submitLabel="Guardar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+
+    expect(campoFecha().type).toBe('date')
+    expect(campoFecha().value).toBe('2026-09-30')
+  })
+})
+
+describe('TrabajoForm — el total ya no flota', () => {
+  /*
+    La barra iba pegada al borde inferior para tener el importe siempre a la
+    vista. El laboratorio la quiso quieta al final: en una pantalla corta tapaba
+    la última línea de la cuenta justo cuando se revisa antes de guardar.
+  */
+  it('la barra del total no es pegajosa', () => {
+    const { container } = render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Crear"
+        fechaIngreso={INGRESO}
+      />,
+    )
+
+    expect(container.querySelector('.sticky')).toBeNull()
+  })
+
+  it('el total y el botón de guardar son lo último del formulario', () => {
+    const { container } = render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar trabajo"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    const texto = container.textContent ?? ''
+    const pos = (t: string) => texto.indexOf(t)
+
+    expect(pos('Trabajos de la cuenta')).toBeLessThan(pos('Fecha de entrega'))
+    expect(pos('Fecha de entrega')).toBeLessThan(pos('Total de la cuenta'))
+    expect(pos('Total de la cuenta')).toBeLessThan(pos('Registrar trabajo'))
   })
 })
