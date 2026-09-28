@@ -5,6 +5,7 @@ import { KpiTile } from '@/components/ui/KpiTile'
 import { requirePermiso } from '@/lib/auth'
 import { veMontos, veMontosReportes } from '@/lib/permisos'
 import { filasReporte } from '@/lib/reportes/data'
+import { fechasDeFila } from '@/lib/reportes/fechas'
 import { agruparPorConsultorio } from '@/lib/reportes/agrupar'
 import { contarFilasPorCobro, filtrarFilasPorCobro } from '@/lib/reportes/cobro'
 import { contarPorEstado } from '@/lib/trabajos/filtro'
@@ -211,7 +212,7 @@ export default async function ReportesPage({
                             className="flex items-baseline justify-between gap-2 text-sm"
                           >
                             <span className="min-w-0 truncate text-[var(--color-muted)]">
-                              {t.fecha_ingreso.slice(5)} · {t.resumen}
+                              {fechasDeFila(t, { corto: true })} · {t.resumen}
                               {t.paciente ? ` · ${t.paciente}` : ''}
                             </span>
                             <span

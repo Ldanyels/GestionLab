@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 import { requirePermiso, respuestaSiSuspendido } from '@/lib/auth'
 import { veMontosReportes } from '@/lib/permisos'
 import { nombreLaboratorioActual } from '@/lib/tenant'
+import { fechasDeFila } from '@/lib/reportes/fechas'
 import { filasReporte } from '@/lib/reportes/data'
 import { agruparPorConsultorio, soloConSaldo } from '@/lib/reportes/agrupar'
 import { resolverFiltros, etiquetaRango } from '@/lib/reportes/filtros'
@@ -184,7 +185,9 @@ export async function GET(req: Request): Promise<Response> {
         for (const t of d.filas) {
           saltoPagina(16)
           const saldo = Math.round((t.total - t.pagado) * 100) / 100
-          const desc = `${t.fecha_ingreso} · ${t.resumen}${t.paciente ? ` · ${t.paciente}` : ''}`
+          // La flecha va en ASCII: las fuentes estándar del PDF no codifican
+          // «→», y medir ese carácter aborta el reporte entero.
+          const desc = `${fechasDeFila(t, { flecha: '>' })} · ${t.resumen}${t.paciente ? ` · ${t.paciente}` : ''}`
           texto(truncar(normal, desc, 8.5, UTIL - (montos ? 180 : 70)), {
             x: MARGEN + 18,
             size: 8.5,
