@@ -116,9 +116,9 @@ export default async function TrabajoDetallePage({
           secuencia real del mostrador —sale la pieza, se entrega el papel— y
           antes el recibo era un enlace de 13 px que nadie veía.
 
-          Cerrar no está aquí: se cerró junto a los pagos, que es cuando se
-          decide. Vuelve a esta fila solo para quien no ve esa sección, para
-          que nadie se quede sin poder cerrar un trabajo.
+          Cerrar no está aquí: se fue al final de la pantalla. Es lo último
+          que se hace con un trabajo y no tenía por qué competir por el sitio
+          con las dos acciones del mostrador.
         */}
         <div className="flex flex-wrap gap-2">
           {t.estado !== 'entregado' ? (
@@ -132,9 +132,6 @@ export default async function TrabajoDetallePage({
           </Link>
           {t.estado !== 'en_curso' ? (
             <EstadoBtn id={t.id} estado="en_curso" label="Reabrir" ghost />
-          ) : null}
-          {t.estado !== 'cerrado' && !registraAbonos ? (
-            <EstadoBtn id={t.id} estado="cerrado" label="Cerrar trabajo" ghost />
           ) : null}
         </div>
 
@@ -268,7 +265,6 @@ export default async function TrabajoDetallePage({
         <PagosSection
           trabajoId={t.id}
           precio={t.precio_acordado}
-          estadoTrabajo={t.estado}
           puedeBorrar={borraAbonos}
           // La sección solo se muestra a quien registra abonos, así que quien
           // llega hasta aquí puede corregirlos.
@@ -279,6 +275,29 @@ export default async function TrabajoDetallePage({
           Los pagos de este trabajo los gestiona un administrador.
         </Card>
       )}
+
+      {/*
+        Cerrar el trabajo: lo último de la ficha, y solo.
+
+        Es el final del recorrido —se entregó, se cobró, se cierra— y arriba
+        estorbaba: era el botón más llamativo de la cabecera cuando lo que se
+        va a hacer casi siempre es entregar o sacar el recibo. Aquí abajo hay
+        que haber pasado por los pagos para llegar, que es justo el orden.
+      */}
+      {t.estado !== 'cerrado' ? (
+        <div className="border-t border-[var(--color-border)] pt-4">
+          <form action={cambiarEstadoTrabajoAction}>
+            <input type="hidden" name="id" value={t.id} />
+            <input type="hidden" name="estado" value="cerrado" />
+            <button
+              type="submit"
+              className="h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm font-semibold transition active:scale-[0.99]"
+            >
+              Cerrar trabajo
+            </button>
+          </form>
+        </div>
+      ) : null}
     </section>
   )
 }
