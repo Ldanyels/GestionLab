@@ -3,6 +3,7 @@ import {
   celdasDeFila,
   celdasDeSubtotal,
   columnasReporte,
+  tieneDeuda,
   UTIL_APAISADO,
   xDeColumnas,
 } from './columnas'
@@ -45,16 +46,38 @@ describe('columnasReporte', () => {
     expect(suma).toBeLessThanOrEqual(UTIL_APAISADO)
   })
 
-  it('sin importes desaparecen las tres columnas de dinero', () => {
+  it('sin importes desaparecen las columnas de dinero', () => {
     const claves = columnasReporte(false).map((c) => c.clave)
     expect(claves).not.toContain('total')
-    expect(claves).not.toContain('pagado')
-    expect(claves).not.toContain('saldo')
+    expect(claves).not.toContain('abono')
+  })
+
+  /*
+    La lista y el orden los fijó el laboratorio. La prueba los deja escritos
+    para que no se cuele una columna de vuelta sin que nadie lo decida.
+  */
+  it('son las columnas que pidió el laboratorio, en su orden', () => {
+    expect(columnasReporte(true).map((c) => c.titulo)).toEqual([
+      'Consultorio',
+      'Doctor',
+      'Entrega',
+      'Paciente',
+      'Abono',
+      'Tratamientos',
+      'Total',
+    ])
+  })
+
+  it('ya no hay columna de ingreso ni de estado', () => {
+    const claves = columnasReporte(true).map((c) => c.clave)
+    expect(claves).not.toContain('ingreso')
+    expect(claves).not.toContain('estado')
   })
 
   it('las cifras van a la derecha y los nombres no', () => {
     const cols = columnasReporte(true)
-    expect(cols.find((c) => c.clave === 'saldo')?.derecha).toBe(true)
+    expect(cols.find((c) => c.clave === 'total')?.derecha).toBe(true)
+    expect(cols.find((c) => c.clave === 'abono')?.derecha).toBe(true)
     expect(cols.find((c) => c.clave === 'consultorio')?.derecha).toBeUndefined()
   })
 })
@@ -100,13 +123,14 @@ describe('celdasDeFila', () => {
     expect(celdas).toHaveLength(cols.length)
     expect(celdas[0]).toBe('Sonrisa Dental')
     expect(celdas[1]).toBe('Dra. Ruiz')
-    expect(celdas[3]).toBe('Corona porcelana')
+    expect(celdas[5]).toBe('Corona porcelana')
   })
 
-  it('el saldo sale calculado, no de la base', () => {
+  it('el abono es lo ya cobrado y el total lo que cuesta', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeFila(fila({ total: 260, pagado: 100 }), cols)
-    expect(celdas[celdas.length - 1]).toBe(formatMoney(160))
+    expect(celdas[4]).toBe(formatMoney(100))
+    expect(celdas[6]).toBe(formatMoney(260))
   })
 
   /*
@@ -115,26 +139,44 @@ describe('celdasDeFila', () => {
   */
   it('sin paciente pone un guion, no un hueco', () => {
     const cols = columnasReporte(true)
-    expect(celdasDeFila(fila({ paciente: null }), cols)[2]).toBe('—')
+    expect(celdasDeFila(fila({ paciente: null }), cols)[3]).toBe('—')
   })
 
   it('sin entregar, la columna de entrega lleva guion', () => {
     const cols = columnasReporte(true)
-    expect(celdasDeFila(fila({ entregado_el: null }), cols)[5]).toBe('—')
+    expect(celdasDeFila(fila({ entregado_el: null }), cols)[2]).toBe('—')
   })
 
   it('entregado muestra su fecha real', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeFila(fila({ estado: 'entregado', entregado_el: '2026-09-18' }), cols)
-    expect(celdas[5]).toBe('2026-09-18')
-    expect(celdas[6]).toBe('Entregado')
+    expect(celdas[2]).toBe('2026-09-18')
   })
 
   it('sin importes no devuelve celdas de dinero', () => {
     const cols = columnasReporte(false)
     const celdas = celdasDeFila(fila(), cols)
-    expect(celdas).toHaveLength(7)
+    expect(celdas).toHaveLength(5)
     expect(celdas.join(' ')).not.toContain('260')
+  })
+})
+
+describe('tieneDeuda', () => {
+  /*
+    Sin columna de saldo, esto es lo que decide qué se pinta en rojo: un reporte
+    de cobranza sin señal de quién debe obliga a restar setenta filas a mano.
+  */
+  it('hay deuda cuando lo abonado no llega al total', () => {
+    expect(tieneDeuda(fila({ total: 260, pagado: 100 }))).toBe(true)
+  })
+
+  it('no hay deuda cuando está pagado del todo', () => {
+    expect(tieneDeuda(fila({ total: 260, pagado: 260 }))).toBe(false)
+  })
+
+  /* Los céntimos en coma flotante: 33.33 * 3 no da exactamente 99.99. */
+  it('una diferencia menor a un céntimo no es deuda', () => {
+    expect(tieneDeuda(fila({ total: 99.99, pagado: 33.33 * 3 }))).toBe(false)
   })
 })
 
@@ -146,24 +188,25 @@ describe('celdasDeSubtotal', () => {
   it('pone las cifras del grupo bajo sus columnas', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeSubtotal(
-      { consultorio: 'Sonrisa Dental', facturado: 890, pagado: 340, saldo: 550 },
+      { consultorio: 'Sonrisa Dental', facturado: 890, pagado: 340 },
       3,
       cols,
     )
     expect(celdas[0]).toBe('Sonrisa Dental')
     // El hueco del doctor queda libre para que el nombre pueda ocuparlo.
     expect(celdas[1]).toBe('')
-    expect(celdas[2]).toBe('3 trabajos')
-    expect(celdas[celdas.length - 1]).toBe(formatMoney(550))
+    expect(celdas[3]).toBe('3 trabajos')
+    expect(celdas[4]).toBe(formatMoney(340))
+    expect(celdas[6]).toBe(formatMoney(890))
   })
 
   it('un solo trabajo se dice en singular', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeSubtotal(
-      { consultorio: 'Sonrisa Dental', facturado: 260, pagado: 0, saldo: 260 },
+      { consultorio: 'Sonrisa Dental', facturado: 260, pagado: 0 },
       1,
       cols,
     )
-    expect(celdas[2]).toBe('1 trabajo')
+    expect(celdas[3]).toBe('1 trabajo')
   })
 })

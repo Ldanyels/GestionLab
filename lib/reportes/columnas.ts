@@ -17,36 +17,33 @@ export interface Columna {
 /*
   El reporte va apaisado porque es una matriz.
 
-  En vertical caben unos 515 pt: con diez columnas tocan a 51, y el nombre de un
-  consultorio se corta en la tercera letra. Apaisado hay 762 y las columnas
-  caben enteras, que es la diferencia entre una tabla que se lee y una que hay
-  que adivinar.
+  En vertical caben unos 515 pt y el nombre de un consultorio se cortaría en la
+  tercera letra. Apaisado hay 762 y las columnas caben enteras, que es la
+  diferencia entre una tabla que se lee y una que hay que adivinar.
+
+  El orden y la lista los fijó el laboratorio: no hay columna de ingreso ni de
+  estado, y el saldo se lee restando el abono del total.
 */
 const CON_MONTOS: Columna[] = [
-  { clave: 'consultorio', titulo: 'Consultorio', ancho: 95 },
-  { clave: 'doctor', titulo: 'Doctor', ancho: 95 },
-  { clave: 'paciente', titulo: 'Paciente', ancho: 88 },
-  { clave: 'trabajo', titulo: 'Trabajo', ancho: 133 },
-  { clave: 'ingreso', titulo: 'Ingreso', ancho: 52 },
-  { clave: 'entrega', titulo: 'Entrega', ancho: 52 },
-  { clave: 'estado', titulo: 'Estado', ancho: 58 },
-  { clave: 'total', titulo: 'Monto', ancho: 62, derecha: true },
-  { clave: 'pagado', titulo: 'Pagado', ancho: 62, derecha: true },
-  { clave: 'saldo', titulo: 'Saldo', ancho: 62, derecha: true },
+  { clave: 'consultorio', titulo: 'Consultorio', ancho: 120 },
+  { clave: 'doctor', titulo: 'Doctor', ancho: 110 },
+  { clave: 'entrega', titulo: 'Entrega', ancho: 70 },
+  { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
+  { clave: 'abono', titulo: 'Abono', ancho: 75, derecha: true },
+  { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 191 },
+  { clave: 'total', titulo: 'Total', ancho: 75, derecha: true },
 ]
 
 /*
-  Sin importes —un técnico— sobran las tres columnas de dinero y el espacio se
+  Sin importes —un técnico— sobran las dos columnas de dinero y el espacio se
   reparte entre los nombres, que es lo que ese lector viene a mirar.
 */
 const SIN_MONTOS: Columna[] = [
-  { clave: 'consultorio', titulo: 'Consultorio', ancho: 130 },
-  { clave: 'doctor', titulo: 'Doctor', ancho: 130 },
-  { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
-  { clave: 'trabajo', titulo: 'Trabajo', ancho: 196 },
-  { clave: 'ingreso', titulo: 'Ingreso', ancho: 60 },
-  { clave: 'entrega', titulo: 'Entrega', ancho: 60 },
-  { clave: 'estado', titulo: 'Estado', ancho: 60 },
+  { clave: 'consultorio', titulo: 'Consultorio', ancho: 150 },
+  { clave: 'doctor', titulo: 'Doctor', ancho: 140 },
+  { clave: 'entrega', titulo: 'Entrega', ancho: 80 },
+  { clave: 'paciente', titulo: 'Paciente', ancho: 150 },
+  { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 240 },
 ]
 
 export function columnasReporte(montos: boolean): Columna[] {
@@ -80,16 +77,18 @@ export function celdasDeFila(f: FilaReporte, columnas: readonly Columna[]): stri
   const valores: Record<string, string> = {
     consultorio: f.consultorio,
     doctor: f.doctor,
-    paciente: f.paciente || '—',
-    trabajo: f.resumen,
-    ingreso: f.fecha_ingreso,
     entrega: f.entregado_el ?? '—',
-    estado: ETIQUETA_TRABAJO[f.estado as EstadoTrabajo] ?? f.estado,
+    paciente: f.paciente || '—',
+    abono: formatMoney(f.pagado),
+    tratamientos: f.resumen,
     total: formatMoney(f.total),
-    pagado: formatMoney(f.pagado),
-    saldo: formatMoney(saldoFila(f)),
   }
   return columnas.map((c) => valores[c.clave] ?? '')
+}
+
+/** Si al trabajo le falta cobrar algo. Decide qué se pinta en rojo. */
+export function tieneDeuda(f: FilaReporte): boolean {
+  return saldoFila(f) > 0.001
 }
 
 /**
@@ -105,16 +104,15 @@ export function celdasDeFila(f: FilaReporte, columnas: readonly Columna[]): stri
  * hace a este papel.
  */
 export function celdasDeSubtotal(
-  grupo: { consultorio: string; facturado: number; pagado: number; saldo: number },
+  grupo: { consultorio: string; facturado: number; pagado: number },
   cuantos: number,
   columnas: readonly Columna[],
 ): string[] {
   const valores: Record<string, string> = {
     consultorio: grupo.consultorio,
     paciente: `${cuantos} ${cuantos === 1 ? 'trabajo' : 'trabajos'}`,
+    abono: formatMoney(grupo.pagado),
     total: formatMoney(grupo.facturado),
-    pagado: formatMoney(grupo.pagado),
-    saldo: formatMoney(grupo.saldo),
   }
   return columnas.map((c) => valores[c.clave] ?? '')
 }

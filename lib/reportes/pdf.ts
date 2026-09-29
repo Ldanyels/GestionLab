@@ -80,7 +80,13 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
       opts: {
         font?: PDFFont
         color?: typeof GRIS
-        colorSaldo?: boolean
+        /**
+         * Pinta en rojo la celda del abono. Se usa solo en los subtotales: ya
+         * no hay columna de saldo, y marcar cada fila impaga teñía de rojo dos
+         * tercios del papel —lo que se destaca en todas partes deja de
+         * destacar—. Por consultorio, que es como se cobra, la señal sirve.
+         */
+        conDeuda?: boolean
         /** La primera celda puede invadir la segunda (fila de subtotal). */
         primeraAncha?: boolean
       } = {},
@@ -91,19 +97,17 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
         if (!col || !celda) return
         const disponible =
           opts.primeraAncha && i === 0 ? col.ancho + (columnas[1]?.ancho ?? 0) : col.ancho
-        const recortada = truncar(font, celda, CUERPO, disponible - 6)
+        const recortada = truncar(font, celda, CUERPO, disponible - 14)
         const x = col.derecha
-          ? xs[i]! - 4 - font.widthOfTextAtSize(recortada, CUERPO)
-          : xs[i]! + 2
+          ? xs[i]! - 10 - font.widthOfTextAtSize(recortada, CUERPO)
+          : xs[i]! + 4
         page.drawText(recortada, {
           x,
           y,
           size: CUERPO,
           font,
           color:
-            opts.colorSaldo && col.clave === 'saldo' && celda !== formatMoney(0)
-              ? ROJO
-              : (opts.color ?? NEGRO),
+            opts.conDeuda && col.clave === 'abono' ? ROJO : (opts.color ?? NEGRO),
         })
       })
     }
@@ -159,7 +163,7 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
       ? [
           [f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos', String(totales.trabajos)],
           ['Monto final', formatMoney(totales.facturado)],
-          [f.soloPendientes ? 'Abonado a cuenta' : 'Pagado', formatMoney(totales.pagado)],
+          [f.soloPendientes ? 'Abonado a cuenta' : 'Abonos', formatMoney(totales.pagado)],
           ['Por cobrar', formatMoney(totales.saldo)],
         ]
       : [
@@ -206,7 +210,7 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
               })
             }
             cebra = !cebra
-            filaTabla(celdasDeFila(t, columnas), { colorSaldo: montos })
+            filaTabla(celdasDeFila(t, columnas))
             y -= ALTO_FILA
           }
         }
@@ -227,7 +231,7 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
         const cuantos = g.doctores.reduce((s, d) => s + d.filas.length, 0)
         filaTabla(celdasDeSubtotal(g, cuantos, columnas), {
           font: bold,
-          colorSaldo: montos,
+          conDeuda: montos && g.saldo > 0.001,
           primeraAncha: true,
         })
         y -= ALTO_FILA + 8
@@ -250,15 +254,13 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
               ? 'TOTAL'
               : c.clave === 'paciente'
                 ? `${totales.trabajos} ${totales.trabajos === 1 ? 'trabajo' : 'trabajos'}`
-                : c.clave === 'total'
-                  ? formatMoney(totales.facturado)
-                  : c.clave === 'pagado'
-                    ? formatMoney(totales.pagado)
-                    : c.clave === 'saldo'
-                      ? formatMoney(totales.saldo)
-                      : '',
+                : c.clave === 'abono'
+                  ? formatMoney(totales.pagado)
+                  : c.clave === 'total'
+                    ? formatMoney(totales.facturado)
+                    : '',
           ),
-          { font: bold, colorSaldo: true, primeraAncha: true },
+          { font: bold, conDeuda: totales.saldo > 0.001, primeraAncha: true },
         )
         y -= ALTO_FILA
       }
