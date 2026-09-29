@@ -3,7 +3,14 @@ import { textoSeguro } from '@/lib/recibos/lineas'
 import { truncar } from '@/lib/pdf/util'
 import { formatMoney } from '@/lib/format'
 import { etiquetaRango } from './filtros'
-import { celdasDeFila, celdasDeSubtotal, columnasReporte, xDeColumnas } from './columnas'
+import {
+  ajustarAnchos,
+  celdasDeFila,
+  celdasDeSubtotal,
+  columnasReporte,
+  RELLENO,
+  xDeColumnas,
+} from './columnas'
 import type { GrupoConsultorio, TotalesReporte } from './agrupar'
 
 // A4 apaisado, en puntos: la matriz no cabe en vertical.
@@ -45,12 +52,37 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
   const laboratorio = textoSeguro(d.laboratorio)
   const f = { soloPendientes: d.soloPendientes, desde: d.desde, hasta: d.hasta }
 
-    const columnas = columnasReporte(montos)
-    const xs = xDeColumnas(columnas, MARGEN)
-
     const doc = await PDFDocument.create()
     const normal = await doc.embedFont(StandardFonts.Helvetica)
     const bold = await doc.embedFont(StandardFonts.HelveticaBold)
+
+    /*
+      Las columnas se miden contra el contenido real antes de dibujar nada.
+
+      Con anchos fijos el reporte aguanta hasta que alguien da de alta un
+      consultorio con el nombre largo, y a partir de ahí corta nombres sin que
+      nadie lo note. Se mide una sola vez, con todas las filas —también las de
+      subtotal, que van en negrita y ocupan más—, para que la tabla no cambie
+      de forma al pasar de página.
+    */
+    const declaradas = columnasReporte(montos)
+    const celdasTodas = [
+      ...grupos.flatMap((g) =>
+        g.doctores.flatMap((d) => d.filas.map((t) => celdasDeFila(t, declaradas))),
+      ),
+      ...grupos.map((g) =>
+        celdasDeSubtotal(g, g.doctores.reduce((s, d) => s + d.filas.length, 0), declaradas),
+      ),
+    ]
+    // La negrita de los subtotales es más ancha que la redonda: se mide con
+    // ella para no quedarse corto justo en la fila que se usa para cobrar.
+    const columnas = ajustarAnchos(
+      declaradas,
+      celdasTodas,
+      (t) => bold.widthOfTextAtSize(textoSeguro(t), CUERPO),
+      UTIL,
+    )
+    const xs = xDeColumnas(columnas, MARGEN)
 
     let page: PDFPage = doc.addPage([ANCHO, ALTO])
     let y = ALTO - MARGEN
@@ -97,10 +129,10 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
         if (!col || !celda) return
         const disponible =
           opts.primeraAncha && i === 0 ? col.ancho + (columnas[1]?.ancho ?? 0) : col.ancho
-        const recortada = truncar(font, celda, CUERPO, disponible - 14)
+        const recortada = truncar(font, celda, CUERPO, disponible - RELLENO)
         const x = col.derecha
-          ? xs[i]! - 10 - font.widthOfTextAtSize(recortada, CUERPO)
-          : xs[i]! + 4
+          ? xs[i]! - RELLENO * 0.7 - font.widthOfTextAtSize(recortada, CUERPO)
+          : xs[i]! + RELLENO * 0.3
         page.drawText(recortada, {
           x,
           y,

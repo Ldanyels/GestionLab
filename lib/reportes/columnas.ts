@@ -12,6 +12,14 @@ export interface Columna {
   ancho: number
   /** Las cifras se alinean a la derecha para poder compararlas de un vistazo. */
   derecha?: boolean
+  /**
+   * Nunca se encoge para hacer sitio a otra.
+   *
+   * Lo llevan las columnas cuyo contenido tiene un ancho conocido y no admite
+   * recorte: una fecha y un importe o están enteros o no dicen nada. El que se
+   * aprieta es el texto, que se sigue entendiendo a medias.
+   */
+  fija?: boolean
 }
 
 /*
@@ -27,11 +35,11 @@ export interface Columna {
 const CON_MONTOS: Columna[] = [
   { clave: 'consultorio', titulo: 'Consultorio', ancho: 120 },
   { clave: 'doctor', titulo: 'Doctor', ancho: 110 },
-  { clave: 'entrega', titulo: 'Entrega', ancho: 70 },
+  { clave: 'entrega', titulo: 'Entrega', ancho: 70, fija: true },
   { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
-  { clave: 'abono', titulo: 'Abono', ancho: 75, derecha: true },
+  { clave: 'abono', titulo: 'Abono', ancho: 75, derecha: true, fija: true },
   { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 191 },
-  { clave: 'total', titulo: 'Total', ancho: 75, derecha: true },
+  { clave: 'total', titulo: 'Total', ancho: 75, derecha: true, fija: true },
 ]
 
 /*
@@ -41,7 +49,7 @@ const CON_MONTOS: Columna[] = [
 const SIN_MONTOS: Columna[] = [
   { clave: 'consultorio', titulo: 'Consultorio', ancho: 150 },
   { clave: 'doctor', titulo: 'Doctor', ancho: 140 },
-  { clave: 'entrega', titulo: 'Entrega', ancho: 80 },
+  { clave: 'entrega', titulo: 'Entrega', ancho: 80, fija: true },
   { clave: 'paciente', titulo: 'Paciente', ancho: 150 },
   { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 240 },
 ]
@@ -115,4 +123,54 @@ export function celdasDeSubtotal(
     total: formatMoney(grupo.facturado),
   }
   return columnas.map((c) => valores[c.clave] ?? '')
+}
+
+/** Lo que se reserva a cada lado del texto dentro de su columna. */
+export const RELLENO = 14
+
+/** Ninguna columna baja de aquí: por debajo no cabe ni un dato corto. */
+const MINIMO = 46
+
+/**
+ * Reparte el ancho disponible según lo que de verdad ocupa el contenido.
+ *
+ * Los anchos fijos son frágiles: aguantan hasta que alguien da de alta un
+ * consultorio con el nombre largo, y entonces el reporte empieza a cortar
+ * nombres sin que nadie lo note. Aquí cada columna pide lo que mide su texto
+ * más ancho —incluida su cabecera— y se reparte:
+ *
+ * - Si todo cabe, el sobrante engorda las columnas de texto, que son las que
+ *   pueden crecer; así la tabla llena el papel en vez de dejar un hueco.
+ * - Si no cabe, se encogen **solo** las de texto y en proporción a lo que
+ *   piden, nunca por debajo del mínimo. Las marcadas como fijas no se tocan:
+ *   una fecha a medias («2026-0…») o un importe recortado no dicen nada, y un
+ *   nombre a medias sí.
+ *
+ * Se calcula una vez con todas las filas, no por página, para que la tabla no
+ * cambie de forma al pasar de hoja.
+ */
+export function ajustarAnchos(
+  columnas: readonly Columna[],
+  filas: readonly (readonly string[])[],
+  medir: (texto: string) => number,
+  disponible: number,
+): Columna[] {
+  const pedido = columnas.map((c, i) => {
+    const contenido = filas.reduce((max, f) => Math.max(max, medir(f[i] ?? '')), 0)
+    return Math.max(medir(c.titulo), contenido) + RELLENO
+  })
+
+  // Las fijas se quedan con lo que piden; solo el texto da y recibe.
+  const flexible = columnas.map((c) => !c.fija)
+  const fijo = pedido.reduce((s, p, i) => (flexible[i] ? s : s + p), 0)
+  const textoPedido = pedido.reduce((s, p, i) => (flexible[i] ? s + p : s), 0)
+  const paraTexto = disponible - fijo
+
+  if (textoPedido <= 0) return columnas.map((c, i) => ({ ...c, ancho: pedido[i]! }))
+
+  const factor = paraTexto / textoPedido
+  return columnas.map((c, i) => ({
+    ...c,
+    ancho: flexible[i] ? Math.max(MINIMO, Math.floor(pedido[i]! * factor)) : pedido[i]!,
+  }))
 }

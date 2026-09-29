@@ -1,12 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import {
+  ajustarAnchos,
   celdasDeFila,
   celdasDeSubtotal,
   columnasReporte,
+  RELLENO,
   tieneDeuda,
   UTIL_APAISADO,
   xDeColumnas,
 } from './columnas'
+import type { Columna } from './columnas'
 import type { FilaReporte } from './agrupar'
 import { formatMoney } from '@/lib/format'
 
@@ -208,5 +211,93 @@ describe('celdasDeSubtotal', () => {
       cols,
     )
     expect(celdas[3]).toBe('1 trabajo')
+  })
+})
+
+describe('ajustarAnchos', () => {
+  /** Un medidor de mentira pero proporcional: 5 pt por carácter. */
+  const medir = (t: string) => t.length * 5
+
+  const cols: Columna[] = [
+    { clave: 'consultorio', titulo: 'Consultorio', ancho: 120 },
+    { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
+    { clave: 'total', titulo: 'Total', ancho: 75, derecha: true, fija: true },
+  ]
+
+  it('una columna nunca queda más estrecha que su contenido', () => {
+    const filas = [['Clínica Odontológica Integral San Borja', 'Ana', 'S/ 90.00']]
+    const r = ajustarAnchos(cols, filas, medir, 900)
+    expect(r[0]!.ancho).toBeGreaterThanOrEqual(medir(filas[0]![0]!) + RELLENO)
+  })
+
+  it('la cabecera también cuenta: una columna de datos cortos no la parte', () => {
+    const r = ajustarAnchos(cols, [['A', 'B', 'S/ 1.00']], medir, 900)
+    expect(r[0]!.ancho).toBeGreaterThanOrEqual(medir('Consultorio') + RELLENO)
+  })
+
+  it('el reparto llena el ancho disponible, sin pasarse', () => {
+    const filas = [['Sonrisa', 'Ana Torres', 'S/ 90.00']]
+    const suma = ajustarAnchos(cols, filas, medir, 900).reduce((s, c) => s + c.ancho, 0)
+    expect(suma).toBeLessThanOrEqual(900)
+    expect(suma).toBeGreaterThan(900 - cols.length)
+  })
+
+  /*
+    Un importe cortado no es un importe: cuando no cabe todo, el recorte sale
+    del texto, que se puede leer a medias, y nunca de las cifras.
+  */
+  /*
+    El fallo que lo destapó: la fecha de entrega se encogía y salía
+    «2026-0…». Una fecha a medias no dice nada; un nombre a medias sí.
+  */
+  it('una columna fija no se encoge aunque falte sitio', () => {
+    const fechas: Columna[] = [
+      { clave: 'nombre', titulo: 'Nombre', ancho: 100 },
+      { clave: 'entrega', titulo: 'Entrega', ancho: 70, fija: true },
+    ]
+    const largo = 'x'.repeat(200)
+    const r = ajustarAnchos(fechas, [[largo, '2026-09-18']], medir, 300)
+    expect(r[1]!.ancho).toBe(medir('2026-09-18') + RELLENO)
+  })
+
+  it('cuando no cabe, las cifras conservan su ancho', () => {
+    const largo = 'x'.repeat(200)
+    const r = ajustarAnchos(cols, [[largo, largo, 'S/ 1,250.50']], medir, 400)
+    expect(r[2]!.ancho).toBe(medir('S/ 1,250.50') + RELLENO)
+  })
+
+  it('cuando no cabe, el texto se encoge pero no desaparece', () => {
+    const largo = 'x'.repeat(200)
+    const r = ajustarAnchos(cols, [[largo, largo, 'S/ 1.00']], medir, 400)
+    expect(r[0]!.ancho).toBeGreaterThanOrEqual(46)
+    expect(r[1]!.ancho).toBeGreaterThanOrEqual(46)
+  })
+
+  /*
+    Lo que motivó todo esto: el ancho fijo aguantaba hasta que alguien daba de
+    alta un consultorio con el nombre largo, y entonces el reporte empezaba a
+    cortar nombres sin que nadie lo notara.
+  */
+  it('un nombre nuevo y largo ensancha su columna, no se corta', () => {
+    const corto = ajustarAnchos(cols, [['Akudent', 'Ana', 'S/ 90.00']], medir, 900)
+    const largo = ajustarAnchos(
+      cols,
+      [
+        ['Akudent', 'Ana', 'S/ 90.00'],
+        ['Centro Odontológico Especializado Miraflores', 'Ana', 'S/ 90.00'],
+      ],
+      medir,
+      900,
+    )
+    expect(largo[0]!.ancho).toBeGreaterThan(corto[0]!.ancho)
+    expect(largo[0]!.ancho).toBeGreaterThanOrEqual(
+      medir('Centro Odontológico Especializado Miraflores') + RELLENO,
+    )
+  })
+
+  it('sin filas se apaña con las cabeceras', () => {
+    const r = ajustarAnchos(cols, [], medir, 900)
+    expect(r).toHaveLength(3)
+    expect(r[0]!.ancho).toBeGreaterThanOrEqual(medir('Consultorio') + RELLENO)
   })
 })
