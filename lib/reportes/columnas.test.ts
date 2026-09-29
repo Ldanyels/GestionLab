@@ -65,8 +65,8 @@ describe('columnasReporte', () => {
       'Doctor',
       'Entrega',
       'Paciente',
-      'Abono',
       'Tratamientos',
+      'Abono',
       'Total',
     ])
   })
@@ -126,13 +126,13 @@ describe('celdasDeFila', () => {
     expect(celdas).toHaveLength(cols.length)
     expect(celdas[0]).toBe('Sonrisa Dental')
     expect(celdas[1]).toBe('Dra. Ruiz')
-    expect(celdas[5]).toBe('Corona porcelana')
+    expect(celdas[4]).toBe('Corona porcelana')
   })
 
   it('el abono es lo ya cobrado y el total lo que cuesta', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeFila(fila({ total: 260, pagado: 100 }), cols)
-    expect(celdas[4]).toBe(formatMoney(100))
+    expect(celdas[5]).toBe(formatMoney(100))
     expect(celdas[6]).toBe(formatMoney(260))
   })
 
@@ -199,7 +199,7 @@ describe('celdasDeSubtotal', () => {
     // El hueco del doctor queda libre para que el nombre pueda ocuparlo.
     expect(celdas[1]).toBe('')
     expect(celdas[3]).toBe('3 trabajos')
-    expect(celdas[4]).toBe(formatMoney(340))
+    expect(celdas[5]).toBe(formatMoney(340))
     expect(celdas[6]).toBe(formatMoney(890))
   })
 

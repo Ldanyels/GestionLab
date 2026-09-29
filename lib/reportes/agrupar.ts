@@ -53,6 +53,26 @@ export function soloConSaldo(filas: readonly FilaReporte[]): FilaReporte[] {
 }
 
 /**
+ * Orden cronológico por la fecha que se ve en el reporte: la de entrega.
+ *
+ * Los que todavía no han salido van al final, ordenados entre sí por su
+ * ingreso. Intercalarlos por la fecha de entrada dejaría filas con «—» en medio
+ * de una columna de fechas ordenada, que se lee como un fallo.
+ *
+ * Las fechas son ISO, así que comparar sus cadenas ya es comparar días.
+ */
+export function porFechaDeEntrega(a: FilaReporte, b: FilaReporte): number {
+  if (a.entregado_el && b.entregado_el) {
+    return a.entregado_el === b.entregado_el
+      ? a.fecha_ingreso.localeCompare(b.fecha_ingreso)
+      : a.entregado_el.localeCompare(b.entregado_el)
+  }
+  if (a.entregado_el) return -1
+  if (b.entregado_el) return 1
+  return a.fecha_ingreso.localeCompare(b.fecha_ingreso)
+}
+
+/**
  * Agrupa trabajos por consultorio → doctor con subtotales de facturado,
  * pagado y saldo. Grupos ordenados por saldo descendente (quién debe más).
  */
@@ -97,7 +117,12 @@ export function agruparPorConsultorio(filas: readonly FilaReporte[]): {
   }
 
   const grupos = [...consultorios.values()].sort((a, b) => b.saldo - a.saldo)
-  for (const g of grupos) g.doctores.sort((a, b) => b.saldo - a.saldo)
+  for (const g of grupos) {
+    g.doctores.sort((a, b) => b.saldo - a.saldo)
+    // Los grupos siguen ordenados por deuda —a quién hay que llamar primero—;
+    // dentro de cada uno, los trabajos van por fecha.
+    for (const d of g.doctores) d.filas.sort(porFechaDeEntrega)
+  }
 
   const totales = grupos.reduce<TotalesReporte>(
     (t, g) => ({

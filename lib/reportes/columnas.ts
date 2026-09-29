@@ -30,15 +30,16 @@ export interface Columna {
   diferencia entre una tabla que se lee y una que hay que adivinar.
 
   El orden y la lista los fijó el laboratorio: no hay columna de ingreso ni de
-  estado, y el saldo se lee restando el abono del total.
+  estado, y el saldo se lee restando el abono del total. Las dos cifras van
+  juntas al final, que es donde se comparan.
 */
 const CON_MONTOS: Columna[] = [
   { clave: 'consultorio', titulo: 'Consultorio', ancho: 120 },
   { clave: 'doctor', titulo: 'Doctor', ancho: 110 },
   { clave: 'entrega', titulo: 'Entrega', ancho: 70, fija: true },
   { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
-  { clave: 'abono', titulo: 'Abono', ancho: 75, derecha: true, fija: true },
   { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 191 },
+  { clave: 'abono', titulo: 'Abono', ancho: 75, derecha: true, fija: true },
   { clave: 'total', titulo: 'Total', ancho: 75, derecha: true, fija: true },
 ]
 

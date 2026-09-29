@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   agruparPorConsultorio,
+  porFechaDeEntrega,
   soloConSaldo,
   saldoFila,
   type FilaReporte,
@@ -87,5 +88,84 @@ describe('soloConSaldo', () => {
 describe('saldoFila', () => {
   it('redondea a dos decimales', () => {
     expect(saldoFila({ total: 100.005, pagado: 0 })).toBe(100.01)
+  })
+})
+
+describe('porFechaDeEntrega', () => {
+  const f = (id: string, entregado_el: string | null, fecha_ingreso = '2026-09-01'): FilaReporte => ({
+    id,
+    fecha_ingreso,
+    entregado_el,
+    estado: 'entregado',
+    paciente: null,
+    resumen: 'Corona',
+    total: 100,
+    pagado: 0,
+    doctor_id: 'd1',
+    doctor: 'Dra. Ruiz',
+    consultorio_id: 'c1',
+    consultorio: 'Sonrisa',
+  })
+
+  const ordenar = (filas: FilaReporte[]) => [...filas].sort(porFechaDeEntrega).map((x) => x.id)
+
+  it('de la entrega más antigua a la más reciente', () => {
+    expect(
+      ordenar([f('c', '2026-09-20'), f('a', '2026-09-05'), f('b', '2026-09-12')]),
+    ).toEqual(['a', 'b', 'c'])
+  })
+
+  /*
+    Los que no han salido no tienen fecha que mostrar. Intercalarlos por su
+    ingreso dejaría filas con «—» en medio de una columna de fechas ordenada,
+    que se lee como un fallo de la exportación.
+  */
+  it('los que no han salido van al final', () => {
+    expect(ordenar([f('sin', null), f('con', '2026-09-20')])).toEqual(['con', 'sin'])
+  })
+
+  it('entre los que no han salido, manda su ingreso', () => {
+    expect(
+      ordenar([f('b', null, '2026-09-10'), f('a', null, '2026-09-02')]),
+    ).toEqual(['a', 'b'])
+  })
+
+  it('a igual entrega, desempata el ingreso', () => {
+    expect(
+      ordenar([
+        f('b', '2026-09-20', '2026-09-15'),
+        f('a', '2026-09-20', '2026-09-03'),
+      ]),
+    ).toEqual(['a', 'b'])
+  })
+
+  it('cruzando el año, ordena por año y no por día', () => {
+    expect(ordenar([f('b', '2027-01-05'), f('a', '2026-12-28')])).toEqual(['a', 'b'])
+  })
+})
+
+describe('agruparPorConsultorio — orden de las filas', () => {
+  const f = (id: string, entregado_el: string | null): FilaReporte => ({
+    id,
+    fecha_ingreso: '2026-09-01',
+    entregado_el,
+    estado: 'entregado',
+    paciente: null,
+    resumen: 'Corona',
+    total: 100,
+    pagado: 0,
+    doctor_id: 'd1',
+    doctor: 'Dra. Ruiz',
+    consultorio_id: 'c1',
+    consultorio: 'Sonrisa',
+  })
+
+  it('dentro de un doctor, los trabajos salen por fecha', () => {
+    const { grupos } = agruparPorConsultorio([
+      f('tarde', '2026-09-20'),
+      f('sin', null),
+      f('pronto', '2026-09-05'),
+    ])
+    expect(grupos[0]!.doctores[0]!.filas.map((x) => x.id)).toEqual(['pronto', 'tarde', 'sin'])
   })
 })
