@@ -6,18 +6,11 @@ import { puedeBorrarAbonos, puedeRegistrarAbonos, veMontos } from '@/lib/permiso
 import { colorConsultorio } from '@/lib/consultorios/color'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
-import { FechaEntregaEditable } from '@/components/trabajos/FechaEntregaEditable'
 import { FotosDelTrabajo } from '@/components/fotos/FotosDelTrabajo'
 import { fotosConEnlace } from '@/lib/fotos/data'
 import { EstadoBadge } from '@/components/trabajos/EstadoBadge'
 import { PagosSection } from '@/components/trabajos/PagosSection'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { Desplegable } from '@/components/ui/Desplegable'
-import {
-  cambiarEstadoTrabajoAction,
-  corregirFechaEntregaAction,
-  eliminarTrabajoAction,
-} from '../actions'
+import { cambiarEstadoTrabajoAction } from '../actions'
 
 const enlace = 'text-[13.5px] font-semibold text-[var(--color-accent)]'
 
@@ -189,50 +182,6 @@ export default async function TrabajoDetallePage({
         </form>
       ) : null}
 
-      {/*
-        Lo que salió de la cabecera pero no del sistema.
-
-        Son cosas que se hacen una vez cada muchos trabajos —corregir la fecha
-        prometida, arreglar la de entrega de un entregado antiguo, borrar algo
-        mal registrado—: ocupaban el sitio de lo que se hace cada día, pero
-        quitarlas del todo dejaría trabajos imposibles de arreglar.
-      */}
-      <Desplegable resumen="Más opciones">
-        <div className="space-y-3">
-          {/* Solo mientras no se haya entregado: después la fecha que informa
-              es la real, y esa se corrige más abajo. */}
-          {t.estado === 'entregado' ? (
-            perfil?.rol === 'admin' ? (
-              <CorregirEntrega id={t.id} fecha={t.entregado_el} />
-            ) : null
-          ) : (
-            <FechaEntregaEditable
-              trabajoId={t.id}
-              fechaIngreso={t.fecha_ingreso}
-              fechaEntrega={t.fecha_entrega}
-            />
-          )}
-
-          {/*
-            Borrar se lleva las etapas y los abonos del trabajo: solo el
-            administrador. La acción lo comprueba en el servidor; aquí se
-            esconde para no ofrecer un botón que expulsa a quien lo pulse.
-          */}
-          {perfil?.rol === 'admin' ? (
-            <div className="border-t border-[var(--color-border)] pt-3">
-              <ConfirmDialog
-                action={eliminarTrabajoAction}
-                fields={{ id: t.id }}
-                triggerLabel="Eliminar trabajo"
-                triggerClassName="text-[13.5px] font-semibold text-[var(--color-danger)]"
-                title="Eliminar trabajo"
-                message="Se borra el trabajo, sus etapas y sus abonos. No se puede deshacer."
-                confirmLabel="Sí, eliminar"
-              />
-            </div>
-          ) : null}
-        </div>
-      </Desplegable>
     </section>
   )
 }
@@ -270,40 +219,6 @@ function EstadoBtn({
         }`}
       >
         {label}
-      </button>
-    </form>
-  )
-}
-
-/**
- * Corrección de la fecha real de entrega. Solo administradores.
- *
- * Existe porque en el laboratorio se marcan varios trabajos de golpe, días
- * después de que salieran: el sello automático guardaría el día en que alguien
- * se acordó de marcarlo. La acción vuelve a comprobar el rol por su cuenta,
- * porque una Server Action se puede invocar sin pasar por esta página.
- */
-function CorregirEntrega({ id, fecha }: { id: string; fecha: string | null }) {
-  return (
-    <form action={corregirFechaEntregaAction} className="flex flex-wrap items-end gap-2">
-      <input type="hidden" name="id" value={id} />
-      <label className="space-y-1">
-        <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)]">
-          Corregir fecha de entrega
-        </span>
-        <input
-          type="date"
-          name="entregado_el"
-          defaultValue={fecha ?? ''}
-          required
-          className="h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm outline-none focus:border-[var(--color-accent)]"
-        />
-      </label>
-      <button
-        type="submit"
-        className="h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 text-sm font-semibold"
-      >
-        Guardar
       </button>
     </form>
   )

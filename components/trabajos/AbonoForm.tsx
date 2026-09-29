@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Desplegable } from '@/components/ui/Desplegable'
 import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { crearAbonoAction, type FormState } from '@/app/(app)/trabajos/actions'
 import { METODOS_PAGO } from '@/lib/abonos/types'
@@ -118,14 +117,6 @@ export function AbonoForm({
           className={CAMPO_COMPACTO}
         />
       </div>
-
-      {/*
-        La nota se pliega: 0 de 65 abonos la han usado, pero quitarla dejaría
-        sin sitio el «me lo pagó su hermana» que algún día hace falta.
-      */}
-      <Desplegable resumen="Nota (opcional)">
-        <input name="nota" placeholder="Nota" className={CAMPO_COMPACTO} />
-      </Desplegable>
 
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">

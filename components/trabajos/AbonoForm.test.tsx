@@ -179,8 +179,22 @@ describe('AbonoForm — cerrar cobrando', () => {
     expect(screen.getByRole('button', { name: /^adelanto$/i })).toBeTruthy()
   })
 
-  it('la nota sigue estando, plegada', () => {
+  it('la nota ya no está, y el formulario sigue enviando lo demás', async () => {
+    const usuario = userEvent.setup()
     render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
-    expect(document.querySelector('input[name="nota"]')).toBeTruthy()
+    expect(document.querySelector('input[name="nota"]')).toBeNull()
+
+    const formulario = document.querySelector('form') as HTMLFormElement
+    let datos: FormData | null = null
+    formulario.addEventListener('submit', (e) => {
+      e.preventDefault()
+      datos = new FormData(formulario, (e as SubmitEvent).submitter)
+    })
+    await usuario.click(screen.getByRole('button', { name: /todo/i }))
+    await usuario.click(screen.getByRole('button', { name: /^adelanto$/i }))
+
+    expect(datos!.get('nota')).toBeNull()
+    expect(datos!.get('monto')).toBe('260')
+    expect(datos!.get('metodo')).toBe('efectivo')
   })
 })
