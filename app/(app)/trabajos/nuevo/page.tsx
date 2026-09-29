@@ -71,7 +71,7 @@ export default async function NuevoTrabajoPage({
           doctores={doctores}
           tipos={tipos}
           doctorInicial={doctor}
-          submitLabel="Crear trabajo"
+          submitLabel="Registrar trabajo"
           // El trabajo ingresa hoy: la base pone `fecha_ingreso` con
           // `default current_date`, y el plazo se cuenta desde ahí.
           fechaIngreso={hoyLima()}

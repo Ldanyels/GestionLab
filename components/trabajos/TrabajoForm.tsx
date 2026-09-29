@@ -183,6 +183,7 @@ export function TrabajoForm({
     return precioTotalTrabajo(tipo, l.cantidad, tipo.variable_etiqueta ? l.varCantidad : 0)
   })
   const total = Math.round(subtotales.reduce((s, x) => s + x, 0) * 100) / 100
+  const unaSolaLinea = lineas.length === 1
 
   /*
     La fecha que se envía, resuelta en el render.
@@ -218,6 +219,41 @@ export function TrabajoForm({
     setLineas((prev) => prev.map((l) => (l.key === key ? { ...l, ...cambios } : l)))
     setLineasError('')
   }
+
+  /*
+    La fila del monto manual, con el mismo formato que la del subtotal: misma
+    línea de separación, etiqueta a la izquierda y cifra a la derecha. Es la
+    cifra que reemplaza al subtotal, así que se lee en el mismo sitio y de la
+    misma forma.
+  */
+  const filaMontoManual = (
+    <div className="flex items-center justify-between gap-3 border-t border-[var(--color-border)] pt-2.5 text-[13px]">
+      <label className="flex items-center gap-2 text-[var(--color-muted)]">
+        <input
+          type="checkbox"
+          checked={manual}
+          onChange={(e) => setManual(e.target.checked)}
+          className="size-[18px] shrink-0"
+        />
+        Monto manual
+      </label>
+      {manual ? (
+        <input
+          name="precio_manual"
+          type="number"
+          min="0"
+          step="0.01"
+          value={montoManual}
+          onChange={(e) => setMontoManual(e.target.value)}
+          placeholder="0.00"
+          aria-label="Monto manual"
+          className="num h-9 w-[116px] shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-transparent px-2 text-right text-base font-bold outline-none focus:border-[var(--color-accent)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        />
+      ) : (
+        <span className="num text-base font-bold text-[var(--color-muted)]">—</span>
+      )}
+    </div>
+  )
 
   function agregarLinea() {
     setLineas((prev) => [
@@ -326,7 +362,10 @@ export function TrabajoForm({
         Se retienen en el navegador y se suben en cuanto el trabajo tiene id.
       */}
       <Card className="space-y-2 p-3.5">
-        <span className={etiqueta}>Fotos del trabajo — cómo llegó</span>
+        <div>
+          <h2 className="text-base font-bold">Fotos del trabajo</h2>
+          <p className="text-[13px] text-[var(--color-muted)]">Como llegó</p>
+        </div>
         <FotosAlCrear
           archivos={fotos}
           onCambiar={setFotos}
@@ -336,7 +375,7 @@ export function TrabajoForm({
 
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold">Trabajos de la cuenta</h2>
+          <h2 className="text-base font-bold">Trabajos a realizar</h2>
           <span className="num shrink-0 text-[13px] text-[var(--color-muted)]">
             {lineas.length} línea{lineas.length === 1 ? '' : 's'}
           </span>
@@ -457,46 +496,29 @@ export function TrabajoForm({
                   {formatMoney(subtotales[idx] ?? 0)}
                 </span>
               </div>
+
+              {/*
+                Con una sola línea —189 de 199 trabajos— el monto manual va
+                aquí dentro, debajo de su subtotal. Con varias no puede: metido
+                en la caja de la última se leería como si reemplazara solo a
+                esa, cuando reemplaza el total de todas. Entonces baja a su
+                propia caja, con el mismo formato.
+              */}
+              {unaSolaLinea ? filaMontoManual : null}
             </Card>
           )
         })}
 
-        {/*
-          El monto manual va aquí, pegado al subtotal, porque es la misma
-          decisión: cuánto se cobra por lo que se hizo. Al final del formulario
-          quedaba lejos de las cifras que lo motivan —«se cobró solo hasta la
-          prueba»— y había que volver a subir para recordarlas.
-        */}
-        <div className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-3">
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={manual}
-              onChange={(e) => setManual(e.target.checked)}
-              className="mt-0.5 size-5 shrink-0"
-            />
-            Ingresar un monto manual (ej. cobrar solo hasta donde se hizo)
-          </label>
-          {manual ? (
-            <>
-              <input
-                name="precio_manual"
-                type="number"
-                min="0"
-                step="0.01"
-                value={montoManual}
-                onChange={(e) => setMontoManual(e.target.value)}
-                placeholder="Monto manual (S/)"
-                className={campo}
-              />
-              {lineas.length > 1 ? (
-                <p className="text-[12px] text-[var(--color-muted)]">
-                  Reemplaza el total de las {lineas.length} líneas.
-                </p>
-              ) : null}
-            </>
-          ) : null}
-        </div>
+        {unaSolaLinea ? null : (
+          <Card className="p-3.5">
+            {filaMontoManual}
+            {manual ? (
+              <p className="mt-2 text-[12px] text-[var(--color-muted)]">
+                Reemplaza el total de las {lineas.length} líneas.
+              </p>
+            ) : null}
+          </Card>
+        )}
 
         <button
           type="button"

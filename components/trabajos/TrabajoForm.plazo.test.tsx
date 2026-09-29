@@ -336,7 +336,7 @@ describe('TrabajoForm — aviso de posible duplicado', () => {
         action={accionConAviso as never}
         doctores={doctores}
         tipos={[tipo({})]}
-        submitLabel="Crear trabajo"
+        submitLabel="Registrar trabajo"
         fechaIngreso={INGRESO}
       />,
     )
@@ -348,7 +348,7 @@ describe('TrabajoForm — aviso de posible duplicado', () => {
   */
   it('sin duplicados, el botón de guardar es el de siempre', () => {
     pintarCon(undefined)
-    expect(screen.getByRole('button', { name: 'Crear trabajo' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Registrar trabajo' })).toBeTruthy()
     expect(screen.queryByRole('alert')).toBeNull()
   })
 })
@@ -376,11 +376,12 @@ describe('TrabajoForm — el orden que pidió el laboratorio', () => {
     expect(pos('Consultorio y doctor')).toBeLessThan(pos('Paciente'))
     expect(pos('Paciente')).toBeLessThan(pos('Indicaciones'))
     expect(pos('Indicaciones')).toBeLessThan(pos('Fotos del trabajo'))
-    expect(pos('Fotos del trabajo')).toBeLessThan(pos('Trabajos de la cuenta'))
-    expect(pos('Trabajos de la cuenta')).toBeLessThan(pos('monto manual'))
-    // El monto manual va con las líneas, no al final: es la cifra que
-    // reemplaza al subtotal y se decide mirándolo.
-    expect(pos('monto manual')).toBeLessThan(pos('Total de la cuenta'))
+    expect(pos('Fotos del trabajo')).toBeLessThan(pos('Trabajos a realizar'))
+    expect(pos('Trabajos a realizar')).toBeLessThan(pos('Subtotal'))
+    // El monto manual va justo debajo del subtotal: es la cifra que lo
+    // reemplaza, y se decide mirándolo.
+    expect(pos('Subtotal')).toBeLessThan(pos('Monto manual'))
+    expect(pos('Monto manual')).toBeLessThan(pos('Total de la cuenta'))
   })
 
   /*
@@ -568,8 +569,111 @@ describe('TrabajoForm — el total ya no flota', () => {
     const texto = container.textContent ?? ''
     const pos = (t: string) => texto.indexOf(t)
 
-    expect(pos('Trabajos de la cuenta')).toBeLessThan(pos('Fecha de entrega'))
+    expect(pos('Trabajos a realizar')).toBeLessThan(pos('Fecha de entrega'))
     expect(pos('Fecha de entrega')).toBeLessThan(pos('Total de la cuenta'))
     expect(pos('Total de la cuenta')).toBeLessThan(pos('Registrar trabajo'))
+  })
+})
+
+describe('TrabajoForm — los nombres que usa el laboratorio', () => {
+  function pintar() {
+    return render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({}), tipo({ id: 't2', nombre: 'Base metálica' })]}
+        submitLabel="Registrar trabajo"
+        fechaIngreso={INGRESO}
+      />,
+    )
+  }
+
+  it('las fotos llevan título y subtítulo, no un solo renglón', () => {
+    pintar()
+    expect(screen.getByRole('heading', { name: 'Fotos del trabajo' })).toBeTruthy()
+    expect(screen.getByText('Como llegó')).toBeTruthy()
+  })
+
+  it('la sección de trabajos se llama «Trabajos a realizar»', () => {
+    pintar()
+    expect(screen.getByRole('heading', { name: 'Trabajos a realizar' })).toBeTruthy()
+  })
+
+  it('el botón de guardar dice «Registrar trabajo»', () => {
+    pintar()
+    expect(screen.getByRole('button', { name: 'Registrar trabajo' })).toBeTruthy()
+  })
+})
+
+/**
+ * El elemento **más pequeño** que contiene a la vez el subtotal y el monto
+ * manual.
+ *
+ * Buscar «alguno que contenga los dos» no distingue nada: la sección entera
+ * los contiene siempre. Lo que dice si comparten caja es cuál es el menor —la
+ * caja del tratamiento, o ya la sección con su título.
+ */
+function cajaComun(container: HTMLElement): HTMLElement | undefined {
+  return [...container.querySelectorAll('div')]
+    .filter(
+      (d) => d.textContent?.includes('Subtotal') && d.textContent?.includes('Monto manual'),
+    )
+    .sort((a, b) => (a.textContent?.length ?? 0) - (b.textContent?.length ?? 0))[0]
+}
+
+describe('TrabajoForm — el monto manual, con el subtotal', () => {
+  function pintar() {
+    return render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar trabajo"
+        fechaIngreso={INGRESO}
+      />,
+    )
+  }
+
+  /*
+    189 de 199 trabajos tienen una sola línea: ese es el caso que hay que
+    acertar. El monto manual vive dentro de la misma caja que el subtotal,
+    porque es la cifra que lo reemplaza.
+  */
+  it('con una sola línea comparte caja con el subtotal', () => {
+    const { container } = pintar()
+    // La caja del tratamiento: no llega a incluir el título de la sección.
+    expect(cajaComun(container)?.textContent).not.toContain('Trabajos a realizar')
+  })
+
+  it('sin marcar no envía importe alguno', () => {
+    pintar()
+    expect(document.querySelector('input[name="precio_manual"]')).toBeNull()
+  })
+
+  it('al marcarlo aparece el campo en el sitio de la cifra', async () => {
+    const usuario = userEvent.setup()
+    pintar()
+
+    await usuario.click(screen.getByRole('checkbox', { name: /monto manual/i }))
+
+    const campo = document.querySelector('input[name="precio_manual"]') as HTMLInputElement
+    expect(campo).toBeTruthy()
+    expect(campo.type).toBe('number')
+  })
+
+  /*
+    Con varias líneas no puede ir dentro de la caja de la última: se leería
+    como si reemplazara solo ese subtotal, cuando reemplaza el total de todas.
+  */
+  it('con varias líneas sale de la caja y avisa a qué reemplaza', async () => {
+    const usuario = userEvent.setup()
+    const { container } = pintar()
+
+    await usuario.click(screen.getByRole('button', { name: /agregar otro trabajo/i }))
+    await usuario.click(screen.getByRole('checkbox', { name: /monto manual/i }))
+
+    // Ya no comparten caja: lo menor que los contiene es la sección entera.
+    expect(cajaComun(container)?.textContent).toContain('Trabajos a realizar')
+    expect(screen.getByText(/reemplaza el total de las 2 líneas/i)).toBeTruthy()
   })
 })
