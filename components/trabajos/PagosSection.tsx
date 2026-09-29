@@ -10,11 +10,14 @@ import { eliminarAbonoAction } from '@/app/(app)/trabajos/actions'
 export async function PagosSection({
   trabajoId,
   precio,
+  estadoTrabajo,
   puedeBorrar,
   puedeEditar,
 }: {
   trabajoId: string
   precio: number
+  /** Para no ofrecer «Trabajo cerrado» en uno que ya lo está. */
+  estadoTrabajo: string
   /**
    * Si es falso, no aparece el botón de eliminar de cada abono. Borrar es solo
    * del administrador: hace desaparecer el registro.
@@ -82,7 +85,11 @@ export async function PagosSection({
         </p>
       )}
 
-      <AbonoForm trabajoId={trabajoId} saldo={saldo} />
+      <AbonoForm
+        trabajoId={trabajoId}
+        saldo={saldo}
+        puedeCerrar={estadoTrabajo !== 'cerrado'}
+      />
     </div>
   )
 }

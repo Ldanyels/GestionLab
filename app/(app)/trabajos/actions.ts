@@ -271,18 +271,53 @@ export async function crearAbonoAction(
 
   const trabajoId = String(formData.get('trabajo_id') ?? '')
   if (!trabajoId) return { error: 'Falta el trabajo' }
-  const parsed = abonoSchema.safeParse({
-    monto: String(formData.get('monto') ?? ''),
-    metodo: String(formData.get('metodo') ?? 'efectivo'),
-    fecha: String(formData.get('fecha') ?? ''),
-    nota: String(formData.get('nota') ?? ''),
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
 
-  const r = await intentar('crearAbonoAction', 'No se pudo registrar el abono', () =>
-    crearAbono(trabajoId, parsed.data),
-  )
-  if (!r.ok) return r.estado
+  /*
+    «Trabajo cerrado» es el otro botón del mismo formulario.
+
+    Cerrar cobrando es el final normal: el consultorio recoge la pieza y paga lo
+    que falta en el mismo gesto. Obligar a dos envíos —registrar y luego
+    cerrar— es justo donde se perdían los cobros, así que un solo botón hace las
+    dos cosas.
+
+    Sin importe escrito solo cierra: también se cierra un trabajo ya pagado, o
+    uno que se cobra por fuera.
+  */
+  const cerrar = String(formData.get('cerrar') ?? '') === '1'
+  const monto = String(formData.get('monto') ?? '').trim()
+
+  if (monto !== '') {
+    const parsed = abonoSchema.safeParse({
+      monto,
+      metodo: String(formData.get('metodo') ?? 'efectivo'),
+      fecha: String(formData.get('fecha') ?? ''),
+      nota: String(formData.get('nota') ?? ''),
+    })
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+
+    const r = await intentar('crearAbonoAction', 'No se pudo registrar el abono', () =>
+      crearAbono(trabajoId, parsed.data),
+    )
+    /*
+      Si el abono falla no se cierra. Cerrar un trabajo dando por cobrado un
+      dinero que no se guardó deja una deuda invisible: nadie vuelve a mirar un
+      trabajo cerrado.
+    */
+    if (!r.ok) return r.estado
+  } else if (!cerrar) {
+    return { error: 'Escribe el monto' }
+  }
+
+  if (cerrar) {
+    const c = await intentar('crearAbonoAction/cerrar', 'No se pudo cerrar el trabajo', async () => {
+      await cambiarEstadoTrabajo(trabajoId, 'cerrado', hoyLima())
+      await descontarInsumosPorTrabajo(trabajoId)
+    })
+    if (!c.ok) return c.estado
+    revalidatePath('/inventario')
+    revalidatePath('/trabajos')
+    revalidatePath('/hoy')
+  }
 
   revalidatePath(`/trabajos/${trabajoId}`)
   return { error: '' }

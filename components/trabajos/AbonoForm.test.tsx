@@ -48,7 +48,7 @@ describe('AbonoForm — atajos de monto', () => {
 
     await usuario.click(screen.getByRole('button', { name: /todo/i }))
 
-    expect(screen.getByRole('button', { name: /registrar adelanto/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^adelanto$/i })).toBeEnabled()
     expect(campoMonto().value).toBe('120')
   })
 
@@ -93,6 +93,94 @@ describe('AbonoForm — sin conexión', () => {
       window.dispatchEvent(new Event('online'))
     })
 
-    expect(screen.getByRole('button', { name: /registrar adelanto/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^adelanto$/i })).toBeEnabled()
+  })
+})
+
+describe('AbonoForm — cerrar cobrando', () => {
+  /*
+    El final normal de un trabajo: el consultorio recoge la pieza y paga lo que
+    falta en el mismo gesto. Un solo botón registra el importe y cierra, porque
+    obligar a dos envíos es justo donde se perdian los cobros.
+  */
+  it('«Trabajo cerrado» envía el formulario marcando que hay que cerrar', async () => {
+    const usuario = userEvent.setup()
+    render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
+
+    const boton = screen.getByRole('button', { name: /trabajo cerrado/i })
+    expect(boton.getAttribute('name')).toBe('cerrar')
+    expect(boton.getAttribute('value')).toBe('1')
+
+    await usuario.click(screen.getByRole('button', { name: /todo/i }))
+    expect(campoMonto().value).toBe('260')
+  })
+
+  /*
+    También se cierra un trabajo ya pagado, o uno cobrado por fuera: sin
+    `formNoValidate` el navegador exigiría el monto y no dejaría cerrar.
+  */
+  /*
+    Que el botón lleve `name`/`value` no basta: solo viaja si el navegador lo
+    reconoce como el que envió. Se comprueba con el `FormData` real que se
+    construye a partir del enviador, que es lo que recibe la acción.
+  */
+  it('el envío lleva cerrar=1 y el monto escrito', async () => {
+    const usuario = userEvent.setup()
+    render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
+
+    const formulario = document.querySelector('form') as HTMLFormElement
+    let datos: FormData | null = null
+    formulario.addEventListener('submit', (e) => {
+      e.preventDefault()
+      datos = new FormData(formulario, (e as SubmitEvent).submitter)
+    })
+
+    await usuario.click(screen.getByRole('button', { name: /todo/i }))
+    await usuario.click(screen.getByRole('button', { name: /trabajo cerrado/i }))
+
+    expect(datos!.get('cerrar')).toBe('1')
+    expect(datos!.get('monto')).toBe('260')
+    expect(datos!.get('trabajo_id')).toBe('t1')
+  })
+
+  it('el envío con «Adelanto» no lleva cerrar', async () => {
+    const usuario = userEvent.setup()
+    render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
+
+    const formulario = document.querySelector('form') as HTMLFormElement
+    let datos: FormData | null = null
+    formulario.addEventListener('submit', (e) => {
+      e.preventDefault()
+      datos = new FormData(formulario, (e as SubmitEvent).submitter)
+    })
+
+    await usuario.click(screen.getByRole('button', { name: /todo/i }))
+    await usuario.click(screen.getByRole('button', { name: /^adelanto$/i }))
+
+    expect(datos!.get('cerrar')).toBeNull()
+    expect(datos!.get('monto')).toBe('260')
+  })
+
+  it('«Trabajo cerrado» no exige el monto', () => {
+    render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
+    expect(
+      screen.getByRole('button', { name: /trabajo cerrado/i }).hasAttribute('formnovalidate'),
+    ).toBe(true)
+  })
+
+  it('«Adelanto» no lleva la marca de cerrar', () => {
+    render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
+    expect(screen.getByRole('button', { name: /^adelanto$/i }).getAttribute('name')).toBeNull()
+  })
+
+  it('en un trabajo ya cerrado no se ofrece volver a cerrarlo', () => {
+    render(<AbonoForm trabajoId="t1" saldo={260} />)
+    expect(screen.queryByRole('button', { name: /trabajo cerrado/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /^adelanto$/i })).toBeTruthy()
+  })
+
+  it('la nota sigue estando, plegada', () => {
+    render(<AbonoForm trabajoId="t1" saldo={260} puedeCerrar />)
+    expect(document.querySelector('input[name="nota"]')).toBeTruthy()
   })
 })

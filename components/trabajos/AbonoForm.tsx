@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Desplegable } from '@/components/ui/Desplegable'
 import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { crearAbonoAction, type FormState } from '@/app/(app)/trabajos/actions'
 import { METODOS_PAGO } from '@/lib/abonos/types'
@@ -22,10 +23,13 @@ function hoyLocal(): string {
 export function AbonoForm({
   trabajoId,
   saldo,
+  puedeCerrar = false,
 }: {
   trabajoId: string
   /** Lo que falta cobrar. De aquí salen los atajos de monto. */
   saldo: number
+  /** Falso en un trabajo ya cerrado: entonces solo se registran adelantos. */
+  puedeCerrar?: boolean
 }) {
   const [state, formAction, pending] = useActionState(crearAbonoAction, initial)
   // Sin conexión no se envía: un abono que parece registrado y no lo está es
@@ -61,28 +65,26 @@ export function AbonoForm({
       <input type="hidden" name="trabajo_id" value={trabajoId} />
 
       {/*
-        Los atajos van **antes** que los campos: el caso frecuente es cobrar
-        todo lo que falta, y así ese caso se resuelve sin teclear nada. Llenan
-        el monto en vez de enviar solos, para que se pueda ajustar antes de
-        confirmar: un pago es dinero, y no debe salir de un solo toque
-        irreversible.
+        La rejilla que pidió el laboratorio: el atajo junto al importe, y debajo
+        cómo y cuándo se pagó.
+
+        Los atajos llenan el campo en vez de enviar solos, para que se pueda
+        ajustar antes de confirmar: un pago es dinero, y no debe salir de un
+        solo toque irreversible.
       */}
-      {atajos.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-wrap content-start gap-1.5">
           {atajos.map((a) => (
             <button
               key={a.etiqueta}
               type="button"
               onClick={() => setMonto(String(a.monto))}
-              className="h-9 rounded-full border border-[var(--color-border)] px-3 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
+              className="h-11 flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-2 text-[13px] font-semibold transition-colors active:border-[var(--color-accent)]"
             >
-              {a.etiqueta} · {formatMoney(a.monto)}
+              {a.etiqueta} {formatMoney(a.monto)}
             </button>
           ))}
         </div>
-      ) : null}
-
-      <div className="grid grid-cols-2 gap-2">
         <input
           name="monto"
           type="number"
@@ -91,10 +93,16 @@ export function AbonoForm({
           required
           value={monto}
           onChange={(e) => setMonto(e.target.value)}
-          placeholder="Monto (S/)"
+          placeholder="Monto adelanto"
+          aria-label="Monto del adelanto"
           className={CAMPO_COMPACTO}
         />
-        <select name="metodo" defaultValue="efectivo" className={CAMPO_COMPACTO}>
+        <select
+          name="metodo"
+          defaultValue="efectivo"
+          aria-label="Método de pago"
+          className={CAMPO_COMPACTO}
+        >
           {METODOS_PAGO.map((m) => (
             <option key={m} value={m}>
               {m}
@@ -106,23 +114,57 @@ export function AbonoForm({
           type="date"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
+          aria-label="Fecha del pago"
           className={CAMPO_COMPACTO}
         />
-        <input name="nota" placeholder="Nota (opcional)" className={CAMPO_COMPACTO} />
       </div>
+
+      {/*
+        La nota se pliega: 0 de 65 abonos la han usado, pero quitarla dejaría
+        sin sitio el «me lo pagó su hermana» que algún día hace falta.
+      */}
+      <Desplegable resumen="Nota (opcional)">
+        <input name="nota" placeholder="Nota" className={CAMPO_COMPACTO} />
+      </Desplegable>
+
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--color-danger)]">
           {state.error}
         </p>
       ) : null}
       {/*
-        «Registrar adelanto» es el nombre que usa el laboratorio —el consultorio
-        adelanta parte y salda al recoger la pieza— y el botón dice qué hace con
-        el monto que se acaba de escribir arriba.
+        Los dos botones del bosquejo, en la misma rejilla que los campos.
+
+        «Trabajo cerrado» registra el importe escrito **y** cierra, en un solo
+        envío: el consultorio recoge la pieza y paga lo que falta en el mismo
+        gesto, y obligar a dos pasos es donde se perdían los cobros. Lleva
+        `formNoValidate` porque también sirve para cerrar sin cobrar nada —un
+        trabajo ya pagado— y el navegador no debe exigir el monto ahí.
+
+        «Adelanto» solo registra: es el pago a cuenta, con el trabajo aún vivo.
       */}
-      <Button type="submit" className="w-full" disabled={pending || !enLinea}>
-        {!enLinea ? 'Sin conexión' : pending ? 'Registrando…' : 'Registrar adelanto'}
-      </Button>
+      <div className={`grid gap-2 ${puedeCerrar ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        {puedeCerrar ? (
+          <Button
+            type="submit"
+            name="cerrar"
+            value="1"
+            formNoValidate
+            className="w-full"
+            disabled={pending || !enLinea}
+          >
+            {pending ? 'Guardando…' : 'Trabajo cerrado'}
+          </Button>
+        ) : null}
+        <Button
+          type="submit"
+          variant={puedeCerrar ? 'ghost' : 'primary'}
+          className="w-full"
+          disabled={pending || !enLinea}
+        >
+          {!enLinea ? 'Sin conexión' : pending ? 'Registrando…' : 'Adelanto'}
+        </Button>
+      </div>
     </form>
   )
 }
