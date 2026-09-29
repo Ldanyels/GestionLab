@@ -677,3 +677,56 @@ describe('TrabajoForm — el monto manual, con el subtotal', () => {
     expect(screen.getByText(/reemplaza el total de las 2 líneas/i)).toBeTruthy()
   })
 })
+
+describe('TrabajoForm — la pieza, sin campo pero sin perderse', () => {
+  /*
+    El laboratorio quitó el campo de la pantalla. El dato no: 24 de 209 líneas
+    tienen pieza, y abrir uno de esos trabajos para cambiar el precio no puede
+    borrarla de paso.
+  */
+  it('ya no hay campo para escribir la pieza', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        submitLabel="Registrar trabajo"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    expect(screen.queryByLabelText(/pieza o diente/i)).toBeNull()
+  })
+
+  it('al editar, la pieza que ya tenía sigue viajando en el envío', () => {
+    render(
+      <TrabajoForm
+        action={accion}
+        doctores={doctores}
+        tipos={[tipo({})]}
+        trabajo={trabajoExistente({
+          items: [
+            {
+              id: 'i1',
+              laboratorio_id: 'lab1',
+              trabajo_id: 'tr1',
+              catalogo_trabajo_id: 't1',
+              tipo_nombre: 'Corona porcelana',
+              variable_etiqueta: null,
+              cantidad: 1,
+              variable_cantidad: 0,
+              precio_unitario: 90,
+              subtotal: 90,
+              pieza: '12',
+              orden: 0,
+              creado_en: '2026-09-10T00:00:00Z',
+            },
+          ],
+        })}
+        submitLabel="Guardar"
+        fechaIngreso={INGRESO}
+      />,
+    )
+    const items = document.querySelector('input[name="items"]') as HTMLInputElement
+    expect(JSON.parse(items.value)[0].pieza).toBe('12')
+  })
+})

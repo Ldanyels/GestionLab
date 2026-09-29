@@ -14,25 +14,17 @@ type Fechable = Pick<FilaReporte, 'fecha_ingreso' | 'entregado_el'>
  * y una flecha hacia la nada no informa de nada.
  *
  * El año de la entrega se calla cuando coincide con el del ingreso, que es lo
- * que haría cualquiera al escribirlo a mano. En el PDF esa diferencia es la que
- * decide si el nombre del trabajo cabe o se corta.
+ * que haría cualquiera al escribirlo a mano.
  *
  * @param corto En pantalla las fechas van sin año (`09-13`); en el PDF completas.
- * @param flecha
- *   El PDF usa las fuentes estándar, que solo codifican WinAnsi: una «→»
- *   (U+2192) no se puede ni medir, y el reporte entero falla al generarse en
- *   cuanto aparece un entregado. Por eso el PDF pasa una de ASCII.
  */
-export function fechasDeFila(
-  f: Fechable,
-  { corto = false, flecha = '→' }: { corto?: boolean; flecha?: string } = {},
-): string {
+export function fechasDeFila(f: Fechable, { corto = false }: { corto?: boolean } = {}): string {
   const ingreso = corto ? sinAno(f.fecha_ingreso) : f.fecha_ingreso
   if (!f.entregado_el) return ingreso
 
   const mismoAno = f.fecha_ingreso.slice(0, 4) === f.entregado_el.slice(0, 4)
   const entrega = corto || mismoAno ? sinAno(f.entregado_el) : f.entregado_el
-  return `${ingreso} ${flecha} ${entrega}`
+  return `${ingreso} → ${entrega}`
 }
 
 function sinAno(fecha: string): string {

@@ -32,6 +32,13 @@ interface Linea {
   tipoId: string
   cantidad: number
   varCantidad: number
+  /**
+   * Pieza o diente.
+   *
+   * Ya no tiene campo: el laboratorio lo quitó de la pantalla. Sigue en el
+   * estado y en el JSON que se envía a propósito —si no, abrir para editar
+   * cualquiera de los 24 trabajos que la tienen se la llevaría por delante—.
+   */
   pieza: string
 }
 
@@ -464,13 +471,6 @@ export function TrabajoForm({
                     +
                   </button>
                 </div>
-                <input
-                  aria-label="Pieza o diente"
-                  value={l.pieza}
-                  onChange={(e) => actualizar(l.key, { pieza: e.target.value })}
-                  placeholder="Pieza / diente (11, 21)"
-                  className={`${campoBase} min-w-0 flex-[1_1_150px] px-3`}
-                />
               </div>
 
               {tipo?.variable_etiqueta ? (
