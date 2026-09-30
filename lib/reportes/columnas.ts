@@ -32,9 +32,12 @@ export interface Columna {
   El orden y la lista los fijó el laboratorio: no hay columna de ingreso ni de
   estado, y el saldo se lee restando el abono del total. Las dos cifras van
   juntas al final, que es donde se comparan.
+
+  El consultorio tampoco es columna: encabeza su bloque una sola vez. Repetirlo
+  en cada fila gastaba la columna más ancha en decir lo mismo ciento noventa y
+  nueve veces.
 */
 const CON_MONTOS: Columna[] = [
-  { clave: 'consultorio', titulo: 'Consultorio', ancho: 120 },
   { clave: 'doctor', titulo: 'Doctor', ancho: 110 },
   { clave: 'entrega', titulo: 'Entrega', ancho: 70, fija: true },
   { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
@@ -48,7 +51,6 @@ const CON_MONTOS: Columna[] = [
   reparte entre los nombres, que es lo que ese lector viene a mirar.
 */
 const SIN_MONTOS: Columna[] = [
-  { clave: 'consultorio', titulo: 'Consultorio', ancho: 150 },
   { clave: 'doctor', titulo: 'Doctor', ancho: 140 },
   { clave: 'entrega', titulo: 'Entrega', ancho: 80, fija: true },
   { clave: 'paciente', titulo: 'Paciente', ancho: 150 },
@@ -84,7 +86,6 @@ export function xDeColumnas(columnas: readonly Columna[], margen: number): numbe
  */
 export function celdasDeFila(f: FilaReporte, columnas: readonly Columna[]): string[] {
   const valores: Record<string, string> = {
-    consultorio: f.consultorio,
     doctor: f.doctor,
     entrega: f.entregado_el ?? '—',
     paciente: f.paciente || '—',
@@ -101,27 +102,44 @@ export function tieneDeuda(f: FilaReporte): boolean {
 }
 
 /**
- * La fila de subtotal de un consultorio: su nombre a la izquierda y sus cifras
- * bajo las columnas que les tocan.
- *
- * El conteo va bajo «Paciente» y no bajo «Doctor» para dejar libre esa columna:
- * al pintarla, el nombre del consultorio puede ocupar las dos y no se corta. En
- * esta fila el nombre es lo que identifica el bloque.
+ * La fila que cierra el bloque de un consultorio.
  *
  * Existe porque el reporte se usa para cobrar. Una matriz plana obligaría a
  * sumar a mano lo que debe cada consultorio, que es la única pregunta que se le
  * hace a este papel.
+ *
+ * No repite el nombre: lo lleva el título del bloque, justo encima.
  */
 export function celdasDeSubtotal(
-  grupo: { consultorio: string; facturado: number; pagado: number },
+  grupo: { facturado: number; pagado: number },
   cuantos: number,
   columnas: readonly Columna[],
 ): string[] {
   const valores: Record<string, string> = {
-    consultorio: grupo.consultorio,
+    doctor: 'Subtotal',
     paciente: `${cuantos} ${cuantos === 1 ? 'trabajo' : 'trabajos'}`,
     abono: formatMoney(grupo.pagado),
     total: formatMoney(grupo.facturado),
+  }
+  return columnas.map((c) => valores[c.clave] ?? '')
+}
+/**
+ * La fila que cierra el reporte entero.
+ *
+ * Vive aquí, y no dibujada a mano en el PDF, porque el ajuste de anchos tiene
+ * que medirla: sus cifras son las más grandes del documento —la suma de todas—
+ * y cuando no se medía salía recortada, «S/ 43,59…», justo en la fila que
+ * resume el papel.
+ */
+export function celdasDeTotal(
+  totales: { trabajos: number; facturado: number; pagado: number },
+  columnas: readonly Columna[],
+): string[] {
+  const valores: Record<string, string> = {
+    doctor: 'TOTAL',
+    paciente: `${totales.trabajos} ${totales.trabajos === 1 ? 'trabajo' : 'trabajos'}`,
+    abono: formatMoney(totales.pagado),
+    total: formatMoney(totales.facturado),
   }
   return columnas.map((c) => valores[c.clave] ?? '')
 }

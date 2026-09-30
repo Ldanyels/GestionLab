@@ -7,6 +7,7 @@ import {
   ajustarAnchos,
   celdasDeFila,
   celdasDeSubtotal,
+  celdasDeTotal,
   columnasReporte,
   RELLENO,
   xDeColumnas,
@@ -73,6 +74,9 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
       ...grupos.map((g) =>
         celdasDeSubtotal(g, g.doctores.reduce((s, d) => s + d.filas.length, 0), declaradas),
       ),
+      // La fila del total lleva las cifras más grandes del documento: si no se
+      // mide, es justo la que sale recortada.
+      celdasDeTotal(totales, declaradas),
     ]
     // La negrita de los subtotales es más ancha que la redonda: se mide con
     // ella para no quedarse corto justo en la fila que se usa para cobrar.
@@ -119,17 +123,13 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
          * destacar—. Por consultorio, que es como se cobra, la señal sirve.
          */
         conDeuda?: boolean
-        /** La primera celda puede invadir la segunda (fila de subtotal). */
-        primeraAncha?: boolean
       } = {},
     ) => {
       const font = opts.font ?? normal
       celdas.forEach((celda, i) => {
         const col = columnas[i]
         if (!col || !celda) return
-        const disponible =
-          opts.primeraAncha && i === 0 ? col.ancho + (columnas[1]?.ancho ?? 0) : col.ancho
-        const recortada = truncar(font, celda, CUERPO, disponible - RELLENO)
+        const recortada = truncar(font, celda, CUERPO, col.ancho - RELLENO)
         const x = col.derecha
           ? xs[i]! - RELLENO * 0.7 - font.widthOfTextAtSize(recortada, CUERPO)
           : xs[i]! + RELLENO * 0.3
@@ -160,10 +160,30 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
       y -= ALTO_FILA + 3
     }
 
+    /*
+      El consultorio encabeza su bloque, una sola vez.
+
+      Era la columna más ancha de la tabla y repetía el mismo nombre en cada
+      fila —«Arte oral» ciento noventa y nueve veces—. Como título se lee mejor
+      y deja ese espacio a los tratamientos, que sí cambian.
+    */
+    let enCurso: string | null = null
+    const tituloConsultorio = (nombre: string, continuacion = false) => {
+      texto(continuacion ? `${nombre} (cont.)` : nombre, {
+        x: MARGEN,
+        size: 10.5,
+        font: bold,
+      })
+      y -= ALTO_FILA
+    }
+
     const saltoPagina = (necesario: number) => {
       if (y - necesario >= MARGEN) return
       page = doc.addPage([ANCHO, ALTO])
       y = ALTO - MARGEN
+      // Un bloque partido reimprime su título: sin él, media página de filas
+      // queda sin dueño y no se sabe a quién cobrarle.
+      if (enCurso) tituloConsultorio(enCurso, true)
       cabeceraTabla()
     }
 
@@ -196,7 +216,6 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
           [f.soloPendientes ? 'Trabajos con deuda' : 'Trabajos', String(totales.trabajos)],
           ['Monto final', formatMoney(totales.facturado)],
           [f.soloPendientes ? 'Abonado a cuenta' : 'Abonos', formatMoney(totales.pagado)],
-          ['Por cobrar', formatMoney(totales.saldo)],
         ]
       : [
           ['Trabajos', String(totales.trabajos)],
@@ -211,7 +230,7 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
         y: y - 18,
         size: 12,
         font: bold,
-        color: montos && i === 3 && totales.saldo > 0.001 ? ROJO : NEGRO,
+        color: NEGRO,
       })
     })
     y -= 34
@@ -229,6 +248,13 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
 
       let cebra = false
       for (const g of grupos) {
+        // El título y al menos una fila van juntos: un encabezado solo al pie
+        // de la página no encabeza nada.
+        enCurso = null
+        saltoPagina(ALTO_FILA * 3)
+        tituloConsultorio(g.consultorio)
+        enCurso = g.consultorio
+
         for (const d of g.doctores) {
           for (const t of d.filas) {
             saltoPagina(ALTO_FILA)
@@ -264,10 +290,10 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
         filaTabla(celdasDeSubtotal(g, cuantos, columnas), {
           font: bold,
           conDeuda: montos && g.saldo > 0.001,
-          primeraAncha: true,
         })
-        y -= ALTO_FILA + 8
+        y -= ALTO_FILA + 10
         cebra = false
+        enCurso = null
       }
 
       // Total general, al pie de la matriz.
@@ -280,20 +306,34 @@ export async function pdfDeReporte(d: DatosPdfReporte): Promise<Uint8Array> {
           height: ALTO_FILA,
           color: CABECERA,
         })
-        filaTabla(
-          columnas.map((c) =>
-            c.clave === 'consultorio'
-              ? 'TOTAL'
-              : c.clave === 'paciente'
-                ? `${totales.trabajos} ${totales.trabajos === 1 ? 'trabajo' : 'trabajos'}`
-                : c.clave === 'abono'
-                  ? formatMoney(totales.pagado)
-                  : c.clave === 'total'
-                    ? formatMoney(totales.facturado)
-                    : '',
-          ),
-          { font: bold, conDeuda: totales.saldo > 0.001, primeraAncha: true },
-        )
+        filaTabla(celdasDeTotal(totales, columnas), {
+          font: bold,
+          conDeuda: totales.saldo > 0.001,
+        })
+        y -= ALTO_FILA
+
+        /*
+          Lo que queda por cobrar cierra el documento.
+
+          Estaba arriba, entre las cifras del encabezado, donde se lee antes de
+          haber visto nada. Es la conclusión del reporte —lo que se saca en
+          claro después de repasar consultorio por consultorio— y su sitio es
+          el final.
+        */
+        saltoPagina(30)
+        y -= 6
+        texto('POR COBRAR', {
+          x: MARGEN,
+          size: 10,
+          font: bold,
+          color: totales.saldo > 0.001 ? ROJO : NEGRO,
+        })
+        texto(formatMoney(totales.saldo), {
+          size: 15,
+          font: bold,
+          alDerecha: true,
+          color: totales.saldo > 0.001 ? ROJO : NEGRO,
+        })
         y -= ALTO_FILA
       }
     }

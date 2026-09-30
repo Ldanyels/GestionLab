@@ -3,6 +3,7 @@ import {
   ajustarAnchos,
   celdasDeFila,
   celdasDeSubtotal,
+  celdasDeTotal,
   columnasReporte,
   RELLENO,
   tieneDeuda,
@@ -61,7 +62,6 @@ describe('columnasReporte', () => {
   */
   it('son las columnas que pidió el laboratorio, en su orden', () => {
     expect(columnasReporte(true).map((c) => c.titulo)).toEqual([
-      'Consultorio',
       'Doctor',
       'Entrega',
       'Paciente',
@@ -71,10 +71,13 @@ describe('columnasReporte', () => {
     ])
   })
 
-  it('ya no hay columna de ingreso ni de estado', () => {
+  it('ya no hay columna de ingreso, de estado ni de consultorio', () => {
     const claves = columnasReporte(true).map((c) => c.clave)
     expect(claves).not.toContain('ingreso')
     expect(claves).not.toContain('estado')
+    // El consultorio encabeza su bloque; repetirlo en cada fila gastaba la
+    // columna más ancha en decir lo mismo 199 veces.
+    expect(claves).not.toContain('consultorio')
   })
 
   it('las cifras van a la derecha y los nombres no', () => {
@@ -124,16 +127,15 @@ describe('celdasDeFila', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeFila(fila(), cols)
     expect(celdas).toHaveLength(cols.length)
-    expect(celdas[0]).toBe('Sonrisa Dental')
-    expect(celdas[1]).toBe('Dra. Ruiz')
-    expect(celdas[4]).toBe('Corona porcelana')
+    expect(celdas[0]).toBe('Dra. Ruiz')
+    expect(celdas[3]).toBe('Corona porcelana')
   })
 
   it('el abono es lo ya cobrado y el total lo que cuesta', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeFila(fila({ total: 260, pagado: 100 }), cols)
-    expect(celdas[5]).toBe(formatMoney(100))
-    expect(celdas[6]).toBe(formatMoney(260))
+    expect(celdas[4]).toBe(formatMoney(100))
+    expect(celdas[5]).toBe(formatMoney(260))
   })
 
   /*
@@ -142,24 +144,24 @@ describe('celdasDeFila', () => {
   */
   it('sin paciente pone un guion, no un hueco', () => {
     const cols = columnasReporte(true)
-    expect(celdasDeFila(fila({ paciente: null }), cols)[3]).toBe('—')
+    expect(celdasDeFila(fila({ paciente: null }), cols)[2]).toBe('—')
   })
 
   it('sin entregar, la columna de entrega lleva guion', () => {
     const cols = columnasReporte(true)
-    expect(celdasDeFila(fila({ entregado_el: null }), cols)[2]).toBe('—')
+    expect(celdasDeFila(fila({ entregado_el: null }), cols)[1]).toBe('—')
   })
 
   it('entregado muestra su fecha real', () => {
     const cols = columnasReporte(true)
     const celdas = celdasDeFila(fila({ estado: 'entregado', entregado_el: '2026-09-18' }), cols)
-    expect(celdas[2]).toBe('2026-09-18')
+    expect(celdas[1]).toBe('2026-09-18')
   })
 
   it('sin importes no devuelve celdas de dinero', () => {
     const cols = columnasReporte(false)
     const celdas = celdasDeFila(fila(), cols)
-    expect(celdas).toHaveLength(5)
+    expect(celdas).toHaveLength(4)
     expect(celdas.join(' ')).not.toContain('260')
   })
 })
@@ -190,27 +192,18 @@ describe('celdasDeSubtotal', () => {
   */
   it('pone las cifras del grupo bajo sus columnas', () => {
     const cols = columnasReporte(true)
-    const celdas = celdasDeSubtotal(
-      { consultorio: 'Sonrisa Dental', facturado: 890, pagado: 340 },
-      3,
-      cols,
-    )
-    expect(celdas[0]).toBe('Sonrisa Dental')
-    // El hueco del doctor queda libre para que el nombre pueda ocuparlo.
-    expect(celdas[1]).toBe('')
-    expect(celdas[3]).toBe('3 trabajos')
-    expect(celdas[5]).toBe(formatMoney(340))
-    expect(celdas[6]).toBe(formatMoney(890))
+    const celdas = celdasDeSubtotal({ facturado: 890, pagado: 340 }, 3, cols)
+    // El nombre no se repite: lo lleva el título del bloque, justo encima.
+    expect(celdas[0]).toBe('Subtotal')
+    expect(celdas[2]).toBe('3 trabajos')
+    expect(celdas[4]).toBe(formatMoney(340))
+    expect(celdas[5]).toBe(formatMoney(890))
   })
 
   it('un solo trabajo se dice en singular', () => {
     const cols = columnasReporte(true)
-    const celdas = celdasDeSubtotal(
-      { consultorio: 'Sonrisa Dental', facturado: 260, pagado: 0 },
-      1,
-      cols,
-    )
-    expect(celdas[3]).toBe('1 trabajo')
+    const celdas = celdasDeSubtotal({ facturado: 260, pagado: 0 }, 1, cols)
+    expect(celdas[2]).toBe('1 trabajo')
   })
 })
 
@@ -299,5 +292,41 @@ describe('ajustarAnchos', () => {
     const r = ajustarAnchos(cols, [], medir, 900)
     expect(r).toHaveLength(3)
     expect(r[0]!.ancho).toBeGreaterThanOrEqual(medir('Consultorio') + RELLENO)
+  })
+})
+
+describe('celdasDeTotal', () => {
+  /*
+    El fallo que lo trajo aquí: la fila del total se dibujaba a mano en el PDF,
+    así que el ajuste de anchos no la veía. Sus cifras son las mayores del
+    documento —la suma de todo— y salía «S/ 43,59…» justo en la línea que
+    resume el papel.
+  */
+  it('pone las sumas bajo sus columnas', () => {
+    const cols = columnasReporte(true)
+    const celdas = celdasDeTotal({ trabajos: 205, facturado: 43590, pagado: 12460 }, cols)
+    expect(celdas[0]).toBe('TOTAL')
+    expect(celdas[2]).toBe('205 trabajos')
+    expect(celdas[4]).toBe(formatMoney(12460))
+    expect(celdas[5]).toBe(formatMoney(43590))
+  })
+
+  it('un solo trabajo se dice en singular', () => {
+    const cols = columnasReporte(true)
+    expect(celdasDeTotal({ trabajos: 1, facturado: 90, pagado: 0 }, cols)[2]).toBe('1 trabajo')
+  })
+
+  /*
+    Medir la fila del total es lo que impide que vuelva a recortarse: con ella
+    incluida, su columna nunca queda más estrecha que la suma que lleva.
+  */
+  it('medida junto a las demás, su columna la admite entera', () => {
+    const medir = (t: string) => t.length * 5
+    const cols = columnasReporte(true)
+    const total = celdasDeTotal({ trabajos: 205, facturado: 43590, pagado: 12460 }, cols)
+    const filas = [celdasDeFila(fila({ total: 90, pagado: 0 }), cols), total]
+    const ajustadas = ajustarAnchos(cols, filas, medir, UTIL_APAISADO)
+    const iTotal = cols.findIndex((c) => c.clave === 'total')
+    expect(ajustadas[iTotal]!.ancho - RELLENO).toBeGreaterThanOrEqual(medir(total[iTotal]!))
   })
 })
