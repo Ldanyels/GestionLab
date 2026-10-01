@@ -70,6 +70,7 @@ export default async function AuditoriaPage() {
                     {new Date(e.creado_en).toLocaleString('es-PE', {
                       dateStyle: 'short',
                       timeStyle: 'short',
+                      timeZone: 'America/Lima',
                     })}
                   </span>
                 </div>
