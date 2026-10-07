@@ -5,8 +5,8 @@ import {
   porMes,
   rankingConsultorios,
   consumoPorProducto,
-  rangoMesActual,
 } from '@/lib/finanzas/data'
+import { consultaDePeriodo, resolverPeriodo } from '@/lib/finanzas/periodo'
 import { margenPct } from '@/lib/finanzas/calculo'
 import { gastosDelPeriodo } from '@/lib/gastos/data'
 import { resumenDeGastos } from '@/lib/gastos/resumen'
@@ -22,25 +22,25 @@ import { UtilidadMensual } from '@/components/finanzas/UtilidadMensual'
 import { ConsumoInsumos } from '@/components/finanzas/ConsumoInsumos'
 import { FilaDeGasto } from '@/components/finanzas/FilaDeGasto'
 import { EnlaceAccion } from '@/components/ui/EnlaceAccion'
+import { SelectorDePeriodo } from '@/components/finanzas/SelectorDePeriodo'
 
-const MESES_LARGOS = [
-  'enero',
-  'febrero',
-  'marzo',
-  'abril',
-  'mayo',
-  'junio',
-  'julio',
-  'agosto',
-  'setiembre',
-  'octubre',
-  'noviembre',
-  'diciembre',
-]
 
-export default async function FinanzasPage() {
+export default async function FinanzasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string; desde?: string; hasta?: string }>
+}) {
   await requireAdmin()
-  const { desde, hasta } = rangoMesActual()
+  /*
+    El periodo sale de la URL.
+
+    Estaba fijo al mes en curso, y eso escondía el trabajo recién cerrado: cada
+    día 1 los gastos y los pagos del mes anterior desaparecían de pantalla
+    —seis gastos y seis pagos de setiembre, invisibles desde el 1 de octubre—.
+    Las cuentas de un mes se cuadran cuando el mes ya terminó.
+  */
+  const p = resolverPeriodo(await searchParams)
+  const { desde, hasta } = p
   const [res, meses, ranking, consumo, gastos, pagos] = await Promise.all([
     resumen(desde, hasta),
     porMes(6),
@@ -52,9 +52,8 @@ export default async function FinanzasPage() {
   const gastosDelMes = resumenDeGastos(gastos)
   const manoDeObra = resumenDeManoDeObra(pagos, res.ingresos)
   const margen = margenPct(res)
+  const q = consultaDePeriodo(p)
   const utilidadTono = res.utilidad >= 0 ? 'exito' : 'peligro'
-  const [anio, mes] = desde.split('-')
-  const periodo = `${MESES_LARGOS[Number(mes) - 1]} ${anio}`
 
   return (
     <section className="space-y-4">
@@ -63,12 +62,12 @@ export default async function FinanzasPage() {
         <div className="min-w-0">
           <h1 className="text-[28px] font-bold tracking-[-0.03em]">Finanzas</h1>
           <p className="text-[13.5px] capitalize text-[var(--color-muted)]">
-            {periodo} · mes actual
+            {p.etiqueta}
           </p>
         </div>
         <div className="flex gap-2">
           <Link
-            href="/reportes"
+            href={`/reportes${q}`}
             className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-[var(--color-accent-contrast)]"
           >
             Reportes
@@ -79,7 +78,7 @@ export default async function FinanzasPage() {
             pantalla, y tres tarjetas más abajo no se encuentra.
           */}
           <Link
-            href="/finanzas/gastos"
+            href={`/finanzas/gastos${q}`}
             className="inline-flex h-11 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm font-semibold text-[var(--color-accent)]"
           >
             Gastos
@@ -92,6 +91,8 @@ export default async function FinanzasPage() {
           </Link>
         </div>
       </div>
+
+      <SelectorDePeriodo ruta="/finanzas" p={p} />
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
         <KpiTile etiqueta="Ingresos" valor={formatMoney(res.ingresos)} />

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { rangoMesActual } from './mes'
+import { etiquetaDeMes, rangoMesActual, rangoMesAnterior } from './mes'
 
 describe('rangoMesActual', () => {
   it('va del día 1 al último del mes', () => {
@@ -58,5 +58,46 @@ describe('rangoMesActual — el mes se resuelve en Lima, no en el servidor', () 
     vi.setSystemTime(new Date('2026-09-15T17:00:00Z'))
 
     expect(rangoMesActual()).toEqual({ desde: '2026-09-01', hasta: '2026-09-30' })
+  })
+})
+
+describe('rangoMesAnterior', () => {
+  it('a mitad de octubre devuelve septiembre entero', () => {
+    expect(rangoMesAnterior('2026-10-07')).toEqual({ desde: '2026-09-01', hasta: '2026-09-30' })
+  })
+
+  /*
+    El caso en que es más fácil equivocarse: restar uno al mes en enero da el
+    mes cero. El laboratorio cierra el año igual que cualquier otro mes.
+  */
+  it('en enero retrocede a diciembre del año anterior', () => {
+    expect(rangoMesAnterior('2027-01-03')).toEqual({ desde: '2026-12-01', hasta: '2026-12-31' })
+  })
+
+  it('en marzo de año bisiesto, febrero tiene 29', () => {
+    expect(rangoMesAnterior('2028-03-01')).toEqual({ desde: '2028-02-01', hasta: '2028-02-29' })
+  })
+
+  it('en marzo de año normal, febrero tiene 28', () => {
+    expect(rangoMesAnterior('2026-03-15')).toEqual({ desde: '2026-02-01', hasta: '2026-02-28' })
+  })
+
+  it('el día 1 ya mira al mes cerrado', () => {
+    expect(rangoMesAnterior('2026-10-01')).toEqual({ desde: '2026-09-01', hasta: '2026-09-30' })
+  })
+})
+
+describe('etiquetaDeMes', () => {
+  it('nombra el mes y el año', () => {
+    expect(etiquetaDeMes('2026-09-01')).toBe('setiembre 2026')
+  })
+
+  it('usa «setiembre», como lo escribe el laboratorio', () => {
+    expect(etiquetaDeMes('2026-09-15')).not.toContain('septiembre')
+  })
+
+  it('enero y diciembre, los extremos', () => {
+    expect(etiquetaDeMes('2026-01-01')).toBe('enero 2026')
+    expect(etiquetaDeMes('2026-12-31')).toBe('diciembre 2026')
   })
 })

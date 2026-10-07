@@ -60,3 +60,38 @@ describe('ETIQUETA_PERIODO_REPORTE', () => {
     for (const p of PERIODOS_REPORTE) expect(ETIQUETA_PERIODO_REPORTE[p]).toBeTruthy()
   })
 })
+
+describe('rangoDeReporte — mes anterior', () => {
+  const mes = { desde: '2026-10-01', hasta: '2026-10-31' }
+
+  /*
+    Un reporte se entrega cuando el mes ya cerró: el día 2 lo que hace falta es
+    el mes pasado, no los dos días que lleva el nuevo.
+  */
+  it('devuelve el mes cerrado, no el que corre', () => {
+    expect(rangoDeReporte('mes_anterior', '2026-10-07', mes)).toEqual({
+      desde: '2026-09-01',
+      hasta: '2026-09-30',
+    })
+  })
+
+  it('en enero retrocede a diciembre del año anterior', () => {
+    expect(rangoDeReporte('mes_anterior', '2027-01-02', mes)).toEqual({
+      desde: '2026-12-01',
+      hasta: '2026-12-31',
+    })
+  })
+
+  it('no depende del `mes` que se le pase: lo calcula de `hoy`', () => {
+    const otro = { desde: '2020-01-01', hasta: '2020-01-31' }
+    expect(rangoDeReporte('mes_anterior', '2026-10-07', otro)).toEqual({
+      desde: '2026-09-01',
+      hasta: '2026-09-30',
+    })
+  })
+
+  it('sigue estando entre los periodos que acepta la URL', () => {
+    expect(resolverPeriodoReporte('mes_anterior')).toBe('mes_anterior')
+    expect(ETIQUETA_PERIODO_REPORTE.mes_anterior).toBe('Mes anterior')
+  })
+})

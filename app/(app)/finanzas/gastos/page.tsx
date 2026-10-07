@@ -6,27 +6,39 @@ import { requireAdmin } from '@/lib/auth'
 import { gastosDelPeriodo } from '@/lib/gastos/data'
 import { ETIQUETA_CATEGORIA } from '@/lib/gastos/categorias'
 import { resumenDeGastos } from '@/lib/gastos/resumen'
-import { rangoMesActual } from '@/lib/finanzas/mes'
+import { consultaDePeriodo, resolverPeriodo } from '@/lib/finanzas/periodo'
 import { hoyLima } from '@/lib/trabajos/agenda'
 import { formatMoney } from '@/lib/format'
 import { GastoForm } from '@/components/gastos/GastoForm'
+import { SelectorDePeriodo } from '@/components/finanzas/SelectorDePeriodo'
 import { crearGastoAction, eliminarGastoAction } from './actions'
 
 /**
- * Gastos del mes: registrarlos y verlos.
+ * Gastos de un periodo: registrarlos y verlos.
  *
  * Vive bajo Finanzas y no en Configuración porque no es un ajuste: es un
  * movimiento de dinero que se registra tan seguido como los pagos.
+ *
+ * El periodo sale de la URL y no está fijo al mes en curso: los recibos de luz
+ * y agua llegan cuando el mes ya cerró, y un gasto con fecha de setiembre
+ * registrado en octubre desaparecía nada más guardarlo.
  */
-export default async function GastosPage() {
+export default async function GastosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string; desde?: string; hasta?: string }>
+}) {
   await requireAdmin()
-  const { desde, hasta } = rangoMesActual()
+  const p = resolverPeriodo(await searchParams)
+  const { desde, hasta } = p
   const gastos = await gastosDelPeriodo(desde, hasta)
   const resumen = resumenDeGastos(gastos)
 
   return (
     <section className="space-y-4">
-      <BackRow href="/finanzas" titulo="Gastos del mes" />
+      <BackRow href={`/finanzas${consultaDePeriodo(p)}`} titulo="Gastos" />
+
+      <SelectorDePeriodo ruta="/finanzas/gastos" p={p} />
 
       <Card className="space-y-3 p-3.5">
         <h2 className="text-base font-bold">Registrar un gasto</h2>
@@ -35,7 +47,7 @@ export default async function GastosPage() {
 
       {gastos.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-[var(--color-border)] p-6 text-center">
-          <p className="text-[15px] font-semibold">Sin gastos este mes</p>
+          <p className="text-[15px] font-semibold">Sin gastos en {p.etiqueta}</p>
           <p className="mt-0.5 text-[13.5px] text-[var(--color-muted)]">
             Mientras la luz, el agua o el alquiler no estén aquí, la utilidad que ves en
             Finanzas es más alta que la real.
@@ -45,7 +57,7 @@ export default async function GastosPage() {
         <>
           <Card className="p-3.5">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-base font-bold">Total del mes</h2>
+              <h2 className="text-base font-bold capitalize">Total · {p.etiqueta}</h2>
               <span className="num text-[19px] font-bold">{formatMoney(resumen.total)}</span>
             </div>
             <div className="mt-2 space-y-1 text-sm">
