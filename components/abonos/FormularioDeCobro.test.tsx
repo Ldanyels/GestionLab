@@ -22,6 +22,7 @@ function cobrable(p: Partial<TrabajoCobrable>): TrabajoCobrable {
     paciente: 'Jeremías',
     resumen: 'Corona porcelana',
     fecha_ingreso: '2026-09-08',
+    estado: 'entregado',
     total: 90,
     pagado: 0,
     saldo: 90,

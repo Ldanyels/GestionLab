@@ -100,6 +100,8 @@ export interface TrabajoCobrable {
   total: number
   pagado: number
   saldo: number
+  /** Para decidir si cobrarlo del todo lo deja listo para cerrarse. */
+  estado: string
 }
 
 /**
@@ -120,6 +122,7 @@ export async function trabajosCobrablesDeConsultorio(
       paciente: f.paciente,
       resumen: f.resumen,
       fecha_ingreso: f.fecha_ingreso,
+      estado: f.estado,
       total: f.total,
       pagado: f.pagado,
       saldo: Math.round((f.total - f.pagado) * 100) / 100,

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { lineasIniciales, totalDelCobro, validarCobro, type LineaDeCobro } from './cobro'
+import {
+  lineasIniciales,
+  totalDelCobro,
+  trabajosQueSeCierran,
+  validarCobro,
+  type LineaDeCobro,
+  type LineaLiquidable,
+} from './cobro'
 
 function linea(p: Partial<LineaDeCobro> = {}): LineaDeCobro {
   return { trabajo_id: 't1', saldo: 100, monto: 100, ...p }
@@ -95,5 +102,65 @@ describe('validarCobro', () => {
   it('tolera un céntimo de diferencia por redondeo', () => {
     expect(validarCobro([linea({ saldo: 33.33, monto: 33.34 })]).ok).toBe(true)
     expect(validarCobro([linea({ saldo: 33.33, monto: 33.5 })]).ok).toBe(false)
+  })
+})
+
+describe('trabajosQueSeCierran', () => {
+  const linea = (p: Partial<LineaLiquidable> = {}): LineaLiquidable => ({
+    trabajo_id: 't1',
+    saldo: 100,
+    monto: 100,
+    estado: 'entregado',
+    ...p,
+  })
+
+  it('un entregado que se cobra entero se cierra', () => {
+    expect(trabajosQueSeCierran([linea()])).toEqual(['t1'])
+  })
+
+  it('un abono parcial no cierra nada', () => {
+    expect(trabajosQueSeCierran([linea({ monto: 40 })])).toEqual([])
+  })
+
+  /*
+    Un trabajo en curso pagado por adelantado no está terminado. Cerrarlo lo
+    sacaría de la lista del técnico antes de hacerlo y descontaría sus insumos
+    como si ya estuviera fabricado.
+  */
+  it('un trabajo en curso no se cierra aunque se pague entero', () => {
+    expect(trabajosQueSeCierran([linea({ estado: 'en_curso' })])).toEqual([])
+  })
+
+  it('uno ya cerrado no vuelve a cerrarse', () => {
+    expect(trabajosQueSeCierran([linea({ estado: 'cerrado' })])).toEqual([])
+  })
+
+  /*
+    El mismo motivo por el que `validarCobro` compara en enteros: en coma
+    flotante un saldo salido de una división deja restos invisibles, y el
+    trabajo se quedaría sin cerrar por una diferencia que nadie puede corregir.
+  */
+  it('un saldo con decimales de división se cierra igual', () => {
+    const saldo = 33.33
+    expect(trabajosQueSeCierran([linea({ saldo, monto: saldo })])).toEqual(['t1'])
+  })
+
+  it('un céntimo de menos no cierra: queda deuda real', () => {
+    expect(trabajosQueSeCierran([linea({ saldo: 100, monto: 99.99 })])).toEqual([])
+  })
+
+  it('de varias líneas, solo las que corresponden', () => {
+    expect(
+      trabajosQueSeCierran([
+        linea({ trabajo_id: 'a' }),
+        linea({ trabajo_id: 'b', monto: 50 }),
+        linea({ trabajo_id: 'c', estado: 'en_curso' }),
+        linea({ trabajo_id: 'd', saldo: 250.5, monto: 250.5 }),
+      ]),
+    ).toEqual(['a', 'd'])
+  })
+
+  it('sin líneas, nada que cerrar', () => {
+    expect(trabajosQueSeCierran([])).toEqual([])
   })
 })

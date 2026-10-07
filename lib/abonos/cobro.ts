@@ -77,3 +77,35 @@ export function validarCobro(lineas: readonly LineaDeCobro[]): Validacion {
   }
   return { ok: true }
 }
+
+/** Lo que hace falta saber de un trabajo para decidir si el pago lo cierra. */
+export interface LineaLiquidable {
+  trabajo_id: string
+  saldo: number
+  monto: number
+  estado: string
+}
+
+/**
+ * Los trabajos que este pago deja saldados y listos para cerrarse.
+ *
+ * Un trabajo entregado y cobrado ya no tiene nada pendiente, y hasta ahora
+ * había que entrar a cerrarlo a mano: 22 de los trabajos del piloto estaban
+ * pagados sin cerrar. Cobrar es el último paso, así que cerrar es su
+ * consecuencia.
+ *
+ * **Solo los entregados.** Un trabajo en curso que se paga por adelantado no
+ * está terminado: cerrarlo lo sacaría de la lista del técnico antes de
+ * hacerlo, y además descontaría sus insumos del inventario como si ya se
+ * hubiera fabricado. Esos se cierran al entregarlos, por el camino de siempre.
+ *
+ * El saldo se compara en céntimos enteros. `saldo - monto < 0.01` parece lo
+ * mismo y no lo es: en coma flotante una resta de importes con decimales deja
+ * restos invisibles, y un trabajo cobrado del todo se quedaría sin cerrar por
+ * una diferencia que nadie puede ver ni corregir.
+ */
+export function trabajosQueSeCierran(lineas: readonly LineaLiquidable[]): string[] {
+  return lineas
+    .filter((l) => l.estado === 'entregado' && centimos(l.monto) >= centimos(l.saldo))
+    .map((l) => l.trabajo_id)
+}
