@@ -79,6 +79,10 @@ function fondo(): HTMLElement {
   return screen.getByRole('dialog')
 }
 
+function panel(): HTMLElement {
+  return fondo().firstElementChild as HTMLElement
+}
+
 describe('Sheet — el teclado del teléfono no puede tapar la lista', () => {
   afterEach(() => {
     Reflect.deleteProperty(window, 'visualViewport')
@@ -137,8 +141,39 @@ describe('Sheet — el teclado del teléfono no puede tapar la lista', () => {
         contenido
       </Sheet>,
     )
-    const panel = fondo().firstElementChild as HTMLElement
-    expect(panel.style.maxHeight).toBe('min(82vh, 800px)')
+    expect(panel().style.getPropertyValue('--alto-hoja')).toBe('min(82vh, 800px)')
+  })
+
+  /*
+    Lo que faltaba. La hoja crecía con su contenido, así que al escribir la
+    lista se acortaba, la hoja se encogía —sigue apoyada abajo— y se quedaba en
+    el título y el campo: el hueco de los nombres se iba a cero justo cuando se
+    estaba buscando.
+  */
+  it('el alto es fijo, no el del contenido: tecleando no se encoge', () => {
+    const vv = fingirVisualViewport(800)
+    render(
+      <Sheet abierta onCerrar={() => {}} titulo="Doctor">
+        contenido
+      </Sheet>,
+    )
+    expect(panel().className).toContain('h-[var(--alto-hoja)]')
+
+    vv.abrirTeclado(390)
+    // Con el teclado fuera gana el alto visible: la hoja ocupa todo lo que
+    // queda, que es lo que hace falta para que quepan nombres.
+    expect(panel().style.getPropertyValue('--alto-hoja')).toBe('min(82vh, 390px)')
+  })
+
+  /* En pantalla grande no hay teclado que tape nada: la hoja se ajusta. */
+  it('en pantalla grande el alto vuelve a ser el del contenido', () => {
+    fingirVisualViewport(800)
+    render(
+      <Sheet abierta onCerrar={() => {}} titulo="Doctor">
+        contenido
+      </Sheet>,
+    )
+    expect(panel().className).toContain('sm:h-auto')
   })
 
   it('donde no existe `visualViewport`, se comporta como siempre', () => {
@@ -149,6 +184,8 @@ describe('Sheet — el teclado del teléfono no puede tapar la lista', () => {
     )
     expect(fondo().style.height).toBe('')
     expect(fondo().style.bottom).toBe('')
+    // Sin la medida real, el 82 % de siempre.
+    expect(panel().style.getPropertyValue('--alto-hoja')).toBe('82vh')
   })
 })
 

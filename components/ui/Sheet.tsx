@@ -93,16 +93,30 @@ export function Sheet({ abierta, onCerrar, titulo, children, fijo, anchoMax = 56
       <div
         onClick={(e) => e.stopPropagation()}
         /*
-          `min()` y no el alto visible a secas: con el teclado guardado, lo
-          visible es la pantalla entera y la hoja se comería la página. El 82 %
-          deja ver lo que hay detrás, que es lo que distingue una hoja de una
-          pantalla nueva.
+          En el teléfono la hoja tiene **alto fijo**, no el de su contenido.
+
+          Era lo que faltaba. Creciendo con la lista, al escribir en el buscador
+          la lista se acortaba, la hoja se encogía —sigue apoyada abajo— y se
+          quedaba en el título y el campo: el hueco de los nombres se iba a
+          cero justo cuando se estaba buscando. Con alto fijo la hoja no se
+          mueve mientras se teclea y la lista conserva su sitio; lo que cambia
+          es lo que se desplaza dentro.
+
+          `min()` porque con el teclado guardado lo visible es la pantalla
+          entera, y el 82 % deja ver lo que hay detrás, que es lo que distingue
+          una hoja de una pantalla nueva. Con el teclado fuera gana el alto
+          visible y la hoja ocupa todo lo que queda, que es lo que hace falta.
+
+          En pantalla grande no aplica (`sm:h-auto`): ahí no hay teclado que
+          tape nada y una hoja medio vacía se ve peor que una ajustada.
         */
         style={{
           maxWidth: anchoMax,
-          maxHeight: area ? `min(82vh, ${Math.round(area.height)}px)` : undefined,
+          ['--alto-hoja' as string]: area
+            ? `min(82vh, ${Math.round(area.height)}px)`
+            : '82vh',
         }}
-        className="flex max-h-[82vh] w-full flex-col rounded-t-[22px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-pop)] motion-safe:animate-[sheetIn_220ms_ease-out] sm:rounded-[var(--radius-xl)]"
+        className="flex h-[var(--alto-hoja)] max-h-[var(--alto-hoja)] w-full flex-col rounded-t-[22px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-pop)] motion-safe:animate-[sheetIn_220ms_ease-out] sm:h-auto sm:rounded-[var(--radius-xl)]"
       >
         <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] p-4">
           <h2 className="text-lg font-bold">{titulo}</h2>
