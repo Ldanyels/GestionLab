@@ -43,16 +43,23 @@ export function DoctorSheet({ doctores, abierta, onCerrar, onElegir }: Props) {
   }
 
   return (
-    <Sheet abierta={abierta} onCerrar={onCerrar} titulo="Doctor">
-      <input
-        autoFocus
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        aria-label="Buscar doctor"
-        placeholder="Buscar por doctor o consultorio…"
-        className="h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-accent)] bg-[var(--color-surface-2)] px-3 outline-none"
-      />
-
+    <Sheet
+      abierta={abierta}
+      onCerrar={onCerrar}
+      titulo="Doctor"
+      /* Fuera de la zona que hace scroll: con la lista larga se iba de la
+         pantalla y había que subir para corregir lo escrito. */
+      fijo={
+        <input
+          autoFocus
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          aria-label="Buscar doctor"
+          placeholder="Buscar por doctor o consultorio…"
+          className="h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-accent)] bg-[var(--color-surface-2)] px-3 outline-none"
+        />
+      }
+    >
       {filtrados.length === 0 ? (
         <p className="py-6 text-center text-sm text-[var(--color-muted)]">
           Sin resultados para «{q}».
