@@ -22,6 +22,7 @@ function cobrable(p: Partial<TrabajoCobrable>): TrabajoCobrable {
     paciente: 'Jeremías',
     resumen: 'Corona porcelana',
     fecha_ingreso: '2026-09-08',
+    entregado_el: null,
     estado: 'entregado',
     total: 90,
     pagado: 0,
@@ -169,5 +170,39 @@ describe('FormularioDeCobro', () => {
     const { container } = pintar()
     expect(container.textContent).toContain('420')
     expect(container.textContent).toContain('3 trabajos')
+  })
+})
+
+describe('FormularioDeCobro — qué fecha enseña cada fila', () => {
+  /*
+    La lista va ordenada por la fecha de cobro —la de entrega cuando el trabajo
+    ya salió—, así que la fila tiene que decir cuál enseña. Sin el rótulo, un
+    entregado que ingresó en agosto parece fuera de sitio.
+  */
+  it('un entregado muestra su fecha de salida', () => {
+    render(
+      <FormularioDeCobro
+        consultorioId="c1"
+        consultorio="Arte oral"
+        trabajos={[cobrable({ fecha_ingreso: '2026-08-11', entregado_el: '2026-09-25' })]}
+        hoy="2026-10-09"
+        action={accion}
+      />,
+    )
+    expect(screen.getByText(/Entregado 2026-09-25/)).toBeTruthy()
+    expect(screen.queryByText(/2026-08-11/)).toBeNull()
+  })
+
+  it('uno que sigue en el taller muestra su ingreso', () => {
+    render(
+      <FormularioDeCobro
+        consultorioId="c1"
+        consultorio="Arte oral"
+        trabajos={[cobrable({ fecha_ingreso: '2026-09-11', entregado_el: null })]}
+        hoy="2026-10-09"
+        action={accion}
+      />,
+    )
+    expect(screen.getByText(/Ingresó 2026-09-11/)).toBeTruthy()
   })
 })

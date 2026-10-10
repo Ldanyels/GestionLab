@@ -1,4 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase/server'
+import { ordenarParaCobrar } from './cobro'
 import { laboratorioIdActual } from '@/lib/tenant'
 import { detalleDeEdicion } from './detalle'
 import type { Abono } from './types'
@@ -97,6 +98,8 @@ export interface TrabajoCobrable {
   paciente: string | null
   resumen: string
   fecha_ingreso: string
+  /** Null mientras siga en el taller, o si se entregó antes de que se sellara. */
+  entregado_el: string | null
   total: number
   pagado: number
   saldo: number
@@ -105,7 +108,11 @@ export interface TrabajoCobrable {
 }
 
 /**
- * Los trabajos con saldo de un consultorio, del más antiguo al más nuevo.
+ * Los trabajos con saldo de un consultorio, del más antiguo al más nuevo **por
+ * su fecha de cobro**: la de entrega si ya salió, la de ingreso si sigue en el
+ * taller. Ordenarlos por la de ingreso ponía primero un trabajo que entró en
+ * agosto y salió la semana pasada, por delante de otro entregado hace un mes
+ * que es el que lleva más tiempo sin cobrarse.
  *
  * Reutiliza `filasReporte`, que ya sabe filtrar por consultorio y traer los
  * abonos de cada trabajo en la misma consulta. Escribir otra consulta aquí
@@ -116,18 +123,21 @@ export async function trabajosCobrablesDeConsultorio(
   consultorioId: string,
 ): Promise<TrabajoCobrable[]> {
   const filas = await filasReporte({ consultorioId })
-  return filas
+  return ordenarParaCobrar(
+    filas
     .map((f) => ({
       trabajo_id: f.id,
       paciente: f.paciente,
       resumen: f.resumen,
       fecha_ingreso: f.fecha_ingreso,
+      entregado_el: f.entregado_el,
       estado: f.estado,
       total: f.total,
       pagado: f.pagado,
       saldo: Math.round((f.total - f.pagado) * 100) / 100,
     }))
-    .filter((f) => f.saldo > 0.001)
+      .filter((f) => f.saldo > 0.001),
+  )
 }
 
 /**

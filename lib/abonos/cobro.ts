@@ -150,3 +150,43 @@ export function porEstadoCobrable<T extends { estado: string }>(
     },
   }
 }
+
+/** Lo que hace falta de un trabajo para situarlo en la cola de cobro. */
+export interface Fechable {
+  fecha_ingreso: string
+  entregado_el: string | null
+}
+
+/**
+ * La fecha por la que un trabajo entra en la cola de cobro.
+ *
+ * La de entrega cuando salió, y la de ingreso mientras siga en el taller. Es
+ * el día en que empezó a deberse: un trabajo entregado se cobra desde que se
+ * entregó, no desde que llegó, y ordenarlos por la fecha de ingreso ponía
+ * primero uno que entró en agosto y salió la semana pasada.
+ *
+ * Los entregados sin fecha sellada —de antes de que el sistema la guardara
+ * sola— caen a su ingreso. Es lo único que se sabe de ellos.
+ */
+export function fechaDeCobro(t: Fechable): string {
+  return t.entregado_el ?? t.fecha_ingreso
+}
+
+/** «Entregado 2026-09-25» o «Ingresó 2026-09-11», según cuál se esté usando. */
+export function etiquetaFechaDeCobro(t: Fechable): string {
+  return t.entregado_el ? `Entregado ${t.entregado_el}` : `Ingresó ${t.fecha_ingreso}`
+}
+
+/**
+ * Del más antiguo al más nuevo por su fecha de cobro.
+ *
+ * Lo más viejo primero porque es lo que lleva más tiempo sin cobrarse, que es
+ * el orden en que se reclama.
+ */
+export function ordenarParaCobrar<T extends Fechable>(trabajos: readonly T[]): T[] {
+  return [...trabajos].sort((a, b) => {
+    const fa = fechaDeCobro(a)
+    const fb = fechaDeCobro(b)
+    return fa === fb ? a.fecha_ingreso.localeCompare(b.fecha_ingreso) : fa.localeCompare(fb)
+  })
+}

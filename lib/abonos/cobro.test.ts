@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
+  etiquetaFechaDeCobro,
+  fechaDeCobro,
   lineasIniciales,
+  ordenarParaCobrar,
   porEstadoCobrable,
   resolverEstadoCobrable,
   totalDelCobro,
@@ -214,5 +217,90 @@ describe('resolverEstadoCobrable', () => {
   it('lo desconocido muestra todo', () => {
     expect(resolverEstadoCobrable('cerrado')).toBe('todos')
     expect(resolverEstadoCobrable(undefined)).toBe('todos')
+  })
+})
+
+describe('fechaDeCobro', () => {
+  const t = (fecha_ingreso: string, entregado_el: string | null) => ({ fecha_ingreso, entregado_el })
+
+  it('un entregado se sitúa por su salida', () => {
+    expect(fechaDeCobro(t('2026-08-11', '2026-09-25'))).toBe('2026-09-25')
+  })
+
+  it('uno en el taller, por su ingreso', () => {
+    expect(fechaDeCobro(t('2026-09-11', null))).toBe('2026-09-11')
+  })
+
+  /* Los entregados sin sellar caen a su ingreso: es lo único que se sabe. */
+  it('un entregado sin fecha sellada usa su ingreso', () => {
+    expect(fechaDeCobro(t('2026-07-02', null))).toBe('2026-07-02')
+  })
+})
+
+describe('etiquetaFechaDeCobro', () => {
+  /*
+    La fila tiene que decir qué fecha enseña. Mostrando la de entrega sin
+    decirlo, una lista ordenada por ella parece desordenada.
+  */
+  it('dice cuál de las dos está mostrando', () => {
+    expect(etiquetaFechaDeCobro({ fecha_ingreso: '2026-08-11', entregado_el: '2026-09-25' })).toBe(
+      'Entregado 2026-09-25',
+    )
+    expect(etiquetaFechaDeCobro({ fecha_ingreso: '2026-09-11', entregado_el: null })).toBe(
+      'Ingresó 2026-09-11',
+    )
+  })
+})
+
+describe('ordenarParaCobrar', () => {
+  const t = (id: string, fecha_ingreso: string, entregado_el: string | null) => ({
+    trabajo_id: id,
+    fecha_ingreso,
+    entregado_el,
+  })
+
+  /*
+    El caso que lo motivó: por fecha de ingreso, un trabajo que entró en agosto
+    y salió la semana pasada encabezaba la lista por delante de otro entregado
+    hace un mes, que es el que lleva más tiempo sin cobrarse.
+  */
+  it('un entregado se ordena por su salida, no por su entrada', () => {
+    const r = ordenarParaCobrar([
+      t('tarde', '2026-08-01', '2026-10-05'),
+      t('pronto', '2026-09-20', '2026-09-25'),
+    ])
+    expect(r.map((x) => x.trabajo_id)).toEqual(['pronto', 'tarde'])
+  })
+
+  it('del más antiguo al más nuevo: lo que lleva más esperando, primero', () => {
+    const r = ordenarParaCobrar([
+      t('c', '2026-09-01', '2026-10-05'),
+      t('a', '2026-09-01', '2026-09-10'),
+      t('b', '2026-09-01', '2026-09-28'),
+    ])
+    expect(r.map((x) => x.trabajo_id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('mezcla entregados y en curso por la fecha que le toca a cada uno', () => {
+    const r = ordenarParaCobrar([
+      t('entregado-nuevo', '2026-07-01', '2026-10-05'),
+      t('en-curso-viejo', '2026-08-15', null),
+    ])
+    expect(r.map((x) => x.trabajo_id)).toEqual(['en-curso-viejo', 'entregado-nuevo'])
+  })
+
+  it('a igual fecha, desempata el ingreso', () => {
+    const r = ordenarParaCobrar([
+      t('b', '2026-09-20', '2026-10-01'),
+      t('a', '2026-09-02', '2026-10-01'),
+    ])
+    expect(r.map((x) => x.trabajo_id)).toEqual(['a', 'b'])
+  })
+
+  it('no modifica la lista que recibe', () => {
+    const lista = [t('b', '2026-09-20', '2026-10-05'), t('a', '2026-09-01', '2026-09-10')]
+    const copia = [...lista]
+    ordenarParaCobrar(lista)
+    expect(lista).toEqual(copia)
   })
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { etiquetaFechaDeCobro } from '@/lib/abonos/cobro'
 import { Button } from '@/components/ui/Button'
 import { CAMPO_COMPACTO } from '@/components/ui/campos'
 import { formatMoney } from '@/lib/format'
@@ -112,7 +113,9 @@ export function FormularioDeCobro({
                     {t.paciente ?? t.resumen}
                   </span>
                   <span className="block truncate text-[12.5px] text-[var(--color-muted)]">
-                    {t.paciente ? `${t.resumen} · ${t.fecha_ingreso}` : t.fecha_ingreso}
+                    {t.paciente
+                      ? `${t.resumen} · ${etiquetaFechaDeCobro(t)}`
+                      : etiquetaFechaDeCobro(t)}
                   </span>
                 </span>
                 <span className="num shrink-0 text-[13.5px] font-semibold">
