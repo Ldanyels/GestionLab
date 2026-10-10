@@ -83,6 +83,16 @@ function panel(): HTMLElement {
   return fondo().firstElementChild as HTMLElement
 }
 
+/**
+ * Comprueba una clase exacta, no por subcadena.
+ *
+ * `max-h-[var(--alto-hoja)]` contiene a `h-[var(--alto-hoja)]`, así que un
+ * `toContain` sobre el className da positivo con la clase equivocada.
+ */
+function tieneClase(el: HTMLElement, clase: string): boolean {
+  return el.className.split(/\s+/).includes(clase)
+}
+
 describe('Sheet — el teclado del teléfono no puede tapar la lista', () => {
   afterEach(() => {
     Reflect.deleteProperty(window, 'visualViewport')
@@ -153,11 +163,11 @@ describe('Sheet — el teclado del teléfono no puede tapar la lista', () => {
   it('el alto es fijo, no el del contenido: tecleando no se encoge', () => {
     const vv = fingirVisualViewport(800)
     render(
-      <Sheet abierta onCerrar={() => {}} titulo="Doctor">
+      <Sheet abierta altoFijo onCerrar={() => {}} titulo="Doctor">
         contenido
       </Sheet>,
     )
-    expect(panel().className).toContain('h-[var(--alto-hoja)]')
+    expect(tieneClase(panel(), 'h-[var(--alto-hoja)]')).toBe(true)
 
     vv.abrirTeclado(390)
     // Con el teclado fuera gana el alto visible: la hoja ocupa todo lo que
@@ -169,11 +179,28 @@ describe('Sheet — el teclado del teléfono no puede tapar la lista', () => {
   it('en pantalla grande el alto vuelve a ser el del contenido', () => {
     fingirVisualViewport(800)
     render(
-      <Sheet abierta onCerrar={() => {}} titulo="Doctor">
+      <Sheet abierta altoFijo onCerrar={() => {}} titulo="Doctor">
         contenido
       </Sheet>,
     )
     expect(panel().className).toContain('sm:h-auto')
+  })
+
+  /*
+    Una confirmación de borrado son dos líneas y dos botones. Estirarla al 82 %
+    de la pantalla para preguntar «¿eliminar?» sería desproporcionado, así que
+    el alto fijo se pide y no se hereda.
+  */
+  it('sin pedirlo, la hoja sigue ajustándose a su contenido', () => {
+    fingirVisualViewport(800)
+    render(
+      <Sheet abierta onCerrar={() => {}} titulo="Eliminar trabajo">
+        ¿Seguro?
+      </Sheet>,
+    )
+    expect(tieneClase(panel(), 'h-[var(--alto-hoja)]')).toBe(false)
+    // El tope sí se mantiene: nunca más alta de lo que se ve.
+    expect(tieneClase(panel(), 'max-h-[var(--alto-hoja)]')).toBe(true)
   })
 
   it('donde no existe `visualViewport`, se comporta como siempre', () => {

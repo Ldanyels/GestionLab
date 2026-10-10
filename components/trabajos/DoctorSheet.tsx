@@ -46,6 +46,7 @@ export function DoctorSheet({ doctores, abierta, onCerrar, onElegir }: Props) {
     <Sheet
       abierta={abierta}
       onCerrar={onCerrar}
+      altoFijo
       titulo="Doctor"
       /* Fuera de la zona que hace scroll: con la lista larga se iba de la
          pantalla y había que subir para corregir lo escrito. */

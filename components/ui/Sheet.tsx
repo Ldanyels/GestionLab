@@ -15,6 +15,19 @@ interface Props {
    * corregir lo escrito.
    */
   fijo?: ReactNode
+  /**
+   * El panel ocupa todo el alto disponible en el teléfono, en vez de ajustarse
+   * a su contenido.
+   *
+   * Para las hojas con lista y buscador. Creciendo con el contenido, al
+   * escribir la lista se acorta, la hoja se encoge —sigue apoyada abajo— y el
+   * hueco de los nombres se va a cero justo cuando se está buscando.
+   *
+   * Apagado por omisión: una confirmación de borrado son dos líneas y dos
+   * botones, y estirarla al 82 % de la pantalla para preguntar «¿eliminar?»
+   * sería desproporcionado.
+   */
+  altoFijo?: boolean
   /** Ancho máximo del panel. 560 px para selección, 420 px para confirmar. */
   anchoMax?: number
 }
@@ -62,7 +75,15 @@ function useAreaVisible(activo: boolean): AreaVisible | null {
   return area
 }
 
-export function Sheet({ abierta, onCerrar, titulo, children, fijo, anchoMax = 560 }: Props) {
+export function Sheet({
+  abierta,
+  onCerrar,
+  titulo,
+  children,
+  fijo,
+  altoFijo = false,
+  anchoMax = 560,
+}: Props) {
   const area = useAreaVisible(abierta)
 
   useEffect(() => {
@@ -116,7 +137,9 @@ export function Sheet({ abierta, onCerrar, titulo, children, fijo, anchoMax = 56
             ? `min(82vh, ${Math.round(area.height)}px)`
             : '82vh',
         }}
-        className="flex h-[var(--alto-hoja)] max-h-[var(--alto-hoja)] w-full flex-col rounded-t-[22px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-pop)] motion-safe:animate-[sheetIn_220ms_ease-out] sm:h-auto sm:rounded-[var(--radius-xl)]"
+        className={`flex max-h-[var(--alto-hoja)] w-full flex-col rounded-t-[22px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-pop)] motion-safe:animate-[sheetIn_220ms_ease-out] sm:h-auto sm:rounded-[var(--radius-xl)] ${
+          altoFijo ? 'h-[var(--alto-hoja)]' : ''
+        }`}
       >
         <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] p-4">
           <h2 className="text-lg font-bold">{titulo}</h2>

@@ -33,6 +33,7 @@ export function TipoSheet({ tipos, abierta, onCerrar, onElegir }: Props) {
     <Sheet
       abierta={abierta}
       onCerrar={onCerrar}
+      altoFijo
       titulo="Tipo de trabajo"
       /* Fuera de la zona que hace scroll: con la lista larga se iba de la
          pantalla y había que subir para corregir lo escrito. */
