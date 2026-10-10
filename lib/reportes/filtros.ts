@@ -119,8 +119,9 @@ export function resolverFiltros(sp: ParamsReporte): FiltrosResueltos {
  */
 export function queryFiltros(f: FiltrosResueltos): string {
   const qs = new URLSearchParams()
-  qs.set('desde', f.desde)
-  qs.set('hasta', f.hasta)
+  // Con «Todo» no hay fechas que llevar.
+  if (f.desde) qs.set('desde', f.desde)
+  if (f.hasta) qs.set('hasta', f.hasta)
   if (f.periodo !== 'mes') qs.set('periodo', f.periodo)
   if (f.consultorioId) qs.set('consultorio', f.consultorioId)
   if (f.doctorId) qs.set('doctor', f.doctorId)
@@ -136,6 +137,9 @@ export function campoDeFecha(f: FiltrosResueltos): CampoFecha {
 
 /** "01/09/2026 – 30/09/2026" para encabezados de reporte. */
 export function etiquetaRango(desde: string, hasta: string): string {
+  // Sin fechas es el periodo «Todo»: decirlo, y no dejar un «/ – /» que
+  // parece un dato que no cargó.
+  if (!desde && !hasta) return 'Todo el historial'
   const f = (iso: string) => iso.split('-').reverse().join('/')
   return `${f(desde)} – ${f(hasta)}`
 }

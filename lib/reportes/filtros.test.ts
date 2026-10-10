@@ -200,3 +200,36 @@ describe('enlaceReporte · qué fecha se acota', () => {
     expect(resolverFiltros({ estado: 'en_curso' }).campoFecha).toBe('fecha_ingreso')
   })
 })
+
+describe('etiquetaRango · el periodo «Todo»', () => {
+  /* Un «/ – /» parece un dato que no cargó. */
+  it('sin fechas lo dice con palabras', () => {
+    expect(etiquetaRango('', '')).toBe('Todo el historial')
+  })
+
+  it('con fechas sigue igual que siempre', () => {
+    expect(etiquetaRango('2026-09-01', '2026-09-30')).toBe('01/09/2026 – 30/09/2026')
+  })
+})
+
+describe('resolverFiltros · «Todo»', () => {
+  it('deja el rango vacío, sin acotar nada', () => {
+    const f = resolverFiltros({ periodo: 'todo' })
+    expect(f.periodo).toBe('todo')
+    expect(f.desde).toBe('')
+    expect(f.hasta).toBe('')
+  })
+
+  it('las exportaciones no arrastran fechas vacías', () => {
+    const q = queryFiltros(resolverFiltros({ periodo: 'todo' }))
+    expect(q).not.toContain('desde=')
+    expect(q).not.toContain('hasta=')
+    expect(q).toContain('periodo=todo')
+  })
+
+  it('combina con el estado y el cobro', () => {
+    const f = resolverFiltros({ periodo: 'todo', estado: 'entregado' })
+    expect(f.campoFecha).toBe('entregado_el')
+    expect(f.desde).toBe('')
+  })
+})

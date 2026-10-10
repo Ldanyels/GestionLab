@@ -35,24 +35,10 @@ describe('rangoDeReporte', () => {
     expect(rangoDeReporte('hoy', HOY, MES)).toEqual({ desde: HOY, hasta: HOY })
   })
 
-  /*
-    La lista y el orden los fijó el laboratorio. Seis atajos en una fila tapaban
-    los tres que se usan.
-  */
-  it('solo ofrece rango, hoy y este mes, en ese orden', () => {
-    expect(PERIODOS_REPORTE).toEqual(['rango', 'hoy', 'mes'])
-  })
-
   it('los que se quitaron caen en el mes, no rompen el enlace', () => {
     for (const viejo of ['mes_anterior', '7d', '30d']) {
       expect(resolverPeriodoReporte(viejo)).toBe('mes')
     }
-  })
-
-  // Un reporte sin rango traería el historial completo del laboratorio, que no
-  // es un reporte de nada. Por eso 'todo' no está entre sus periodos.
-  it('no ofrece un periodo sin límites', () => {
-    expect(PERIODOS_REPORTE).not.toContain('todo')
   })
 
   it('el rango a medida respeta las fechas dadas', () => {
@@ -71,5 +57,34 @@ describe('rangoDeReporte', () => {
 describe('ETIQUETA_PERIODO_REPORTE', () => {
   it('tiene etiqueta para cada periodo', () => {
     for (const p of PERIODOS_REPORTE) expect(ETIQUETA_PERIODO_REPORTE[p]).toBeTruthy()
+  })
+})
+
+describe('rangoDeReporte — todo', () => {
+  /*
+    Cobrar no es una pregunta mensual. De 78 trabajos entregados con deuda,
+    «este mes» enseñaba 37 y dejaba fuera S/7.420 que se siguen debiendo.
+  */
+  it('no pone límites de fecha', () => {
+    expect(rangoDeReporte('todo', HOY, MES)).toEqual({ desde: '', hasta: '' })
+  })
+
+  /*
+    Vacío y no `undefined`: las consultas comprueban `if (f.desde)` antes de
+    acotar, así que la cadena vacía ya significa «sin límite» en todas ellas
+    sin un caso especial por consulta.
+  */
+  it('devuelve cadenas vacías, que es lo que las consultas entienden', () => {
+    const r = rangoDeReporte('todo', HOY, MES)
+    expect(r.desde).toBe('')
+    expect(Boolean(r.desde)).toBe(false)
+  })
+
+  it('está primero entre los atajos', () => {
+    expect(PERIODOS_REPORTE).toEqual(['todo', 'rango', 'hoy', 'mes'])
+  })
+
+  it('se acepta desde la URL', () => {
+    expect(resolverPeriodoReporte('todo')).toBe('todo')
   })
 })

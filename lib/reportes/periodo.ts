@@ -7,9 +7,11 @@ import { rangoDePeriodo, type Rango } from '@/lib/trabajos/periodo'
  * un reporte se entrega por mes:
  *
  * - Añade `mes`, que además es el valor por omisión.
- * - **No incluye `todo`.** Un reporte sin límite de fechas traería el historial
- *   completo del laboratorio, que no es un reporte de nada: se imprime, se
- *   entrega a un doctor y tiene que cubrir un periodo concreto.
+ * - Incluye `todo`, que quita el límite de fechas. Se añadió porque cobrar no
+ *   es una pregunta mensual: de 78 trabajos entregados con deuda, «este mes»
+ *   enseñaba 37 y dejaba fuera S/7.420 que se siguen debiendo. Un reporte que
+ *   se imprime cubre un periodo, pero el de cobranza se mira en pantalla y
+ *   tiene que enseñarlo todo.
  */
 /*
   El orden es el que pidió el laboratorio, y la lista también: se quitaron
@@ -17,10 +19,11 @@ import { rangoDePeriodo, type Rango } from '@/lib/trabajos/periodo'
   reporte se pide por mes o por un rango concreto— y seis atajos en una fila
   tapaban los tres que sí.
 */
-export const PERIODOS_REPORTE = ['rango', 'hoy', 'mes'] as const
+export const PERIODOS_REPORTE = ['todo', 'rango', 'hoy', 'mes'] as const
 export type PeriodoReporte = (typeof PERIODOS_REPORTE)[number]
 
 export const ETIQUETA_PERIODO_REPORTE: Record<PeriodoReporte, string> = {
+  todo: 'Todo',
   rango: 'Rango…',
   hoy: 'Hoy',
   mes: 'Este mes',
@@ -49,5 +52,11 @@ export function rangoDeReporte(
   hasta?: string,
 ): Rango {
   if (periodo === 'mes') return mes
+  /*
+    Sin fechas, y con cadenas vacías a propósito: las consultas comprueban
+    `if (f.desde)` antes de acotar, así que vacío significa «sin límite» en
+    todas ellas sin un caso especial por consulta.
+  */
+  if (periodo === 'todo') return { desde: '', hasta: '' }
   return rangoDePeriodo(periodo, hoy, desde, hasta) ?? mes
 }

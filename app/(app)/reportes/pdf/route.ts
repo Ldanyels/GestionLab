@@ -46,7 +46,9 @@ export async function GET(req: Request): Promise<Response> {
     return new Response(Buffer.from(bytes), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${montos && f.soloPendientes ? 'cobranza' : 'trabajos'}-${f.desde}-a-${f.hasta}.pdf"`,
+        // Con «Todo» no hay fechas: el nombre las omite en vez de dejar
+        // «trabajos--a-.pdf».
+        'Content-Disposition': `attachment; filename="${montos && f.soloPendientes ? 'cobranza' : 'trabajos'}${f.desde && f.hasta ? `-${f.desde}-a-${f.hasta}` : '-todo'}.pdf"`,
       },
     })
   } catch {
