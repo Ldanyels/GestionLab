@@ -118,10 +118,10 @@ describe('resolverFiltros · periodo', () => {
 
 describe('queryFiltros · dimensiones nuevas', () => {
   it('lleva el estado y el periodo a las exportaciones', () => {
-    const f = resolverFiltros({ estado: 'entregado', periodo: '7d' })
+    const f = resolverFiltros({ estado: 'entregado', periodo: 'hoy' })
     const q = queryFiltros(f)
     expect(q).toContain('estado=entregado')
-    expect(q).toContain('periodo=7d')
+    expect(q).toContain('periodo=hoy')
   })
 
   it('no ensucia la URL con los valores por omisión', () => {
@@ -148,7 +148,7 @@ describe('enlaceReporte', () => {
   // Con un periodo relativo, unas fechas en la URL describirían otro momento
   // en cuanto pasara un día.
   it('las fechas solo viajan con el rango a medida', () => {
-    expect(enlaceReporte(base, { periodo: '7d' })).not.toContain('desde=')
+    expect(enlaceReporte(base, { periodo: 'hoy' })).not.toContain('desde=')
     expect(enlaceReporte(base, { periodo: 'rango' })).toContain('desde=')
   })
 
@@ -158,44 +158,45 @@ describe('enlaceReporte', () => {
   })
 })
 
-describe('resolverFiltros · qué fecha se acota (corrección)', () => {
+describe('resolverFiltros · qué fecha se acota', () => {
   /*
-    Antes el campo se acoplaba al estado, y como el recorte de fechas de esta
-    pantalla está siempre activo, elegir «Entregados» descartaba en silencio
-    los 12 trabajos entregados antes de que existiera la fecha de salida. El
-    conteo decía 16 y la lista mostraba 4.
+    El campo vuelve a deducirse del estado, y esta vez sin el fallo que lo
+    desaconsejaba: entonces acotar por la fecha de salida descartaba en
+    silencio los entregados que no la tenían sellada —el conteo decía 16 y la
+    lista mostraba 4—. Ahora la consulta los conserva (`entregado_el.is.null`)
+    y la pastilla se recalcula sobre lo que devuelve, así que las dos cifras
+    coinciden. Sin eso, esta deducción no sería segura.
   */
-  it('entregados se acota por fecha de ingreso, como los demás', () => {
-    expect(resolverFiltros({ estado: 'entregado' }).campoFecha).toBe('fecha_ingreso')
+  it('sobre entregados se acota por la fecha de salida', () => {
+    expect(resolverFiltros({ estado: 'entregado' }).campoFecha).toBe('entregado_el')
   })
 
-  it('la fecha de entrega se pide explícitamente', () => {
-    expect(resolverFiltros({ estado: 'entregado', fecha: 'entrega' }).campoFecha).toBe(
-      'entregado_el',
-    )
+  /*
+    Ya no se pide por la URL: se deduce del estado. Un trabajo en curso no tiene
+    fecha de entrega, así que acotar por ella devolvería siempre una lista vacía
+    sin que se viera la causa.
+  */
+  it('fuera de entregados se acota por el ingreso', () => {
+    expect(resolverFiltros({}).campoFecha).toBe('fecha_ingreso')
+    expect(resolverFiltros({ estado: 'en_curso' }).campoFecha).toBe('fecha_ingreso')
+    expect(resolverFiltros({ estado: 'cerrado' }).campoFecha).toBe('fecha_ingreso')
   })
 
-  // Un trabajo en curso no tiene fecha de entrega: acotar por ella devolvería
-  // siempre una lista vacía, y el usuario no vería la causa.
-  it('sin estado entregado se ignora la petición', () => {
-    expect(resolverFiltros({ fecha: 'entrega' }).campoFecha).toBe('fecha_ingreso')
-    expect(resolverFiltros({ estado: 'en_curso', fecha: 'entrega' }).campoFecha).toBe(
-      'fecha_ingreso',
-    )
+  it('sobre entregados se acota por la salida, sin pedirlo', () => {
+    expect(resolverFiltros({ estado: 'entregado' }).campoFecha).toBe('entregado_el')
   })
 })
 
 describe('enlaceReporte · qué fecha se acota', () => {
-  it('lleva la fecha de entrega en la URL', () => {
-    const f = resolverFiltros({ estado: 'entregado', fecha: 'entrega' })
-    expect(enlaceReporte(f)).toContain('fecha=entrega')
+  /* El par de botones se fue: la URL ya no lleva ese parámetro. */
+  it('la URL ya no arrastra el campo de fecha', () => {
+    const f = resolverFiltros({ estado: 'entregado' })
+    expect(enlaceReporte(f)).not.toContain('fecha=')
   })
 
-  // Si arrastrara `fecha=entrega` al cambiar de estado, la pantalla quedaría
-  // vacía sin explicación.
-  it('salir de entregados suelta la fecha de entrega', () => {
-    const f = resolverFiltros({ estado: 'entregado', fecha: 'entrega' })
-    expect(enlaceReporte(f, { estado: 'en_curso' })).not.toContain('fecha=')
-    expect(enlaceReporte(f, { estado: undefined })).not.toContain('fecha=')
+  it('al cambiar de estado, el campo se recalcula solo', () => {
+    const f = resolverFiltros({ estado: 'entregado' })
+    expect(f.campoFecha).toBe('entregado_el')
+    expect(resolverFiltros({ estado: 'en_curso' }).campoFecha).toBe('fecha_ingreso')
   })
 })

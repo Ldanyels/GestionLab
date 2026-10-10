@@ -73,8 +73,6 @@ export function FiltrosReporte({
   doctores,
 }: Props) {
   const campoFecha = f.campoFecha ?? 'fecha_ingreso'
-  const porEntrega = campoFecha === 'entregado_el'
-  const verEleccionDeFecha = f.estado === 'entregado'
   const doctoresVisibles = f.consultorioId
     ? doctores.filter((d) => d.consultorio_id === f.consultorioId)
     : doctores
@@ -122,42 +120,19 @@ export function FiltrosReporte({
           className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
         >
           {/*
-            Con un solo campo posible es un rótulo —dice sobre qué fecha se
-            está contando— y sobre entregados se convierte en la elección entre
-            las dos, que es la única combinación donde la de salida existe.
+            Un rótulo, no un control: dice sobre qué fecha se está contando.
+
+            Eran dos botones para elegirlo y la elección casi siempre estaba
+            mal hecha, porque la respuesta se deduce del estado —viendo
+            entregados la pregunta es «qué salió en este periodo»—. Se quitaron;
+            saber cuál se está usando sigue haciendo falta.
           */}
-          {verEleccionDeFecha ? (
-            <span
-              role="group"
-              aria-label="Qué fecha acotar"
-              className="mr-1 flex shrink-0 items-center gap-0.5 rounded-full border border-[var(--color-border)] p-0.5"
-            >
-              {(['fecha_ingreso', 'entregado_el'] as const).map((c) => {
-                const activo = campoFecha === c
-                return (
-                  <Link
-                    key={c}
-                    href={enlaceReporte(f, { campoFecha: c })}
-                    aria-pressed={activo}
-                    className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold uppercase tracking-[0.06em] transition-colors ${
-                      activo
-                        ? 'bg-[var(--color-accent)] text-[var(--color-accent-contrast)]'
-                        : 'text-[var(--color-muted)] hover:text-[var(--color-accent)]'
-                    }`}
-                  >
-                    {ETIQUETA_CAMPO_FECHA[c]}
-                  </Link>
-                )
-              })}
-            </span>
-          ) : (
-            <span
-              aria-hidden
-              className="shrink-0 pr-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)] opacity-70"
-            >
-              {ETIQUETA_CAMPO_FECHA[campoFecha]}
-            </span>
-          )}
+          <span
+            aria-hidden
+            className="shrink-0 pr-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--color-muted)] opacity-70"
+          >
+            {ETIQUETA_CAMPO_FECHA[campoFecha]}
+          </span>
           {PERIODOS_REPORTE.map((p: PeriodoReporte) => {
             const activo = f.periodo === p
             return (
@@ -187,7 +162,6 @@ export function FiltrosReporte({
           {/* GET: los demás filtros viajan ocultos o se perderían al aplicar. */}
           <input type="hidden" name="periodo" value="rango" />
           {f.estado ? <input type="hidden" name="estado" value={f.estado} /> : null}
-          {porEntrega ? <input type="hidden" name="fecha" value="entrega" /> : null}
           {f.pago !== 'por_cobrar' ? (
             <input type="hidden" name="pago" value={f.pago} />
           ) : null}
@@ -228,7 +202,6 @@ export function FiltrosReporte({
           </>
         ) : null}
         {f.estado ? <input type="hidden" name="estado" value={f.estado} /> : null}
-        {porEntrega ? <input type="hidden" name="fecha" value="entrega" /> : null}
         {f.pago !== 'por_cobrar' ? <input type="hidden" name="pago" value={f.pago} /> : null}
 
         <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">

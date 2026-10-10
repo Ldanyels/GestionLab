@@ -17,7 +17,7 @@ describe('resolverPeriodoReporte', () => {
   })
 
   it('acepta los periodos conocidos', () => {
-    expect(resolverPeriodoReporte('7d')).toBe('7d')
+    expect(resolverPeriodoReporte('hoy')).toBe('hoy')
     expect(resolverPeriodoReporte('rango')).toBe('rango')
   })
 
@@ -33,7 +33,20 @@ describe('rangoDeReporte', () => {
 
   it('reutiliza los periodos de trabajos', () => {
     expect(rangoDeReporte('hoy', HOY, MES)).toEqual({ desde: HOY, hasta: HOY })
-    expect(rangoDeReporte('7d', HOY, MES)).toEqual({ desde: '2026-09-04', hasta: HOY })
+  })
+
+  /*
+    La lista y el orden los fijó el laboratorio. Seis atajos en una fila tapaban
+    los tres que se usan.
+  */
+  it('solo ofrece rango, hoy y este mes, en ese orden', () => {
+    expect(PERIODOS_REPORTE).toEqual(['rango', 'hoy', 'mes'])
+  })
+
+  it('los que se quitaron caen en el mes, no rompen el enlace', () => {
+    for (const viejo of ['mes_anterior', '7d', '30d']) {
+      expect(resolverPeriodoReporte(viejo)).toBe('mes')
+    }
   })
 
   // Un reporte sin rango traería el historial completo del laboratorio, que no
@@ -58,40 +71,5 @@ describe('rangoDeReporte', () => {
 describe('ETIQUETA_PERIODO_REPORTE', () => {
   it('tiene etiqueta para cada periodo', () => {
     for (const p of PERIODOS_REPORTE) expect(ETIQUETA_PERIODO_REPORTE[p]).toBeTruthy()
-  })
-})
-
-describe('rangoDeReporte — mes anterior', () => {
-  const mes = { desde: '2026-10-01', hasta: '2026-10-31' }
-
-  /*
-    Un reporte se entrega cuando el mes ya cerró: el día 2 lo que hace falta es
-    el mes pasado, no los dos días que lleva el nuevo.
-  */
-  it('devuelve el mes cerrado, no el que corre', () => {
-    expect(rangoDeReporte('mes_anterior', '2026-10-07', mes)).toEqual({
-      desde: '2026-09-01',
-      hasta: '2026-09-30',
-    })
-  })
-
-  it('en enero retrocede a diciembre del año anterior', () => {
-    expect(rangoDeReporte('mes_anterior', '2027-01-02', mes)).toEqual({
-      desde: '2026-12-01',
-      hasta: '2026-12-31',
-    })
-  })
-
-  it('no depende del `mes` que se le pase: lo calcula de `hoy`', () => {
-    const otro = { desde: '2020-01-01', hasta: '2020-01-31' }
-    expect(rangoDeReporte('mes_anterior', '2026-10-07', otro)).toEqual({
-      desde: '2026-09-01',
-      hasta: '2026-09-30',
-    })
-  })
-
-  it('sigue estando entre los periodos que acepta la URL', () => {
-    expect(resolverPeriodoReporte('mes_anterior')).toBe('mes_anterior')
-    expect(ETIQUETA_PERIODO_REPORTE.mes_anterior).toBe('Mes anterior')
   })
 })

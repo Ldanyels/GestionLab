@@ -109,3 +109,44 @@ export function trabajosQueSeCierran(lineas: readonly LineaLiquidable[]): string
     .filter((l) => l.estado === 'entregado' && centimos(l.monto) >= centimos(l.saldo))
     .map((l) => l.trabajo_id)
 }
+
+export const ESTADOS_COBRABLES = ['todos', 'en_curso', 'entregado'] as const
+export type EstadoCobrable = (typeof ESTADOS_COBRABLES)[number]
+
+export const ETIQUETA_ESTADO_COBRABLE: Record<EstadoCobrable, string> = {
+  todos: 'Todos',
+  en_curso: 'En curso',
+  entregado: 'Entregados',
+}
+
+/** Cualquier valor desconocido en la URL muestra todo: esconder deuda es peor. */
+export function resolverEstadoCobrable(valor: string | undefined): EstadoCobrable {
+  return (ESTADOS_COBRABLES as readonly string[]).includes(valor ?? '')
+    ? (valor as EstadoCobrable)
+    : 'todos'
+}
+
+/**
+ * Separa los trabajos por estado para cobrarlos aparte.
+ *
+ * El consultorio paga por lo que ya recibió: mezclar en la misma lista lo
+ * entregado con lo que aún está en el taller obliga a buscar cuáles son cuáles
+ * entre doce líneas, y ese es el momento en que se marca uno de más.
+ *
+ * Se devuelven también los conteos, y se cuentan **sobre la lista entera**: una
+ * pastilla que contara solo lo ya filtrado diría cero en las otras dos y
+ * parecería que no hay nada que cobrar ahí.
+ */
+export function porEstadoCobrable<T extends { estado: string }>(
+  trabajos: readonly T[],
+  estado: EstadoCobrable,
+): { visibles: T[]; conteo: Record<EstadoCobrable, number> } {
+  return {
+    visibles: estado === 'todos' ? [...trabajos] : trabajos.filter((t) => t.estado === estado),
+    conteo: {
+      todos: trabajos.length,
+      en_curso: trabajos.filter((t) => t.estado === 'en_curso').length,
+      entregado: trabajos.filter((t) => t.estado === 'entregado').length,
+    },
+  }
+}

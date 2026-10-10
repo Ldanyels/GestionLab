@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   lineasIniciales,
+  porEstadoCobrable,
+  resolverEstadoCobrable,
   totalDelCobro,
   trabajosQueSeCierran,
   validarCobro,
@@ -162,5 +164,55 @@ describe('trabajosQueSeCierran', () => {
 
   it('sin líneas, nada que cerrar', () => {
     expect(trabajosQueSeCierran([])).toEqual([])
+  })
+})
+
+describe('porEstadoCobrable', () => {
+  const t = (id: string, estado: string) => ({ trabajo_id: id, estado })
+  const lista = [t('a', 'entregado'), t('b', 'en_curso'), t('c', 'entregado'), t('d', 'cerrado')]
+
+  it('«todos» no esconde nada', () => {
+    expect(porEstadoCobrable(lista, 'todos').visibles).toHaveLength(4)
+  })
+
+  it('separa los entregados', () => {
+    expect(porEstadoCobrable(lista, 'entregado').visibles.map((x) => x.trabajo_id)).toEqual([
+      'a',
+      'c',
+    ])
+  })
+
+  it('separa los que siguen en el taller', () => {
+    expect(porEstadoCobrable(lista, 'en_curso').visibles.map((x) => x.trabajo_id)).toEqual(['b'])
+  })
+
+  /*
+    Los conteos salen de la lista entera. Contarlos sobre lo ya filtrado dejaría
+    las otras pastillas en cero y parecería que ahí no hay nada que cobrar.
+  */
+  it('los conteos no dependen del filtro activo', () => {
+    const esperado = { todos: 4, en_curso: 1, entregado: 2 }
+    expect(porEstadoCobrable(lista, 'entregado').conteo).toEqual(esperado)
+    expect(porEstadoCobrable(lista, 'en_curso').conteo).toEqual(esperado)
+    expect(porEstadoCobrable(lista, 'todos').conteo).toEqual(esperado)
+  })
+
+  it('no modifica la lista que recibe', () => {
+    const original = [...lista]
+    porEstadoCobrable(lista, 'entregado')
+    expect(lista).toEqual(original)
+  })
+})
+
+describe('resolverEstadoCobrable', () => {
+  it('acepta los que existen', () => {
+    expect(resolverEstadoCobrable('entregado')).toBe('entregado')
+    expect(resolverEstadoCobrable('en_curso')).toBe('en_curso')
+  })
+
+  /* Esconder deuda por un parámetro mal escrito sería peor que mostrarla toda. */
+  it('lo desconocido muestra todo', () => {
+    expect(resolverEstadoCobrable('cerrado')).toBe('todos')
+    expect(resolverEstadoCobrable(undefined)).toBe('todos')
   })
 })
