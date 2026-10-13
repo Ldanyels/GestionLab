@@ -7,7 +7,7 @@ import {
   columnasReporte,
   RELLENO,
   tieneDeuda,
-  UTIL_APAISADO,
+  UTIL_PAGINA,
   xDeColumnas,
 } from './columnas'
 import type { Columna } from './columnas'
@@ -42,12 +42,12 @@ describe('columnasReporte', () => {
   */
   it('con importes, las columnas caben en el ancho útil', () => {
     const suma = columnasReporte(true).reduce((s, c) => s + c.ancho, 0)
-    expect(suma).toBeLessThanOrEqual(UTIL_APAISADO)
+    expect(suma).toBeLessThanOrEqual(UTIL_PAGINA)
   })
 
   it('sin importes, también caben', () => {
     const suma = columnasReporte(false).reduce((s, c) => s + c.ancho, 0)
-    expect(suma).toBeLessThanOrEqual(UTIL_APAISADO)
+    expect(suma).toBeLessThanOrEqual(UTIL_PAGINA)
   })
 
   it('sin importes desaparecen las columnas de dinero', () => {
@@ -118,7 +118,7 @@ describe('xDeColumnas', () => {
   it('ninguna columna se sale del papel', () => {
     const cols = columnasReporte(true)
     const xs = xDeColumnas(cols, MARGEN)
-    for (const x of xs) expect(x).toBeLessThanOrEqual(MARGEN + UTIL_APAISADO)
+    for (const x of xs) expect(x).toBeLessThanOrEqual(MARGEN + UTIL_PAGINA)
   })
 })
 
@@ -325,7 +325,7 @@ describe('celdasDeTotal', () => {
     const cols = columnasReporte(true)
     const total = celdasDeTotal({ trabajos: 205, facturado: 43590, pagado: 12460 }, cols)
     const filas = [celdasDeFila(fila({ total: 90, pagado: 0 }), cols), total]
-    const ajustadas = ajustarAnchos(cols, filas, medir, UTIL_APAISADO)
+    const ajustadas = ajustarAnchos(cols, filas, medir, UTIL_PAGINA)
     const iTotal = cols.findIndex((c) => c.clave === 'total')
     expect(ajustadas[iTotal]!.ancho - RELLENO).toBeGreaterThanOrEqual(medir(total[iTotal]!))
   })

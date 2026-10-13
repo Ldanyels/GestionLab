@@ -2,13 +2,13 @@ import { formatMoney } from '@/lib/format'
 import { ETIQUETA_TRABAJO, type EstadoTrabajo } from '@/lib/trabajos/estado'
 import { saldoFila, type FilaReporte } from './agrupar'
 
-/** Ancho útil de un A4 apaisado con márgenes de 40 pt. */
-export const UTIL_APAISADO = 841.89 - 80
+/** Ancho útil de un A4 vertical con márgenes de 40 pt. */
+export const UTIL_PAGINA = 595.28 - 80
 
 export interface Columna {
   clave: string
   titulo: string
-  /** Puntos. La suma no debe pasar de `UTIL_APAISADO`. */
+  /** Puntos. La suma no debe pasar de `UTIL_PAGINA`. */
   ancho: number
   /** Las cifras se alinean a la derecha para poder compararlas de un vistazo. */
   derecha?: boolean
@@ -23,11 +23,14 @@ export interface Columna {
 }
 
 /*
-  El reporte va apaisado porque es una matriz.
+  El reporte va en vertical, que es como lo pidió el laboratorio: se archiva y
+  se entrega en papel junto a los demás documentos, y uno apaisado en medio de
+  la carpeta estorba.
 
-  En vertical caben unos 515 pt y el nombre de un consultorio se cortaría en la
-  tercera letra. Apaisado hay 762 y las columnas caben enteras, que es la
-  diferencia entre una tabla que se lee y una que hay que adivinar.
+  Caben 515 pt, frente a los 762 del apaisado. Las columnas se reparten lo que
+  hay midiendo el contenido, así que las de texto se estrechan y alguna línea
+  larga se recorta; las de fecha e importe no se tocan, que a medias no dicen
+  nada.
 
   El orden y la lista los fijó el laboratorio: no hay columna de ingreso ni de
   estado, y el saldo se lee restando el abono del total. Las dos cifras van
@@ -38,12 +41,12 @@ export interface Columna {
   nueve veces.
 */
 const CON_MONTOS: Columna[] = [
-  { clave: 'doctor', titulo: 'Doctor', ancho: 110 },
-  { clave: 'entrega', titulo: 'Entrega', ancho: 70, fija: true },
-  { clave: 'paciente', titulo: 'Paciente', ancho: 120 },
-  { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 191 },
-  { clave: 'abono', titulo: 'Abono', ancho: 75, derecha: true, fija: true },
-  { clave: 'total', titulo: 'Total', ancho: 75, derecha: true, fija: true },
+  { clave: 'doctor', titulo: 'Doctor', ancho: 70 },
+  { clave: 'entrega', titulo: 'Entrega', ancho: 60, fija: true },
+  { clave: 'paciente', titulo: 'Paciente', ancho: 95 },
+  { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 160 },
+  { clave: 'abono', titulo: 'Abono', ancho: 65, derecha: true, fija: true },
+  { clave: 'total', titulo: 'Total', ancho: 65, derecha: true, fija: true },
 ]
 
 /*
@@ -51,10 +54,10 @@ const CON_MONTOS: Columna[] = [
   reparte entre los nombres, que es lo que ese lector viene a mirar.
 */
 const SIN_MONTOS: Columna[] = [
-  { clave: 'doctor', titulo: 'Doctor', ancho: 140 },
-  { clave: 'entrega', titulo: 'Entrega', ancho: 80, fija: true },
-  { clave: 'paciente', titulo: 'Paciente', ancho: 150 },
-  { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 240 },
+  { clave: 'doctor', titulo: 'Doctor', ancho: 110 },
+  { clave: 'entrega', titulo: 'Entrega', ancho: 65, fija: true },
+  { clave: 'paciente', titulo: 'Paciente', ancho: 130 },
+  { clave: 'tratamientos', titulo: 'Tratamientos', ancho: 210 },
 ]
 
 export function columnasReporte(montos: boolean): Columna[] {

@@ -14,9 +14,10 @@ import {
 } from './columnas'
 import type { GrupoConsultorio, TotalesReporte } from './agrupar'
 
-// A4 apaisado, en puntos: la matriz no cabe en vertical.
-const ANCHO = 841.89
-const ALTO = 595.28
+// A4 vertical, en puntos. Lo pidió el laboratorio: el reporte se archiva y se
+// entrega en papel con el resto de documentos, y uno apaisado estorba.
+const ANCHO = 595.28
+const ALTO = 841.89
 const MARGEN = 40
 const UTIL = ANCHO - MARGEN * 2
 
