@@ -3,6 +3,7 @@ import {
   etiquetaFechaDeCobro,
   fechaDeCobro,
   lineasIniciales,
+  mostrarEtiquetaDeFecha,
   ordenarParaCobrar,
   porEstadoCobrable,
   resolverEstadoCobrable,
@@ -315,5 +316,31 @@ describe('ordenarParaCobrar', () => {
     const copia = [...lista]
     ordenarParaCobrar(lista)
     expect(lista).toEqual(copia)
+  })
+})
+
+describe('mostrarEtiquetaDeFecha', () => {
+  /*
+    Lo pidió el laboratorio: filtrando por entregados, repetir «Entregado» en
+    cada fila le quitaba a la fecha el ancho que necesita para verse entera.
+  */
+  it('se calla cuando ya se filtró por entregados', () => {
+    expect(mostrarEtiquetaDeFecha('entregado')).toBe(false)
+  })
+
+  /*
+    Sin filtrar la lista mezcla los dos estados, cada uno situado por una fecha
+    distinta: la palabra es lo único que explica el orden.
+  */
+  it('se mantiene sin filtrar', () => {
+    expect(mostrarEtiquetaDeFecha('todos')).toBe(true)
+  })
+
+  /*
+    En «En curso» la fecha es la de ingreso, la única que esos trabajos tienen.
+    Decirlo evita leerla como una entrega que todavía no ha ocurrido.
+  */
+  it('se mantiene en los que siguen en el taller', () => {
+    expect(mostrarEtiquetaDeFecha('en_curso')).toBe(true)
   })
 })

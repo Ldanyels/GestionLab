@@ -42,9 +42,9 @@ export function FormularioDeCobro({
   /**
    * Si cada fila antepone «Entregado» o «Ingresó» a su fecha.
    *
-   * Solo hace falta con la lista sin filtrar, donde se mezclan los dos estados
-   * y la palabra explica el orden. Filtrando por uno, todas las filas son
-   * iguales y la palabra se come el ancho de la fecha.
+   * Se apaga al filtrar por «Entregados»: todas las filas lo son, y la palabra
+   * repetida le come a la fecha el ancho que necesita para verse entera.
+   * En el resto se mantiene, porque explica cuál de las dos fechas se enseña.
    */
   conEtiquetaDeFecha?: boolean
   action: (prev: FormState, formData: FormData) => Promise<FormState>

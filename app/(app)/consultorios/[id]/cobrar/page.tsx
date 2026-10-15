@@ -6,6 +6,7 @@ import { trabajosCobrablesDeConsultorio } from '@/lib/abonos/data'
 import {
   ESTADOS_COBRABLES,
   ETIQUETA_ESTADO_COBRABLE,
+  mostrarEtiquetaDeFecha,
   porEstadoCobrable,
   resolverEstadoCobrable,
 } from '@/lib/abonos/cobro'
@@ -102,9 +103,7 @@ export default async function CobrarPage({
               consultorio={consultorio.nombre}
               trabajos={visibles}
               hoy={hoyLima()}
-              // Filtrando por un estado, todas las filas son del mismo: la
-              // palabra sobra y le quita ancho a la fecha.
-              conEtiquetaDeFecha={estado === 'todos'}
+              conEtiquetaDeFecha={mostrarEtiquetaDeFecha(estado)}
               action={registrarCobroAction}
             />
           )}

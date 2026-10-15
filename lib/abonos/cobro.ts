@@ -151,6 +151,21 @@ export function porEstadoCobrable<T extends { estado: string }>(
   }
 }
 
+/**
+ * Si las filas anteponen la palabra que dice qué fecha enseñan.
+ *
+ * Se calla solo en «Entregados»: todas las filas lo son, y la palabra repetida
+ * le quita a la fecha el ancho que necesita para verse entera en un teléfono.
+ *
+ * En el resto se mantiene. Sin filtrar porque la lista mezcla los dos estados
+ * y la palabra es lo único que explica el orden; en «En curso» porque la fecha
+ * es la de ingreso —la única que esos trabajos tienen— y decirlo evita leerla
+ * como una entrega que todavía no ha ocurrido.
+ */
+export function mostrarEtiquetaDeFecha(estado: EstadoCobrable): boolean {
+  return estado !== 'entregado'
+}
+
 /** Lo que hace falta de un trabajo para situarlo en la cola de cobro. */
 export interface Fechable {
   fecha_ingreso: string
@@ -179,8 +194,8 @@ export function fechaDeCobro(t: Fechable): string {
  * fecha distinta: ahí la palabra es lo único que explica el orden, y sin ella
  * un trabajo ingresado en agosto parece fuera de sitio.
  *
- * Filtrando por un estado sobra —todas las filas son del mismo— y además roba
- * el ancho que necesita la fecha para verse entera en un teléfono.
+ * Filtrando por «Entregados» sobra —todas las filas lo son— y además roba el
+ * ancho que necesita la fecha para verse entera en un teléfono.
  */
 export function etiquetaFechaDeCobro(
   t: Fechable,
