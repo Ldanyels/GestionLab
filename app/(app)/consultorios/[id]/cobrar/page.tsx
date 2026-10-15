@@ -102,6 +102,9 @@ export default async function CobrarPage({
               consultorio={consultorio.nombre}
               trabajos={visibles}
               hoy={hoyLima()}
+              // Filtrando por un estado, todas las filas son del mismo: la
+              // palabra sobra y le quita ancho a la fecha.
+              conEtiquetaDeFecha={estado === 'todos'}
               action={registrarCobroAction}
             />
           )}

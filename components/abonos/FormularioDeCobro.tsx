@@ -32,12 +32,21 @@ export function FormularioDeCobro({
   consultorio,
   trabajos,
   hoy,
+  conEtiquetaDeFecha = true,
   action,
 }: {
   consultorioId: string
   consultorio: string
   trabajos: TrabajoCobrable[]
   hoy: string
+  /**
+   * Si cada fila antepone «Entregado» o «Ingresó» a su fecha.
+   *
+   * Solo hace falta con la lista sin filtrar, donde se mezclan los dos estados
+   * y la palabra explica el orden. Filtrando por uno, todas las filas son
+   * iguales y la palabra se come el ancho de la fecha.
+   */
+  conEtiquetaDeFecha?: boolean
   action: (prev: FormState, formData: FormData) => Promise<FormState>
 }) {
   const [state, formAction, pending] = useActionState(action, initial)
@@ -114,8 +123,8 @@ export function FormularioDeCobro({
                   </span>
                   <span className="block truncate text-[12.5px] text-[var(--color-muted)]">
                     {t.paciente
-                      ? `${t.resumen} · ${etiquetaFechaDeCobro(t)}`
-                      : etiquetaFechaDeCobro(t)}
+                      ? `${t.resumen} · ${etiquetaFechaDeCobro(t, { conEtiqueta: conEtiquetaDeFecha })}`
+                      : etiquetaFechaDeCobro(t, { conEtiqueta: conEtiquetaDeFecha })}
                   </span>
                 </span>
                 <span className="num shrink-0 text-[13.5px] font-semibold">

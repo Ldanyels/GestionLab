@@ -206,3 +206,40 @@ describe('FormularioDeCobro — qué fecha enseña cada fila', () => {
     expect(screen.getByText(/Ingresó 2026-09-11/)).toBeTruthy()
   })
 })
+
+describe('FormularioDeCobro — la etiqueta de la fecha', () => {
+  const entregado = cobrable({ fecha_ingreso: '2026-08-11', entregado_el: '2026-09-25' })
+
+  /*
+    Filtrando por un estado todas las filas son del mismo, así que la palabra
+    sobra y además le quita a la fecha el ancho que necesita para verse entera
+    en un teléfono.
+  */
+  it('filtrando por un estado, solo la fecha', () => {
+    render(
+      <FormularioDeCobro
+        consultorioId="c1"
+        consultorio="Dentysalud"
+        trabajos={[entregado]}
+        hoy="2026-10-15"
+        conEtiquetaDeFecha={false}
+        action={accion}
+      />,
+    )
+    expect(screen.getByText(/2026-09-25/)).toBeTruthy()
+    expect(screen.queryByText(/Entregado/)).toBeNull()
+  })
+
+  it('sin filtrar, la palabra vuelve para explicar el orden', () => {
+    render(
+      <FormularioDeCobro
+        consultorioId="c1"
+        consultorio="Dentysalud"
+        trabajos={[entregado]}
+        hoy="2026-10-15"
+        action={accion}
+      />,
+    )
+    expect(screen.getByText(/Entregado 2026-09-25/)).toBeTruthy()
+  })
+})

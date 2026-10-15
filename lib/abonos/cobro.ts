@@ -172,9 +172,23 @@ export function fechaDeCobro(t: Fechable): string {
   return t.entregado_el ?? t.fecha_ingreso
 }
 
-/** «Entregado 2026-09-25» o «Ingresó 2026-09-11», según cuál se esté usando. */
-export function etiquetaFechaDeCobro(t: Fechable): string {
-  return t.entregado_el ? `Entregado ${t.entregado_el}` : `Ingresó ${t.fecha_ingreso}`
+/**
+ * La fecha de cobro con o sin la palabra que dice cuál es.
+ *
+ * Con «Todos» la lista mezcla entregados y en curso, cada uno situado por una
+ * fecha distinta: ahí la palabra es lo único que explica el orden, y sin ella
+ * un trabajo ingresado en agosto parece fuera de sitio.
+ *
+ * Filtrando por un estado sobra —todas las filas son del mismo— y además roba
+ * el ancho que necesita la fecha para verse entera en un teléfono.
+ */
+export function etiquetaFechaDeCobro(
+  t: Fechable,
+  { conEtiqueta = true }: { conEtiqueta?: boolean } = {},
+): string {
+  const fecha = fechaDeCobro(t)
+  if (!conEtiqueta) return fecha
+  return t.entregado_el ? `Entregado ${fecha}` : `Ingresó ${fecha}`
 }
 
 /**

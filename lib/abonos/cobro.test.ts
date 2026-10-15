@@ -238,17 +238,30 @@ describe('fechaDeCobro', () => {
 })
 
 describe('etiquetaFechaDeCobro', () => {
+  const entregado = { fecha_ingreso: '2026-08-11', entregado_el: '2026-09-25' }
+  const enCurso = { fecha_ingreso: '2026-09-11', entregado_el: null }
+
   /*
-    La fila tiene que decir qué fecha enseña. Mostrando la de entrega sin
-    decirlo, una lista ordenada por ella parece desordenada.
+    Con la lista sin filtrar se mezclan los dos estados, cada uno situado por
+    una fecha distinta: la palabra es lo único que explica el orden, y sin ella
+    un trabajo ingresado en agosto parece fuera de sitio.
   */
   it('dice cuál de las dos está mostrando', () => {
-    expect(etiquetaFechaDeCobro({ fecha_ingreso: '2026-08-11', entregado_el: '2026-09-25' })).toBe(
-      'Entregado 2026-09-25',
-    )
-    expect(etiquetaFechaDeCobro({ fecha_ingreso: '2026-09-11', entregado_el: null })).toBe(
-      'Ingresó 2026-09-11',
-    )
+    expect(etiquetaFechaDeCobro(entregado)).toBe('Entregado 2026-09-25')
+    expect(etiquetaFechaDeCobro(enCurso)).toBe('Ingresó 2026-09-11')
+  })
+
+  /*
+    Filtrando por un estado sobra: todas las filas son del mismo, y la palabra
+    roba el ancho que necesita la fecha para verse entera en un teléfono.
+  */
+  it('sin la etiqueta deja solo la fecha', () => {
+    expect(etiquetaFechaDeCobro(entregado, { conEtiqueta: false })).toBe('2026-09-25')
+    expect(etiquetaFechaDeCobro(enCurso, { conEtiqueta: false })).toBe('2026-09-11')
+  })
+
+  it('sin etiqueta sigue siendo la fecha por la que se ordena', () => {
+    expect(etiquetaFechaDeCobro(entregado, { conEtiqueta: false })).toBe(fechaDeCobro(entregado))
   })
 })
 
