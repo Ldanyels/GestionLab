@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { armarResumen, margenPct } from '@/lib/finanzas/calculo'
+import { armarResumen, margenPct, sumarGastosPorMes } from '@/lib/finanzas/calculo'
 
 describe('armarResumen', () => {
   it('suma gastos y calcula utilidad', () => {
@@ -57,5 +57,53 @@ describe('armarResumen con gastos de operación', () => {
     const r = armarResumen({ ingresos: 100, materiales: 33.33, pagos: 33.33, operativos: 33.33 })
     expect(r.gastos).toBe(99.99)
     expect(r.utilidad).toBe(0.01)
+  })
+})
+
+describe('sumarGastosPorMes', () => {
+  const serie = [
+    { mes: '2026-09-01', ingresos: 14360, gastos: 5120 },
+    { mes: '2026-10-01', ingresos: 18190, gastos: 2260 },
+  ]
+
+  /*
+    El caso real: la función de la base solo sumaba insumos y pagos, así que la
+    gráfica decía S/5.120 en setiembre cuando el gasto fue S/9.585.
+  */
+  it('suma los gastos del mes que le corresponde', () => {
+    const r = sumarGastosPorMes(serie, [
+      { fecha: '2026-09-12', monto: 4000 },
+      { fecha: '2026-09-30', monto: 465 },
+      { fecha: '2026-10-03', monto: 3260 },
+    ])
+    expect(r[0]!.gastos).toBe(9585)
+    expect(r[1]!.gastos).toBe(5520)
+  })
+
+  it('un mes sin gastos se queda como estaba', () => {
+    const r = sumarGastosPorMes(serie, [{ fecha: '2026-10-03', monto: 100 }])
+    expect(r[0]!.gastos).toBe(5120)
+  })
+
+  it('no toca los ingresos', () => {
+    const r = sumarGastosPorMes(serie, [{ fecha: '2026-09-01', monto: 500 }])
+    expect(r[0]!.ingresos).toBe(14360)
+  })
+
+  /* Un gasto de otro mes no debe colarse en la serie. */
+  it('ignora los que caen fuera de la serie', () => {
+    const r = sumarGastosPorMes(serie, [{ fecha: '2026-07-15', monto: 9999 }])
+    expect(r.map((x) => x.gastos)).toEqual([5120, 2260])
+  })
+
+  it('redondea a céntimos', () => {
+    const r = sumarGastosPorMes([{ mes: '2026-09-01', gastos: 0.1 }], [
+      { fecha: '2026-09-02', monto: 0.2 },
+    ])
+    expect(r[0]!.gastos).toBe(0.3)
+  })
+
+  it('sin gastos devuelve la serie intacta', () => {
+    expect(sumarGastosPorMes(serie, [])).toEqual(serie)
   })
 })

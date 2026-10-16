@@ -39,3 +39,30 @@ export function margenPct(resumen: ResumenFinanciero): number {
   if (resumen.ingresos <= 0) return 0
   return Math.round((resumen.utilidad / resumen.ingresos) * 100)
 }
+
+/**
+ * Añade a la serie mensual los gastos de servicios y extras.
+ *
+ * `finanzas_por_mes` solo suma insumos y pagos al personal: la tabla `gasto`
+ * —luz, agua, alquiler, reparaciones— llegó después y la función de la base
+ * nunca la incluyó. La gráfica «Ingresos vs gastos» se quedaba corta casi a la
+ * mitad: en setiembre decía S/5.120 cuando el gasto real fue S/9.585.
+ *
+ * Se suma aquí y no en la base por lo mismo que en `resumen`: tocar la función
+ * obliga a reemplazarla por migración y a arriesgar las cifras que ya salen
+ * bien, y son unas decenas de filas al mes.
+ */
+export function sumarGastosPorMes<T extends { mes: string; gastos: number }>(
+  serie: readonly T[],
+  gastos: readonly { fecha: string; monto: number }[],
+): T[] {
+  const porMes = new Map<string, number>()
+  for (const g of gastos) {
+    const clave = g.fecha.slice(0, 7)
+    porMes.set(clave, (porMes.get(clave) ?? 0) + Number(g.monto))
+  }
+  return serie.map((p) => ({
+    ...p,
+    gastos: Math.round((p.gastos + (porMes.get(p.mes.slice(0, 7)) ?? 0)) * 100) / 100,
+  }))
+}

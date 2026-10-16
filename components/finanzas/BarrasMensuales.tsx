@@ -38,10 +38,23 @@ export function BarrasMensuales({ datos }: { datos: PuntoMes[] }) {
         </span>
       </div>
 
-      <div className="flex h-[170px] items-end gap-2">
+      {/*
+        La columna de cada mes se estira a los 170 px y la zona de barras toma
+        lo que queda con `flex-1`.
+
+        Antes la fila era `items-end`, así que las columnas no se estiraban:
+        median lo que su contenido —23 px, solo la etiqueta— y el `h-full` de
+        la zona de barras se resolvía contra una altura automática. Las barras,
+        en porcentaje de eso, salian de 0 px. La tarjeta nunca llego a pintar
+        una sola barra.
+
+        `min-h-0` para que la zona de barras pueda encogerse por debajo de su
+        contenido, que es lo que permite que `flex-1` mande.
+      */}
+      <div className="flex h-[170px] gap-2">
         {datos.map((d) => (
           <div key={d.mes} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-            <div className="flex h-full w-full items-end justify-center gap-[6%]">
+            <div className="flex min-h-0 w-full flex-1 items-end justify-center gap-[6%]">
               <div
                 title={`Ingresos ${formatMoney(d.ingresos)}`}
                 style={{

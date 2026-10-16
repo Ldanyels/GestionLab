@@ -1,4 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase/server'
+import { sumarGastosPorMes } from './calculo'
 import { armarResumen, type ResumenFinanciero } from './calculo'
 import { gastosDelPeriodo } from '@/lib/gastos/data'
 // Se reexporta para no romper a quien ya la importaba de aquí.
@@ -66,11 +67,30 @@ export async function porMes(meses: number): Promise<PuntoMes[]> {
   const supabase = await createServerSupabase()
   const { data, error } = await supabase.rpc('finanzas_por_mes', { p_meses: meses })
   if (error) throw new Error(error.message)
-  return (data ?? []).map((r: { mes: string; ingresos: number; gastos: number }) => ({
+  const serie = (data ?? []).map((r: { mes: string; ingresos: number; gastos: number }) => ({
     mes: r.mes,
     ingresos: Number(r.ingresos),
     gastos: Number(r.gastos),
   }))
+
+  /*
+    La función de la base solo cuenta insumos y pagos al personal.
+
+    Los gastos de servicios y extras —luz, agua, alquiler, reparaciones— viven
+    en una tabla que llegó después, y sin ellos la gráfica se queda corta casi
+    a la mitad: en setiembre decía S/5.120 cuando el gasto real fue S/9.585. Se
+    suman aquí, igual que hace `resumen`, para no reemplazar por migración una
+    función cuyas otras cifras ya salen bien.
+  */
+  const primero = serie[0]?.mes
+  if (!primero) return serie
+  const { data: gastos, error: errGastos } = await supabase
+    .from('gasto')
+    .select('fecha, monto')
+    .gte('fecha', primero)
+  if (errGastos) throw new Error(errGastos.message)
+
+  return sumarGastosPorMes(serie, (gastos ?? []) as { fecha: string; monto: number }[])
 }
 
 export async function rankingConsultorios(
