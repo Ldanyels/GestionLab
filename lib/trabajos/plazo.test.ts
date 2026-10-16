@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   ATAJOS_DE_PLAZO,
+  entregaMostrada,
   plazoDelTrabajo,
   diasDePlazoSchema,
   estadoDeEntrega,
@@ -207,5 +208,40 @@ describe('plazoDelTrabajo', () => {
 
   it('cero no pisa un plazo mayor de otra línea', () => {
     expect(plazoDelTrabajo([{ dias_entrega: 0 }, { dias_entrega: 5 }])).toBe(5)
+  })
+})
+
+describe('entregaMostrada', () => {
+  const t = (fecha_entrega: string | null, entregado_el: string | null) => ({
+    fecha_entrega,
+    entregado_el,
+  })
+
+  /*
+    El fallo que la trajo: la ficha enseñaba la fecha real solo mientras el
+    estado era «entregado». Al cobrar el trabajo y pasar a «cerrado», la fecha
+    desaparecía y salía «Sin fecha» —118 de los 152 cerrados del piloto—.
+    Cerrar un trabajo no deshace su entrega.
+  */
+  it('manda la fecha real cuando el trabajo ya salió', () => {
+    expect(entregaMostrada(t('2026-10-20', '2026-10-12'))).toBe('2026-10-12')
+  })
+
+  it('sin salir todavía, enseña la prometida', () => {
+    expect(entregaMostrada(t('2026-10-20', null))).toBe('2026-10-20')
+  })
+
+  it('la real vale aunque no hubiera promesa', () => {
+    expect(entregaMostrada(t(null, '2026-10-12'))).toBe('2026-10-12')
+  })
+
+  /* Sin ninguna de las dos decide quien la muestra: «sin registrar» o «sin fecha». */
+  it('sin ninguna de las dos devuelve null', () => {
+    expect(entregaMostrada(t(null, null))).toBeNull()
+  })
+
+  it('no mira el estado: solo las dos fechas', () => {
+    const cerradoYEntregado = { fecha_entrega: null, entregado_el: '2026-10-12', estado: 'cerrado' }
+    expect(entregaMostrada(cerradoYEntregado)).toBe('2026-10-12')
   })
 })

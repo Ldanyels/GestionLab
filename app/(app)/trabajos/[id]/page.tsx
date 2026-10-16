@@ -4,6 +4,7 @@ import { getTrabajo } from '@/lib/trabajos/data'
 import { getSessionPerfil } from '@/lib/auth'
 import { puedeBorrarAbonos, puedeRegistrarAbonos, veMontos } from '@/lib/permisos'
 import { colorConsultorio } from '@/lib/consultorios/color'
+import { entregaMostrada } from '@/lib/trabajos/plazo'
 import { formatMoney } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { FotosDelTrabajo } from '@/components/fotos/FotosDelTrabajo'
@@ -66,15 +67,19 @@ export default async function TrabajoDetallePage({
         <div className="grid grid-cols-2 gap-2">
           <Dato etiqueta="Ingreso" valor={t.fecha_ingreso} />
           {/*
-            En un entregado se muestra la fecha real y no la prometida: la
-            promesa ya no informa de nada cuando el trabajo salió, y tenerlas
-            las dos a la vez invita a leer una por la otra.
+            La fecha real en cuanto el trabajo salió; la prometida mientras no.
+
+            Antes dependía del estado, y al cobrar un entregado pasa solo a
+            «cerrado»: la fecha real desaparecía y salía «Sin fecha» en 118 de
+            los 152 cerrados. Cerrar no deshace la entrega.
           */}
-          {t.estado === 'entregado' ? (
-            <Dato etiqueta="Entrega" valor={t.entregado_el ?? 'Sin registrar'} />
-          ) : (
-            <Dato etiqueta="Entrega" valor={t.fecha_entrega ?? 'Sin fecha'} />
-          )}
+          <Dato
+            etiqueta="Entrega"
+            valor={
+              entregaMostrada(t) ??
+              (t.estado === 'entregado' ? 'Sin registrar' : 'Sin fecha')
+            }
+          />
         </div>
 
         {/*

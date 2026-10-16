@@ -56,7 +56,12 @@ export default async function EditarTrabajoPage({
             La acción vuelve a comprobar el rol por su cuenta, porque una Server
             Action se puede invocar sin pasar por esta página.
           */}
-          {t.estado === 'entregado' ? (
+          {/*
+            También en los cerrados. Al cobrar un entregado pasa solo a
+            «cerrado», así que atado al estado el formulario desaparecía
+            justo en los trabajos cuya fecha hay que poder arreglar.
+          */}
+          {t.estado === 'entregado' || t.entregado_el ? (
             <form
               action={corregirFechaEntregaAction}
               className="flex flex-wrap items-end gap-2 border-b border-[var(--color-border)] pb-3"

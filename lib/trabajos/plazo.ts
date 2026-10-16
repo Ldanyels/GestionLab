@@ -140,3 +140,24 @@ export function plazoDelTrabajo(
     .filter((d): d is number => d !== null && d !== undefined)
   return definidos.length === 0 ? null : Math.max(...definidos)
 }
+
+/**
+ * La fecha de entrega que se enseña de un trabajo: la real si ya salió, la
+ * prometida mientras no.
+ *
+ * No mira el estado, y es la corrección. La ficha enseñaba la real solo
+ * mientras el estado era «entregado», así que al cobrarlo y pasar a «cerrado»
+ * la fecha desaparecía y salía «Sin fecha» —118 de los 152 trabajos cerrados
+ * del piloto—. Cerrar un trabajo no deshace su entrega: el dato sigue ahí y
+ * tiene que verse.
+ *
+ * Devuelve `null` cuando no hay ninguna de las dos. Quien la muestre decide
+ * qué decir entonces: en un entregado sin sellar es «sin registrar», y en uno
+ * que no ha salido, «sin fecha».
+ */
+export function entregaMostrada(t: {
+  fecha_entrega: string | null
+  entregado_el: string | null
+}): string | null {
+  return t.entregado_el ?? t.fecha_entrega
+}
